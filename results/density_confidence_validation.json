@@ -1,0 +1,115 @@
+{
+  "experiment": "density_confidence_validation",
+  "timestamp": "2026-07-05T23:16:33.872598",
+  "scorer_config": {
+    "density_weight": 0.4,
+    "dist_weight": 0.4,
+    "consistency_weight": 0.2,
+    "sim_threshold": 0.1,
+    "k_neighbors": 10
+  },
+  "results": {
+    "test1_rich": {
+      "scores": {
+        "animals": 0.8210306569933892,
+        "nature": 0.7590252218147119,
+        "vehicles": 0.818575726946195,
+        "plants": 0.8206106118857861
+      },
+      "avg": 0.8048105544100206
+    },
+    "test2_sparse": {
+      "scores": {
+        "colors": 0.7442826623753936,
+        "body": 0.4824655596184846,
+        "places": 0.10770333732167879
+      },
+      "avg": 0.4448171864385189
+    },
+    "test3_empty": {
+      "scores": {
+        "food": 0.047019628062844265,
+        "emotions": 0.16353048061331113,
+        "clothing": 0.022211897683640312,
+        "tools": 0.055628628093594056,
+        "professions": 0.39976321176495316,
+        "materials": 0.11668568154176076
+      },
+      "avg": 0.13413992129335062
+    },
+    "test4_novel": {
+      "scores": [
+        0.40622113831521234,
+        0.14209540486335753,
+        0.067533540725708,
+        0.027900996804237355,
+        0.022804412245750416,
+        0.09058823237816492,
+        0.10674284696578978,
+        0.06612618565559386,
+        0.13597803115844725,
+        0.15481701977550982,
+        0.010827228613197792,
+        0.04639874013761679,
+        0.0909799024152259,
+        0.12163107239951688,
+        0.08904178366065024,
+        0.10199871569251019,
+        0.15589079931378363,
+        0.07175039052963256,
+        0.5100903057821707,
+        0.11890239690740902
+      ],
+      "avg": 0.12691595721697427
+    },
+    "test5_discrimination": {
+      "threshold": 0.3,
+      "accuracy": 0.9,
+      "precision": 0.8,
+      "recall": 1.0,
+      "tp": 4,
+      "fp": 1,
+      "fn": 0,
+      "tn_empty": 5,
+      "tn_novel": 18
+    },
+    "test6_adaptivity": {
+      "before": {
+        "confidence": 0.047019628062844265,
+        "density": 0.0
+      },
+      "after": {
+        "confidence": 0.827263474961122,
+        "density": 0.12658227848101267
+      },
+      "delta": 0.7802438468982777,
+      "adapted": true
+    },
+    "test7_latency": {
+      "store_size": 79,
+      "avg_ms": 1.6131170099470182,
+      "p99_ms": 2.462405999613111
+    }
+  },
+  "comparison": {
+    "neural": {
+      "novel_confidence": 0.668,
+      "known_confidence": 0.65,
+      "discriminates": false,
+      "accuracy": "~50%",
+      "training": "1500 epochs (~37s)",
+      "latency_ms": 4.7,
+      "params": 3884545
+    },
+    "density": {
+      "novel_confidence": 0.12691595721697427,
+      "rich_confidence": 0.8048105544100206,
+      "empty_confidence": 0.13413992129335062,
+      "discriminates": "True",
+      "accuracy": 0.9,
+      "training": "NONE",
+      "latency_ms": 1.6131170099470182,
+      "params": 0
+    }
+  }
+}

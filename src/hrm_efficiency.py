@@ -121,11 +121,18 @@ def run_hrm_efficiency_benchmark():
         map_location=DEVICE, weights_only=False,
     )
 
-    confidence_net = ConfidenceNet(
+    # ConfidenceNet REPLACED with DensityConfidenceScore (no neural net)
+    from density_confidence import DensityConfidenceScore
+    confidence_scorer = DensityConfidenceScore(
+        density_weight=0.4, dist_weight=0.4, consistency_weight=0.2,
+        sim_threshold=0.10, k_neighbors=10,
+    )
+    # We still keep the neural one for comparison
+    confidence_net_neural = ConfidenceNet(
         topic_dim=1024, d_model=256, n_heads=4, n_layers=3, dropout=0.1,
     ).to(DEVICE)
-    confidence_net.load_state_dict(ckpt8["confidence_net"])
-    confidence_net.eval()
+    confidence_net_neural.load_state_dict(ckpt8["confidence_net"])
+    confidence_net_neural.eval()
 
     query_generator = QueryGenerator(
         vocab_size_is, topic_dim=1024, d_model=256,

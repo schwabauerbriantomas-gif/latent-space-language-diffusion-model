@@ -1,0 +1,66 @@
+{
+  "experiment": "hrm_efficiency_v2",
+  "timestamp": "2026-07-05T23:18:53.228346",
+  "device": "cuda",
+  "results": {
+    "individual_latencies": {
+      "density_confidence": {
+        "latency_ms": 1.8430340001214063,
+        "params": 0
+      },
+      "query_generator": {
+        "latency_ms": 33.815007800003514
+      },
+      "splatsdb_query": {
+        "latency_ms": 0.9730200001649791
+      },
+      "generator": {
+        "latency_ms": 242.05045669987157
+      },
+      "reviewer": {
+        "latency_ms": 8.078961840001284
+      },
+      "editor": {
+        "latency_ms": 8.616779801377561
+      }
+    },
+    "end_to_end": {
+      "total_s": 0.5078739665998,
+      "per_seq_ms": 50.78739665998,
+      "breakdown": {
+        "confidence_s": 0.0018128299996533314,
+        "splatsdb_s": 0.0010505949998332654,
+        "trigger_s": 0.0007149750004828093,
+        "generate_s": 0.47983293194993165,
+        "review_s": 0.00789147484993009,
+        "edit_s": 0.016517119799209466
+      }
+    },
+    "adaptation_test": {
+      "density_confidence": {
+        "known": 0.8205039543410143,
+        "novel": 0.10813400323192278,
+        "discriminates": true,
+        "gap": 0.7123699511090915,
+        "adapted_after_ingest": true,
+        "delta": 0.6454904727637767
+      },
+      "query_generator": {
+        "novel_query": "tell me about <unk>"
+      },
+      "generator": {
+        "novel_score": 0.307932585477829,
+        "sample": "a rabbit goes sadly"
+      },
+      "editor": {
+        "improved": 6
+      }
+    }
+  },
+  "summary": {
+    "e2e_latency_s": 0.5078739665998,
+    "per_sequence_ms": 50.78739665998,
+    "all_heads_adaptive": true,
+    "confidence_discriminates": true
+  }
+}
