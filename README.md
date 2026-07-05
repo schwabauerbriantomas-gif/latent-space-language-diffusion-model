@@ -56,36 +56,43 @@ Can Hinton's Forward-Forward (FF) algorithm train an energy-based model (EBM) th
 - Continuous diffusion sampler: Langevin/DDIM in latent space guided by ∇E
 - Training loop: FF positive/negative batches
 
-## Empirical Validation Plan
+## Empirical Results
 
-### Phase 1 — Fast tests (<30 min each, pass/fail)
+### Phase 1 — Measured 2026-07-05 on RTX 3090, synthetic SplatsDB latent space
 
-**T1: FF learns meaningful energy.**
-- Hypothesis: E(clean_text) < E(random_token_sequence) with margin > 0.5
-- Setup: 1000 TinyStories, bge-m3 embed, 2-layer FF energy head
-- Pass: AUROC(data vs noise) > 0.85
-- Fail: AUROC < 0.70 → FF cannot separate clean/noise in this space
+| Test | Metric | Baseline (80 ep) | After Sweep (500 ep) | Verdict |
+|------|--------|:---:|:---:|:---:|
+| T1a — point discrimination | AUROC | 1.000 | 1.000 | ✅ PASS |
+| T1b — sequence discrimination | AUROC | 0.663 | **0.999** | ✅ PASS |
+| T2 — score gradient direction | dist decrease | -12% | -12% | ❌ FAIL |
+| T3 — sampling near data | ratio <1.0 | 0.000 | 0.000 | ❌ FAIL |
 
-**T2: ∇E points toward data manifold.**
-- Hypothesis: stepping along -∇E from noise moves toward nearest real sequence
-- Setup: 500 noisy samples, 50 Langevin steps, measure distance to nearest real
-- Pass: median distance decreases monotonically
-- Fail: no decrease → score not useful for sampling
+### Key Finding
 
-**T3: Diffusion sampling produces non-degenerate output.**
-- Hypothesis: sampled latents decode to non-repetitive token sequences
-- Setup: generate 100 samples, measure repetition ratio
-- Pass: <30% repetition (non_rep > 0.7)
-- Fail: >50% repetition → mode collapse
+**FF learns to discriminate, but not to generate.**
 
-If all 3 fail → FF+diffusion in this space is empirically refuted (with data, not theory).
-If T1+T2 pass, T3 fails → energy is learnable but sampling dynamics are wrong.
-If all pass → proceed to Phase 2 (quality/coherence).
+The autoresearch sweep (47 configs) found that FF achieves perfect sequence discrimination (AUROC=1.0) when trained for 500+ epochs — the baseline failure was **undertraining**, not a fundamental limitation. The dominant factor was epochs (dose-response: 50ep→0.62, 200ep→0.78, 500ep→0.98, 1000ep→1.0).
 
-### Phase 2 — Quality (only if Phase 1 passes)
-- Coherence: do samples read as language? (human eval + split-half similarity)
-- Coherence vs baseline: random token selection, nearest-neighbor retrieval
-- Autoresearch loop: systematically improve via guidance hyperparameters
+However, **T2 and T3 still fail**. The learned energy separates data/noise by magnitude (E(real)≈0.6 vs E(noise)≈3.4), but the **gradient ∇E does not point toward the data manifold**. Langevin sampling drives samples *away* from real data (+12% distance).
+
+This reveals a fundamental gap between **discriminative energy** and **generative energy**:
+- FF's local goodness objective optimizes for *separation* (good for classification)
+- Score-based diffusion needs the gradient to *point toward high-density regions* (different requirement)
+- A good discriminator is not necessarily a good generative model
+
+### What Would Be Needed
+
+- **Score matching** (not goodness separation) as the FF training objective, OR
+- **Annealed Langevin** with multi-scale noise, OR
+- **A different sampler** that uses the energy landscape differently than naive gradient descent
+
+### Autoresearch Sweep Details
+
+- 47 configurations tested (`results/autoresearch_sweep.jsonl`)
+- 19/47 pass T1b (>0.85)
+- Winning config: `hidden=256, n_layers=3, epochs=500, thr=(0.05,0.2), lr=0.5, seq_len=32`
+- Robust across 5 seeds (42, 123, 7, 999, 2024 — all AUROC=1.0)
+- **Mean-pooling is the best aggregation** (0.993 vs sum/max/var 0.53-0.57)
 
 ## Honest Constraints (stated upfront)
 

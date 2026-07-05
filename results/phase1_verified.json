@@ -1,0 +1,53 @@
+{
+  "_description": "Independent verification of Phase 1 results after autoresearch sweep. Re-trained winning config from scratch.",
+  "_verifier": "parent agent (not subagent self-report)",
+  "date": "2026-07-05",
+  "winning_config": {
+    "hidden_dim": 256,
+    "n_layers": 3,
+    "epochs": 500,
+    "threshold_pos": 0.05,
+    "threshold_neg": 0.2,
+    "lr": 0.5,
+    "seq_len": 32,
+    "seed": 42
+  },
+  "results": {
+    "t1a_point_auroc": {
+      "value": 1.000,
+      "verdict": "PASS",
+      "note": "Perfect, unchanged from baseline"
+    },
+    "t1b_sequence_auroc": {
+      "value": 0.9994,
+      "verdict": "PASS",
+      "note": "Was 0.663 at 80 epochs → 0.9994 at 500 epochs. Undertraining was the bottleneck.",
+      "energy_real_mean": 0.6225,
+      "energy_noise_mean": 3.3561,
+      "margin": 2.7337
+    },
+    "t2_score_gradient": {
+      "value": -0.12,
+      "verdict": "FAIL",
+      "note": "Distance to real data INCREASES 12% during Langevin sampling. Score gradient does NOT guide toward data manifold. Unchanged from baseline.",
+      "start_median_dist": 62.24,
+      "end_median_dist": 69.69
+    },
+    "t3_sampling_near_data": {
+      "value": 0.000,
+      "verdict": "FAIL",
+      "note": "0% of samples land within distance 1.0 of real data. Samples are diverse (std=1.42) but not on the manifold.",
+      "sample_std": 1.4170,
+      "near_real_ratio": 0.0
+    }
+  },
+  "key_finding": "FF CAN learn sequence discrimination (T1b PASS at 500 epochs), BUT the learned energy landscape does NOT produce a useful score gradient for diffusion sampling (T2/T3 FAIL). The energy separates data/noise by MAGNITUDE but the GRADIENT does not point toward data. This is a fundamental limitation of FF's local goodness objective for score-based generation: what makes a good discriminator does not necessarily make a good generative model.",
+  "sweep_stats": {
+    "total_configs": 47,
+    "configs_passing_t1b": 19,
+    "best_auroc": 1.0,
+    "dominant_factor": "epochs (50→0.619, 200→0.777, 500→0.979, 1000→1.0)",
+    "seed_robustness": "AUROC=1.0 across 5 seeds"
+  },
+  "verdict": "PARTIAL: FF learns discriminative energy but not generative energy. The diffusion pipeline cannot work as-is because the score gradient is adversarial to sampling. Further work would require a different training objective (score matching rather than goodness separation) or a different sampling scheme."
+}

@@ -1,0 +1,63 @@
+{
+  "sweep_summary": {
+    "description": "FF T1b hyperparameter sweep: coherent vs incoherent sequence discrimination",
+    "baseline_auroc": 0.663,
+    "pass_threshold": 0.85,
+    "n_configs": 47,
+    "n_passing": 19,
+    "best_auroc": 1.0,
+    "any_pass": true,
+    "timestamp": "2026-07-05T16:10:00Z"
+  },
+  "best_config": {
+    "hidden": 256,
+    "n_layers": 3,
+    "epochs": 500,
+    "threshold_pos": 0.05,
+    "threshold_neg": 0.2,
+    "lr": 0.5,
+    "seq_len": 32,
+    "agg": "mean_pool",
+    "auroc": 1.0,
+    "margin": 4.3351,
+    "seed_robustness": "PERFECT (1.0 across 5 seeds: 42, 123, 7, 999, 2024)"
+  },
+  "key_findings": {
+    "dominant_parameter": "epochs",
+    "epochs_dose_response_seq16": {
+      "50": 0.6191, "100": 0.6771, "150": 0.7222, "200": 0.7772,
+      "300": 0.9239, "400": 0.9640, "500": 0.9793, "700": 0.9930, "1000": 1.0
+    },
+    "threshold_for_pass_at_seq16": "~300 epochs (AUROC 0.92)",
+    "aggregation_comparison_ep500": {
+      "mean_pool": 0.9929,
+      "sum_token_energies": 0.5272,
+      "max_token_energy": 0.5592,
+      "var_token_energy": 0.5720,
+      "conclusion": "Mean-pooling is BEST aggregation, NOT the problem"
+    },
+    "seq_len_interaction": {
+      "seq4_ep80": 0.6585, "seq4_ep500": 0.8144,
+      "seq8_ep80": 0.7419, "seq8_ep500": 0.9674,
+      "seq16_ep80": 0.7641, "seq16_ep500": 0.9929,
+      "seq32_ep80": 0.7846, "seq32_ep500": 1.0,
+      "conclusion": "Longer seq_len helps slightly, especially at low epochs"
+    },
+    "hidden_dim_effect_at_ep80": {
+      "128": 0.7984, "256": 0.6628, "512": 0.6145, "1024": 0.5520,
+      "conclusion": "SMALLER hidden dim is better at low epochs (less overfitting)"
+    },
+    "n_layers_effect_at_ep80": {
+      "1": 0.5459, "2": 0.6201, "3": 0.6628, "4": 0.6821,
+      "conclusion": "More layers slightly help, but marginal"
+    }
+  },
+  "verdict": {
+    "can_ff_capture_sequence_structure": true,
+    "mechanism": "FF learns to discriminate mean-pooled coherent vs incoherent sequences. The mean of a coherent sequence (all tokens from same cluster) maps to a tighter region than the mean of an incoherent sequence (tokens from different clusters). FF needs sufficient epochs (300+) to learn this discrimination.",
+    "is_mean_pooling_the_bottleneck": false,
+    "is_ff_fundamentally_limited": false,
+    "root_cause_of_baseline_failure": "Undertraining (80 epochs was ~4x too few). At 80 epochs, the FF layers have not converged enough to separate the mean-pooled distributions.",
+    "recommendation": "Use 500+ epochs for T1b. hidden=256, n_layers=3, lr=0.5 is sufficient. seq_len=32 gives best results."
+  }
+}
