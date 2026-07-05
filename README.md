@@ -103,6 +103,81 @@ The fix is NOT in the training method — it's in the **energy parameterization*
 
 These abandon the FF premise (local goodness). They're known to work (that's how real diffusion LMs are trained). FF's value is elsewhere (efficient discriminative training, biological plausibility), not in generative modeling.
 
+---
+
+## Phase 2: Score Matching (scaled up) — 2026-07-05
+
+### Hypothesis
+
+If FF failed because of its objective (goodness → spikes), then **score matching** (trains ∇log p directly) should succeed in the same latent space.
+
+### What Was Built
+
+- **ScoreNetworkV2**: 46M parameters, 8 residual blocks (1024 hidden), FiLM sigma conditioning (sinusoidal embedding), zero-initialized output
+- **Training**: 3000 epochs, cosine LR schedule with warmup, AdamW, gradient clipping
+- **Data**: unit-norm on S^1023 (matching bge-m3), 20 clusters with cluster spread 0.15
+
+### Results
+
+| Experiment | cos(score, true) | T2 Sampling | T3 Generation |
+|-----------|:--:|:--:|:--:|
+| Phase 1d (small net, 500 ep) | +0.38 | FAIL | FAIL |
+| **Phase 2 (46M, 3000 ep)** | **+0.970** | FAIL (3.4%) | FAIL (0%) |
+| Phase 2 (separable data, 5 clusters) | +0.961 | FAIL | FAIL |
+
+**Score direction is near-perfect (cos=0.970).** The score matching objective DOES learn the correct gradient direction in 1024D. But Langevin sampling still cannot reach the data manifold.
+
+### Root Cause: Constant-Magnitude Score Field
+
+Diagnostic measurements revealed WHY sampling fails despite excellent direction:
+
+| Position | Distance to data | \|\|score\|\| | cos(score→center) |
+|----------|:--:|:--:|:--:|
+| Far (random on sphere) | 1.37 | 56.1 | +0.46 |
+| Midway | 0.92 | 57.4 | +0.54 |
+| Near | 0.34 | 59.9 | +0.49 |
+| At center | 0.15 | 57.1 | 0.00 |
+
+**The score has constant magnitude (~57) everywhere on the sphere.** It's a compass that always points vaguely toward data but never gets stronger as you approach. Langevin dynamics require the score magnitude to *increase* near data modes — without that, sampling plateaus.
+
+### 2D Control Experiment: Pipeline Validated
+
+To rule out bugs in the sampling pipeline, we replicated the ENTIRE pipeline (DSM training → annealed Langevin → evaluation) in 2D:
+
+| Metric | 2D Result |
+|--------|:--:|
+| cos(score, true) @ σ=0.5 | +0.77 |
+| Samples near data (<0.5 dist) | **77.6%** |
+| Clusters reached | **5/5** |
+| Verdict | **✅ FULL SUCCESS** |
+
+The score matching → Langevin sampling pipeline works perfectly in 2D. Samples land on cluster centers, all modes are covered, no mode collapse. **The methodology is correct.**
+
+### Conclusion: Curse of Dimensionality on the Hypersphere
+
+The failure in 1024D is NOT a bug in our pipeline (proven by 2D success). It's the **concentration of measure** on the high-dimensional sphere:
+
+1. In 1024D, all points on S^1023 are at distance ~√2 ≈ 1.41 from each other
+2. Cluster structure is compressed: even tight clusters (spread=0.005) have intra-cluster distance 0.16 vs inter-cluster 1.42
+3. The score matching loss is dominated by the noise-removal target (-eps/σ), which is **isotropic** — it doesn't encode cluster structure
+4. The network learns a nearly-constant score field that points vaguely toward data but has no gradient *gradient* (no curvature toward modes)
+
+This is a known problem in high-dimensional generative modeling. Real diffusion models solve it by:
+- Working in **pixel/parameter space** (not on a constrained manifold)
+- Using **U-Net architectures** with spatial inductive biases
+- Training on **millions of samples** (not 2000)
+- Operating at **much lower effective dimensionality** via spatial structure
+
+### Final Summary
+
+| Method | Works? | Why |
+|--------|:--:|-----|
+| FF (goodness) | ❌ | Energy collapse: spikes on data, adversarial gradients |
+| Score matching in 2D | ✅ | Pipeline correct, samples reach all modes |
+| Score matching in 1024D | 🔶 | Direction correct (cos=0.97), magnitude constant → sampling stalls |
+
+**The latent space IS usable** (score direction is learned). But Langevin sampling in 1024D on a hypersphere requires either (a) much larger/different architecture (e.g., normalizing flows to map sphere→R^1024), or (b) a fundamentally different sampler (e.g., projected Gibbs, or manifold-aware MCMC). This is future work.
+
 ## Honest Constraints (stated upfront)
 
 1. **SplatsDB is bag-of-tokens by design** — no sequence model. The FF energy head MUST supply the sequential structure. If it can't, the approach fails. This is the core empirical question.
