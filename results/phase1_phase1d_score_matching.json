@@ -1,0 +1,45 @@
+{
+  "test": "phase1d_score_matching",
+  "timestamp": "2026-07-05T16:16:06.221725",
+  "method": "denoising_score_matching",
+  "t1_auroc": 1.0,
+  "t2_decrease": -0.08702069157722295,
+  "t2_distances": [
+    {
+      "step": 0,
+      "median": 62.85345458984375,
+      "mean": 62.7973518371582
+    },
+    {
+      "step": 10,
+      "median": 63.80691146850586,
+      "mean": 63.78379821777344
+    },
+    {
+      "step": 20,
+      "median": 65.17837524414062,
+      "mean": 65.16130065917969
+    },
+    {
+      "step": 30,
+      "median": 66.12655639648438,
+      "mean": 66.10224151611328
+    },
+    {
+      "step": 40,
+      "median": 67.61174011230469,
+      "mean": 67.572509765625
+    },
+    {
+      "step": 49,
+      "median": 68.32300567626953,
+      "mean": 68.26720428466797
+    }
+  ],
+  "t2_verdict": "FAIL",
+  "t3_near_ratio": 0.0,
+  "t3_near_ratio_2": 0.0,
+  "t3_sample_std": 2.5437002182006836,
+  "t3_verdict": "FAIL",
+  "final_verdict": "Score matching ALSO fails \u2014 latent space itself is problematic"
+}

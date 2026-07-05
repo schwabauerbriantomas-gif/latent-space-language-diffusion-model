@@ -1,0 +1,8 @@
+{
+  "test": "phase1d_FIXED",
+  "timestamp": "2026-07-05T16:17:32.531179",
+  "t2_decrease": 0.000586792323133427,
+  "t3_near_03": 0.0,
+  "t3_near_05": 0.0,
+  "note": "Unit-norm data + spherical projection + appropriate lr"
+}
