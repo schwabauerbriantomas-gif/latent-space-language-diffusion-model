@@ -1,0 +1,110 @@
+{
+  "experiment": "hrm_efficiency_benchmark",
+  "timestamp": "2026-07-05T23:07:05.312149",
+  "device": "cuda",
+  "total_hrm_params": 46350208,
+  "results": {
+    "individual_latencies": {
+      "confidence_net": {
+        "latency_ms": 4.700035999776446
+      },
+      "query_generator": {
+        "latency_ms": 35.67094411984726
+      },
+      "splatsdb_query": {
+        "latency_ms": 0.9901160002482355
+      },
+      "generator": [
+        {
+          "n_steps": 20,
+          "latency_ms": 241.10767090023728
+        },
+        {
+          "n_steps": 40,
+          "latency_ms": 502.84329380010604
+        }
+      ],
+      "reviewer": {
+        "latency_ms": 8.812920120253693
+      },
+      "editor": [
+        {
+          "n_rounds": 1,
+          "latency_ms": 39.40372059951187
+        },
+        {
+          "n_rounds": 3,
+          "latency_ms": 84.85174099987489
+        },
+        {
+          "n_rounds": 5,
+          "latency_ms": 61.12918080034433
+        }
+      ]
+    },
+    "end_to_end": {
+      "total_avg_s": 0.6488207946002149,
+      "per_sequence_ms": 64.88207946002149,
+      "breakdown": {
+        "confidence_assessment_s": 0.004911470150364039,
+        "splatsdb_query_s": 0.0012722350498734158,
+        "ingest_trigger_s": 0.000833615000374266,
+        "generate_s": 0.6198576493005021,
+        "review_s": 0.00797835999965173,
+        "edit_s": 0.01391330510014086
+      }
+    },
+    "adaptation_test": {
+      "confidence_net": {
+        "novel_confidence": 0.6677449345588684,
+        "known_avg_confidence": 0.6503084531197181,
+        "discriminates": "False"
+      },
+      "query_generator": {
+        "novel_query": "tell me about <unk>",
+        "known_query": "tell me about <unk>"
+      },
+      "reviewer": {
+        "novel_score": 0.5370810627937317,
+        "known_score": 0.9942256212234497
+      },
+      "editor": {
+        "improved": 3,
+        "time_s": 0.12763550099771237
+      },
+      "generator": {
+        "reviewer_score": 0.5370810627937317,
+        "sample": "the eye shows by them"
+      }
+    },
+    "training_costs": {
+      "generator": {
+        "params": 16076795,
+        "100_epochs_s": 5.713123798370361,
+        "full_training_2500_s": 142.82809495925903
+      },
+      "reviewer": {
+        "params": 5105665,
+        "100_epochs_s": 299.3323130607605,
+        "full_training_2000_s": 5986.64626121521
+      },
+      "confidence_net": {
+        "params": 3884545,
+        "100_epochs_s": 2.7909297943115234,
+        "full_training_1500_s": 41.86394691467285
+      },
+      "query_generator": {
+        "params": 5199739,
+        "100_epochs_s": 3.41351056098938,
+        "full_training_2000_s": 68.2702112197876
+      }
+    }
+  },
+  "summary": {
+    "e2e_latency_s": 0.6488207946002149,
+    "per_sequence_ms": 64.88207946002149,
+    "dominant_cost": "generation",
+    "all_heads_adaptive": false,
+    "full_retrain_all_heads_s": 6239.608514308929
+  }
+}
