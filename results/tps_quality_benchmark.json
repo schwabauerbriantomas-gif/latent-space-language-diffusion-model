@@ -1,0 +1,381 @@
+{
+  "experiment": "tps_quality_benchmark",
+  "timestamp": "2026-07-05T23:36:30.659109",
+  "device": "cuda",
+  "gpu": "NVIDIA GeForce RTX 3090",
+  "tps_results": [
+    {
+      "batch_size": 1,
+      "n_steps": 10,
+      "latency_ms": 119.78976633448231,
+      "total_tokens": 20,
+      "tps": 166.95917031973426
+    },
+    {
+      "batch_size": 1,
+      "n_steps": 20,
+      "latency_ms": 240.82736566682192,
+      "total_tokens": 20,
+      "tps": 83.04704054135382
+    },
+    {
+      "batch_size": 1,
+      "n_steps": 40,
+      "latency_ms": 476.9738313310275,
+      "total_tokens": 20,
+      "tps": 41.931021549313634
+    },
+    {
+      "batch_size": 10,
+      "n_steps": 10,
+      "latency_ms": 287.08549866617733,
+      "total_tokens": 200,
+      "tps": 696.6565741885826
+    },
+    {
+      "batch_size": 10,
+      "n_steps": 20,
+      "latency_ms": 459.20972399956855,
+      "total_tokens": 200,
+      "tps": 435.53084690381667
+    },
+    {
+      "batch_size": 10,
+      "n_steps": 40,
+      "latency_ms": 714.8944186653049,
+      "total_tokens": 200,
+      "tps": 279.7615910519996
+    },
+    {
+      "batch_size": 50,
+      "n_steps": 10,
+      "latency_ms": 946.3570076647253,
+      "total_tokens": 1000,
+      "tps": 1056.6836742379567
+    },
+    {
+      "batch_size": 50,
+      "n_steps": 20,
+      "latency_ms": 1453.349717334883,
+      "total_tokens": 1000,
+      "tps": 688.0656376593071
+    },
+    {
+      "batch_size": 100,
+      "n_steps": 10,
+      "latency_ms": 1728.9267616676323,
+      "total_tokens": 2000,
+      "tps": 1156.7869989304259
+    },
+    {
+      "batch_size": 100,
+      "n_steps": 20,
+      "latency_ms": 2717.178344001392,
+      "total_tokens": 2000,
+      "tps": 736.0576844046036
+    },
+    {
+      "batch_size": 200,
+      "n_steps": 10,
+      "latency_ms": 3388.764067000011,
+      "total_tokens": 4000,
+      "tps": 1180.3713451025526
+    },
+    {
+      "batch_size": 500,
+      "n_steps": 10,
+      "latency_ms": 7518.047808332388,
+      "total_tokens": 10000,
+      "tps": 1330.1325363902076
+    }
+  ],
+  "quality_results": {
+    "per_category": {
+      "animals": {
+        "n": 50,
+        "grammar_rate": 0.64,
+        "uniqueness": 1.0,
+        "novelty": 1.0,
+        "distinct_1": 0.4175824175824176,
+        "distinct_2": 0.9554140127388535,
+        "ngram_diversity": 0.9554140127388535,
+        "self_bleu": 0.0,
+        "reviewer_score": 0.9911071062088013,
+        "reviewer_score_std": 0.037184905260801315,
+        "on_topic_rate": 0.5701754385964912,
+        "avg_seq_len": 7.28,
+        "pass_rate": 1.0
+      },
+      "colors": {
+        "n": 50,
+        "grammar_rate": 0.66,
+        "uniqueness": 1.0,
+        "novelty": 1.0,
+        "distinct_1": 0.4609164420485175,
+        "distinct_2": 0.9688473520249221,
+        "ngram_diversity": 0.9688473520249221,
+        "self_bleu": 0.0,
+        "reviewer_score": 0.9484748840332031,
+        "reviewer_score_std": 0.17878179252147675,
+        "on_topic_rate": 0.4594594594594595,
+        "avg_seq_len": 7.42,
+        "pass_rate": 0.9399999976158142
+      },
+      "food": {
+        "n": 50,
+        "grammar_rate": 0.78,
+        "uniqueness": 1.0,
+        "novelty": 1.0,
+        "distinct_1": 0.4214876033057851,
+        "distinct_2": 0.9616613418530351,
+        "ngram_diversity": 0.9616613418530351,
+        "self_bleu": 0.0,
+        "reviewer_score": 0.8408456444740295,
+        "reviewer_score_std": 0.2865988612174988,
+        "on_topic_rate": 0.5980392156862745,
+        "avg_seq_len": 7.26,
+        "pass_rate": 0.8799999952316284
+      },
+      "emotions": {
+        "n": 50,
+        "grammar_rate": 0.68,
+        "uniqueness": 1.0,
+        "novelty": 1.0,
+        "distinct_1": 0.4858757062146893,
+        "distinct_2": 0.9375,
+        "ngram_diversity": 0.9375,
+        "self_bleu": 0.0,
+        "reviewer_score": 0.9769973754882812,
+        "reviewer_score_std": 0.1226496770977974,
+        "on_topic_rate": 0.44680851063829785,
+        "avg_seq_len": 7.08,
+        "pass_rate": 0.9799999594688416
+      },
+      "nature": {
+        "n": 50,
+        "grammar_rate": 0.94,
+        "uniqueness": 1.0,
+        "novelty": 1.0,
+        "distinct_1": 0.42857142857142855,
+        "distinct_2": 0.9158415841584159,
+        "ngram_diversity": 0.9158415841584159,
+        "self_bleu": 0.0,
+        "reviewer_score": 0.8240430355072021,
+        "reviewer_score_std": 0.2975289821624756,
+        "on_topic_rate": 0.8253968253968254,
+        "avg_seq_len": 5.04,
+        "pass_rate": 0.85999995470047
+      },
+      "body": {
+        "n": 50,
+        "grammar_rate": 0.76,
+        "uniqueness": 1.0,
+        "novelty": 1.0,
+        "distinct_1": 0.3375,
+        "distinct_2": 0.8368421052631579,
+        "ngram_diversity": 0.8368421052631579,
+        "self_bleu": 0.0,
+        "reviewer_score": 0.5913991332054138,
+        "reviewer_score_std": 0.4208281934261322,
+        "on_topic_rate": 0.9615384615384616,
+        "avg_seq_len": 4.8,
+        "pass_rate": 0.5799999833106995
+      },
+      "clothing": {
+        "n": 50,
+        "grammar_rate": 0.98,
+        "uniqueness": 1.0,
+        "novelty": 1.0,
+        "distinct_1": 0.3888888888888889,
+        "distinct_2": 0.8967391304347826,
+        "ngram_diversity": 0.8967391304347826,
+        "self_bleu": 0.0,
+        "reviewer_score": 0.6419296264648438,
+        "reviewer_score_std": 0.3832325041294098,
+        "on_topic_rate": 0.8983050847457628,
+        "avg_seq_len": 4.68,
+        "pass_rate": 0.6399999856948853
+      },
+      "tools": {
+        "n": 50,
+        "grammar_rate": 0.94,
+        "uniqueness": 1.0,
+        "novelty": 1.0,
+        "distinct_1": 0.41434262948207173,
+        "distinct_2": 0.945273631840796,
+        "ngram_diversity": 0.945273631840796,
+        "self_bleu": 0.0,
+        "reviewer_score": 0.6954896450042725,
+        "reviewer_score_std": 0.37181219458580017,
+        "on_topic_rate": 0.8656716417910447,
+        "avg_seq_len": 5.02,
+        "pass_rate": 0.7199999690055847
+      },
+      "vehicles": {
+        "n": 50,
+        "grammar_rate": 0.86,
+        "uniqueness": 1.0,
+        "novelty": 1.0,
+        "distinct_1": 0.38,
+        "distinct_2": 0.895,
+        "ngram_diversity": 0.895,
+        "self_bleu": 0.0,
+        "reviewer_score": 0.83469158411026,
+        "reviewer_score_std": 0.2961956560611725,
+        "on_topic_rate": 0.9365079365079365,
+        "avg_seq_len": 5.0,
+        "pass_rate": 0.8799999952316284
+      },
+      "places": {
+        "n": 50,
+        "grammar_rate": 0.96,
+        "uniqueness": 1.0,
+        "novelty": 1.0,
+        "distinct_1": 0.42448979591836733,
+        "distinct_2": 0.9487179487179487,
+        "ngram_diversity": 0.9487179487179487,
+        "self_bleu": 0.0,
+        "reviewer_score": 0.6700817942619324,
+        "reviewer_score_std": 0.3676375448703766,
+        "on_topic_rate": 0.8939393939393939,
+        "avg_seq_len": 4.9,
+        "pass_rate": 0.699999988079071
+      },
+      "professions": {
+        "n": 50,
+        "grammar_rate": 0.18,
+        "uniqueness": 1.0,
+        "novelty": 1.0,
+        "distinct_1": 0.3567073170731707,
+        "distinct_2": 0.841726618705036,
+        "ngram_diversity": 0.841726618705036,
+        "self_bleu": 0.030393427426063702,
+        "reviewer_score": 0.6821948289871216,
+        "reviewer_score_std": 0.4137498736381531,
+        "on_topic_rate": 0.7368421052631579,
+        "avg_seq_len": 6.56,
+        "pass_rate": 0.699999988079071
+      },
+      "materials": {
+        "n": 50,
+        "grammar_rate": 0.92,
+        "uniqueness": 1.0,
+        "novelty": 1.0,
+        "distinct_1": 0.38666666666666666,
+        "distinct_2": 0.9085714285714286,
+        "ngram_diversity": 0.9085714285714286,
+        "self_bleu": 0.0,
+        "reviewer_score": 0.5945336222648621,
+        "reviewer_score_std": 0.41877323389053345,
+        "on_topic_rate": 0.9137931034482759,
+        "avg_seq_len": 4.5,
+        "pass_rate": 0.5999999642372131
+      },
+      "plants": {
+        "n": 50,
+        "grammar_rate": 0.94,
+        "uniqueness": 1.0,
+        "novelty": 1.0,
+        "distinct_1": 0.357429718875502,
+        "distinct_2": 0.8994974874371859,
+        "ngram_diversity": 0.8994974874371859,
+        "self_bleu": 0.0,
+        "reviewer_score": 0.5600716471672058,
+        "reviewer_score_std": 0.4363221526145935,
+        "on_topic_rate": 0.9285714285714286,
+        "avg_seq_len": 4.98,
+        "pass_rate": 0.5399999618530273
+      }
+    },
+    "averages": {
+      "grammar_rate": 0.7876923076923076,
+      "uniqueness": 1.0,
+      "novelty": 1.0,
+      "distinct_1": 0.40465066266365424,
+      "distinct_2": 0.9162794339804279,
+      "self_bleu": 0.002337955955851054,
+      "reviewer_score": 0.7578353790136484,
+      "pass_rate": 0.7707692109621488,
+      "on_topic_rate": 0.7719268158140623
+    },
+    "overall": {
+      "distinct_1": 0.1301663982823403,
+      "distinct_2": 0.8283485045513654,
+      "self_bleu": 0.0023379559558510538
+    }
+  },
+  "optimization_results": {
+    "baseline_fixed_0.7_30steps": {
+      "grammar_rate": 0.74,
+      "uniqueness": 1.0,
+      "novelty": 1.0,
+      "distinct_1": 0.4563375421670578,
+      "self_bleu": 0.0,
+      "reviewer_score": 0.9015795946121216,
+      "pass_rate": 0.9119999647140503,
+      "on_topic_rate": 0.6031018631648709,
+      "latency_ms": 1432.5337990012486,
+      "tps": 698.0638088240516
+    },
+    "cosine_schedule_40steps": {
+      "grammar_rate": 0.644,
+      "uniqueness": 1.0,
+      "novelty": 1.0,
+      "distinct_1": 0.41146936669278966,
+      "self_bleu": 0.0,
+      "reviewer_score": 0.8870837211608886,
+      "pass_rate": 0.8959999799728393,
+      "on_topic_rate": 0.5786802846691284,
+      "latency_ms": 1744.155102998775,
+      "tps": 573.3435049902797
+    },
+    "linear_schedule_40steps": {
+      "grammar_rate": 0.688,
+      "uniqueness": 1.0,
+      "novelty": 1.0,
+      "distinct_1": 0.42120825007236673,
+      "self_bleu": 0.0,
+      "reviewer_score": 0.8871286630630493,
+      "pass_rate": 0.9039999842643738,
+      "on_topic_rate": 0.582819843088943,
+      "latency_ms": 2063.285898999311,
+      "tps": 484.66380761144046
+    },
+    "low_temp_0.3_30steps": {
+      "grammar_rate": 0.976,
+      "uniqueness": 0.9640000000000001,
+      "novelty": 1.0,
+      "distinct_1": 0.28043054947097323,
+      "self_bleu": 0.068,
+      "reviewer_score": 0.9531908750534057,
+      "pass_rate": 0.971999979019165,
+      "on_topic_rate": 0.7836579364494936,
+      "latency_ms": 1778.7572939996608,
+      "tps": 562.1902456132335
+    },
+    "cosine_40steps+editor": {
+      "grammar_rate": 0.716,
+      "uniqueness": 1.0,
+      "novelty": 1.0,
+      "distinct_1": 0.42053031097555316,
+      "self_bleu": 0.0,
+      "reviewer_score": 0.9457157492637634,
+      "pass_rate": 0.9879999756813049,
+      "on_topic_rate": 0.6088628926564481,
+      "latency_ms": 1758.4037280030316,
+      "tps": 568.6976114044476
+    },
+    "baseline_50steps": {
+      "grammar_rate": 0.72,
+      "uniqueness": 1.0,
+      "novelty": 0.9960000000000001,
+      "distinct_1": 0.4452063726311303,
+      "self_bleu": 0.0,
+      "reviewer_score": 0.8804492712020874,
+      "pass_rate": 0.887999975681305,
+      "on_topic_rate": 0.6063928927224806,
+      "latency_ms": 2091.373310999188,
+      "tps": 478.15471046736917
+    }
+  }
+}
