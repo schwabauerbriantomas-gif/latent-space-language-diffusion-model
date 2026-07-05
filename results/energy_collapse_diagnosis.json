@@ -1,0 +1,24 @@
+{
+  "_description": "Diagnostic of WHY CD-trained energy fails to guide sampling despite perfect discrimination.",
+  "date": "2026-07-05",
+  "method": "CD (contrastive divergence) trained, 100 epochs, k=15 Langevin",
+  "results": {
+    "discrimination_auroc": 1.0,
+    "gradient_magnitude_real": 1752.5,
+    "gradient_magnitude_noise": 10.0,
+    "ratio": 175.3,
+    "radial_component_at_noise": 0.0001,
+    "tangential_at_noise": 10.43,
+    "spearman_norm_vs_energy": -0.083,
+    "gradient_at_real_toward_center": "AWAY (dist 23.3 → 77.6)"
+  },
+  "diagnosis": "ENERGY COLLAPSE: The energy forms sharp PEAKS on training data (|∇E|real = 1752 vs |∇E|noise = 10, ratio 175x) rather than smooth VALLEYS. The gradient at real points points radially OUTWARD from cluster centers, pushing Langevin samples away. The energy discriminates perfectly (AUROC=1.0) by magnitude but the gradient field is hostile to sampling.",
+  "why": "Both FF (goodness separation) and CD (contrastive loss e_pos - e_neg) optimize E to be LOW at data and HIGH elsewhere. With ReLU hidden units and no smoothness constraint, the optimum is delta-like spikes at data points, not a smooth basin. The gradient flows UP the walls of these spikes, repelling samples.",
+  "implication": "This is not a hyperparameter problem (FF and CD both reach it). It is a regularization problem: the energy needs explicit smoothness (gradient penalty, spectral norm, or score matching) to form basins instead of spikes.",
+  "fixes_to_try": [
+    "Score matching (Hyvarinen): match ∇E to data score directly — forces smoothness",
+    "Gradient penalty (Gulrajani): penalize ||∇E||^2 to flatten the landscape",
+    "Spectral normalization on linear layers: bounds the Lipschitz constant → smoother E",
+    "One-sided label smoothing in the contrastive loss"
+  ]
+}

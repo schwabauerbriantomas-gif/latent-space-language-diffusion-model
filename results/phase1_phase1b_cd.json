@@ -1,0 +1,45 @@
+{
+  "test": "phase1b_cd",
+  "timestamp": "2026-07-05T16:06:03.843675",
+  "method": "contrastive_divergence",
+  "t1_auroc": 1.0,
+  "t1_margin": 477.6517639160156,
+  "t2_decrease": -0.10245722243125888,
+  "t2_distances": [
+    {
+      "step": 0,
+      "median": 63.06022644042969,
+      "mean": 63.035980224609375
+    },
+    {
+      "step": 10,
+      "median": 64.3331069946289,
+      "mean": 64.27125549316406
+    },
+    {
+      "step": 20,
+      "median": 65.62408447265625,
+      "mean": 65.58335876464844
+    },
+    {
+      "step": 30,
+      "median": 66.9433822631836,
+      "mean": 66.8888168334961
+    },
+    {
+      "step": 40,
+      "median": 68.24060821533203,
+      "mean": 68.19290161132812
+    },
+    {
+      "step": 49,
+      "median": 69.52120208740234,
+      "mean": 69.47225189208984
+    }
+  ],
+  "t2_verdict": "FAIL",
+  "t3_near_ratio": 0.0,
+  "t3_sample_std": 1.4172630310058594,
+  "t3_verdict": "FAIL",
+  "final_verdict": "CD does NOT fix the gradient problem \u2014 fundamental limitation"
+}

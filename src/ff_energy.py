@@ -166,6 +166,71 @@ class FFEnergy(nn.Module):
                         gn = layer.goodness(inp_neg).mean().item()
                         print(f"  epoch {ep:3d}: pos_goodness={gp:.3f}  neg_goodness={gn:.3f}")
 
+    def train_cd(self, x_pos: torch.Tensor, epochs: int = 200, k_steps: int = 15,
+                 lr_langevin: float = 0.05, cd_lr: float = 0.05,
+                 grad_penalty: float = 1.0,
+                 verbose: bool = True):
+        """Contrastive Divergence training (Hinton 2002) + gradient penalty.
+
+        The gradient penalty (R1, Mescheder et al. 2018) penalizes ||∇E(x)||^2
+        at data points. This prevents energy collapse (sharp spikes on data)
+        and forces smooth valleys — making the energy useful for generation.
+
+        Per epoch:
+          1. x_neg = x_pos + noise, then k Langevin steps
+          2. Loss = E(x_pos) - E(x_neg) + λ||∇E(x_pos)||^2
+          3. Backprop + update
+        """
+        optimizer = torch.optim.Adam(self.parameters(), lr=cd_lr)
+        for ep in range(epochs):
+            # 1. Generate negatives via Langevin from current energy
+            #    NOTE: score computation needs grad context (no torch.no_grad),
+            #    but we detach the result so it doesn't backprop through sampling
+            with torch.enable_grad():
+                x_neg = (x_pos.clone() + torch.randn_like(x_pos) * 0.5).detach()
+                if x_neg.dim() == 3:
+                    x_neg = x_neg.mean(dim=1)
+                for _ in range(k_steps):
+                    x_neg = x_neg.detach().requires_grad_(True)
+                    energy_neg = self._energy_raw(x_neg)
+                    score = torch.autograd.grad(energy_neg.sum(), x_neg)[0]
+                    x_neg = (x_neg - 0.5 * lr_langevin * score +
+                             (2 * lr_langevin) ** 0.5 * torch.randn_like(x_neg)).detach()
+
+            # 2. Contrastive loss with L2 reg + R1 gradient penalty
+            optimizer.zero_grad()
+            xp = x_pos.mean(dim=1) if x_pos.dim() == 3 else x_pos
+            xn = x_neg
+            # E(x_pos) needs grad for penalty
+            xp_grad = xp.detach().requires_grad_(True)
+            e_pos = self._energy_raw(xp_grad)
+            e_neg = self._energy_raw(xn)
+            # L2 reg on energy magnitude
+            l2_reg = 0.001 * (e_pos.pow(2).mean() + e_neg.pow(2).mean())
+            # R1 gradient penalty: ||∇E(x_pos)||^2 — forces smooth valleys
+            if grad_penalty > 0:
+                grads = torch.autograd.grad(e_pos.sum(), xp_grad, create_graph=True)[0]
+                gp = grads.pow(2).sum(dim=-1).mean()
+            else:
+                gp = torch.tensor(0.0, device=xp.device)
+            loss = e_pos.mean() - e_neg.mean() + l2_reg + grad_penalty * gp
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(self.parameters(), max_norm=1.0)
+            optimizer.step()
+
+            if verbose and (ep % 20 == 0 or ep == epochs - 1):
+                print(f"  [CD] ep {ep:3d}: E(pos)={e_pos.mean():.4f} E(neg)={e_neg.mean():.4f} "
+                      f"margin={e_neg.mean()-e_pos.mean():.4f} |∇E|={gp.sqrt().item():.4f}")
+
+    def _energy_raw(self, x: torch.Tensor) -> torch.Tensor:
+        """Raw energy (differentiable, for CD training)."""
+        energy = torch.zeros(x.shape[0], device=x.device)
+        h = x
+        for layer in self.layers:
+            energy = energy + layer.goodness(h)
+            h = layer.forward(h)
+        return energy
+
     def _layer_input(self, x: torch.Tensor, up_to: int) -> torch.Tensor:
         """Get input to layer `up_to` by passing through layers 0..up_to-1 (detached)."""
         if x.dim() == 3:

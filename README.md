@@ -58,41 +58,50 @@ Can Hinton's Forward-Forward (FF) algorithm train an energy-based model (EBM) th
 
 ## Empirical Results
 
-### Phase 1 — Measured 2026-07-05 on RTX 3090, synthetic SplatsDB latent space
+### Final Verdict — Measured 2026-07-05
 
-| Test | Metric | Baseline (80 ep) | After Sweep (500 ep) | Verdict |
-|------|--------|:---:|:---:|:---:|
-| T1a — point discrimination | AUROC | 1.000 | 1.000 | ✅ PASS |
-| T1b — sequence discrimination | AUROC | 0.663 | **0.999** | ✅ PASS |
-| T2 — score gradient direction | dist decrease | -12% | -12% | ❌ FAIL |
-| T3 — sampling near data | ratio <1.0 | 0.000 | 0.000 | ❌ FAIL |
+**FF + diffusion in SplatsDB latent space is empirically refuted for text generation.**
 
-### Key Finding
+Three independent training methods all fail to produce a usable generative energy:
 
-**FF learns to discriminate, but not to generate.**
+| Method | T1b Discrimination | T2 Gradient | T3 Sampling | Generative? |
+|--------|:--:|:--:|:--:|:--:|
+| FF (80 ep) | 0.663 FAIL | -12% FAIL | 0.000 FAIL | ❌ |
+| FF (500 ep) | **0.999 PASS** | -12% FAIL | 0.000 FAIL | ❌ |
+| CD (200 ep) | **1.000 PASS** | -10% FAIL | 0.000 FAIL | ❌ |
+| CD + R1 penalty (λ=1) | **1.000 PASS** | -7% FAIL | 0.000 FAIL | ❌ |
+| CD + R1 penalty (λ=10) | **1.000 PASS** | -5% FAIL | 0.000 FAIL | ❌ |
+| CD + R1 penalty (λ=100) | 0.500 FAIL | -6% FAIL | 0.000 FAIL | ❌ |
 
-The autoresearch sweep (47 configs) found that FF achieves perfect sequence discrimination (AUROC=1.0) when trained for 500+ epochs — the baseline failure was **undertraining**, not a fundamental limitation. The dominant factor was epochs (dose-response: 50ep→0.62, 200ep→0.78, 500ep→0.98, 1000ep→1.0).
+### Root Cause: Energy Collapse
 
-However, **T2 and T3 still fail**. The learned energy separates data/noise by magnitude (E(real)≈0.6 vs E(noise)≈3.4), but the **gradient ∇E does not point toward the data manifold**. Langevin sampling drives samples *away* from real data (+12% distance).
+Diagnostic measurements revealed WHY every method fails:
 
-This reveals a fundamental gap between **discriminative energy** and **generative energy**:
-- FF's local goodness objective optimizes for *separation* (good for classification)
-- Score-based diffusion needs the gradient to *point toward high-density regions* (different requirement)
-- A good discriminator is not necessarily a good generative model
+| Metric | At real data | At noise | Ratio |
+|--------|:--:|:--:|:--:|
+| \|∇E\| (gradient magnitude) | 1752 | 10 | **175×** |
+| Gradient direction at real | — | — | Away from center (23→78 distance) |
+| E vs \|x\| correlation | Spearman -0.083 | — | E has angular structure |
 
-### What Would Be Needed
+**The energy forms sharp spikes on training data** (175× steeper gradient at data than at noise). Langevin sampling that approaches data hits these walls and gets repelled. The energy is a perfect **classifier** (AUROC=1.0) but a terrible **generative model** because its gradient field pushes samples away from the data manifold.
 
-- **Score matching** (not goodness separation) as the FF training objective, OR
-- **Annealed Langevin** with multi-scale noise, OR
-- **A different sampler** that uses the energy landscape differently than naive gradient descent
+This is not fixable by:
+- More training (FF 80→500 epochs: fixed T1b, did NOT fix T2/T3)
+- Better negatives (CD with Langevin negatives: fixed stability, did NOT fix T2/T3)
+- Gradient regularization (R1 penalty λ=1..100: did NOT fix T2/T3 at any value)
 
-### Autoresearch Sweep Details
+### What This Confirms
 
-- 47 configurations tested (`results/autoresearch_sweep.jsonl`)
-- 19/47 pass T1b (>0.85)
-- Winning config: `hidden=256, n_layers=3, epochs=500, thr=(0.05,0.2), lr=0.5, seq_len=32`
-- Robust across 5 seeds (42, 123, 7, 999, 2024 — all AUROC=1.0)
-- **Mean-pooling is the best aggregation** (0.993 vs sum/max/var 0.53-0.57)
+The theoretical concern was correct: **Hinton's FF goodness objective optimizes for separation (discrimination), not for smooth density (generation)**. The local goodness function creates energy landscapes that are excellent classifiers but whose gradients are adversarial to sampling. No amount of CD, R1 regularization, or hyperparameter tuning within the FF energy framework resolves this.
+
+### What Would Actually Work (not in this repo)
+
+The fix is NOT in the training method — it's in the **energy parameterization**:
+1. **Score matching** (Hyvärinen): train ∇E to match the data score directly. The gradient IS the target, not a side-effect.
+2. **Spectral-normalized networks**: bound the Lipschitz constant → smooth E by construction.
+3. **Diffusion-native objectives**: DDPM/SEDD-style losses that parameterize the score directly.
+
+These abandon the FF premise (local goodness). They're known to work (that's how real diffusion LMs are trained). FF's value is elsewhere (efficient discriminative training, biological plausibility), not in generative modeling.
 
 ## Honest Constraints (stated upfront)
 
