@@ -1,0 +1,148 @@
+{
+  "experiment": "mdlm_text_generation",
+  "timestamp": "2026-07-05T21:09:38.353198",
+  "vocab_size": 152,
+  "n_train_sequences": 1800,
+  "model_params": 3502744,
+  "n_epochs": 3000,
+  "train_loss": 2.0673294067382812,
+  "test_loss": 3.065675973892212,
+  "n_generated": 100,
+  "n_unique": 100,
+  "n_grammatical": 100,
+  "n_novel": 100,
+  "sample_sequences": [
+    "an sheep are near an salt",
+    "these orange milk drinks this mouse",
+    "that wolf plays with the lake",
+    "an mountain drinks an gray sheep",
+    "those relaxed horse runs this fish",
+    "that elephant drinks a happy wind",
+    "that cow sees that small wolf",
+    "the bread sings at the banana",
+    "that hopeful star are these rice",
+    "an tiger was by the moon",
+    "those tiger likes on the moon",
+    "the red deer sleeps those salad",
+    "that island are near these dog",
+    "confused dog sings red star",
+    "that horse likes near an chicken",
+    "the bread comes those bored dog",
+    "that hopeful dog eats this salt",
+    "those sugar are under this tea",
+    "new snake was hopeful bird",
+    "that magenta island likes that mountain",
+    "an bird wants these calm egg",
+    "the snow comes by the potato",
+    "the tea eats this relaxed rabbit",
+    "cold potato jumps orange sheep",
+    "excited egg was gentle tomato",
+    "amazed chicken sleeps afraid horse",
+    "that bread eats on those meat",
+    "these snow sings on these bear",
+    "black beer sleeps azure egg",
+    "these egg plays with those island",
+    "hot cave were brave tomato",
+    "angry salt sings fast egg",
+    "a surprised beer were these earth",
+    "those banana goes these cyan fire",
+    "those snake goes in those egg",
+    "an fish are over that wolf",
+    "this elephant was from that salad",
+    "those worried mouse comes a island",
+    "bright fire likes small rice",
+    "that salad comes near this sun",
+    "a milk drinks by the star",
+    "those rabbit sings on an bird",
+    "an green fire eats these sun",
+    "tired cloud were big rain",
+    "this bread comes over those deer",
+    "these horse goes at these snake",
+    "the old beer are these rice",
+    "the wolf is in those snow",
+    "these salad sings the gray elephant",
+    "that fire wants in an egg"
+  ],
+  "loss_history": [
+    {
+      "epoch": 0,
+      "train_loss": 5.023880958557129,
+      "test_loss": 4.978951454162598
+    },
+    {
+      "epoch": 200,
+      "train_loss": 2.6368205547332764,
+      "test_loss": 2.729520320892334
+    },
+    {
+      "epoch": 400,
+      "train_loss": 2.578831434249878,
+      "test_loss": 2.529686689376831
+    },
+    {
+      "epoch": 600,
+      "train_loss": 2.565613031387329,
+      "test_loss": 2.5744457244873047
+    },
+    {
+      "epoch": 800,
+      "train_loss": 2.6002914905548096,
+      "test_loss": 2.5603606700897217
+    },
+    {
+      "epoch": 1000,
+      "train_loss": 2.5569396018981934,
+      "test_loss": 2.6708433628082275
+    },
+    {
+      "epoch": 1200,
+      "train_loss": 2.5601251125335693,
+      "test_loss": 2.5720667839050293
+    },
+    {
+      "epoch": 1400,
+      "train_loss": 2.5840134620666504,
+      "test_loss": 2.5965163707733154
+    },
+    {
+      "epoch": 1600,
+      "train_loss": 2.4149858951568604,
+      "test_loss": 2.7022085189819336
+    },
+    {
+      "epoch": 1800,
+      "train_loss": 2.473440170288086,
+      "test_loss": 2.772643566131592
+    },
+    {
+      "epoch": 2000,
+      "train_loss": 2.2544779777526855,
+      "test_loss": 2.6713507175445557
+    },
+    {
+      "epoch": 2200,
+      "train_loss": 2.2950692176818848,
+      "test_loss": 2.9177677631378174
+    },
+    {
+      "epoch": 2400,
+      "train_loss": 2.3528060913085938,
+      "test_loss": 2.9687023162841797
+    },
+    {
+      "epoch": 2600,
+      "train_loss": 2.2341115474700928,
+      "test_loss": 3.0044798851013184
+    },
+    {
+      "epoch": 2800,
+      "train_loss": 2.135627508163452,
+      "test_loss": 2.934269666671753
+    },
+    {
+      "epoch": 2999,
+      "train_loss": 2.0673294067382812,
+      "test_loss": 3.065675973892212
+    }
+  ]
+}
