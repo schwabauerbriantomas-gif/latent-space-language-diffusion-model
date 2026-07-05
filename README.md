@@ -511,6 +511,125 @@ This proves the model learned to associate the topic embedding with specific voc
 3. **79% on-topic, not 100%**: The model sometimes mixes categories (e.g., "a bird thinks the dirty cat" includes a color). This is expected — real sentences naturally span multiple categories.
 4. **Grammar slightly lower with conditioning**: The added semantic constraint occasionally produces slightly worse syntax, because the model balances two objectives.
 
+---
+
+## Phase 8: InformationSeeker — Agentic Information Retrieval (4th HRM Head)
+
+**Status**: ✅ Working — 100% accuracy on gap detection [MEASURED]
+
+The pipeline was "blind": it could generate and review, but couldn't detect knowledge gaps or seek new information. Phase 8 adds the 4th HRM head — **InformationSeeker** — making the system agentic: it can identify what it doesn't know, query SplatsDB, and trigger external retrieval.
+
+### The Full Agentic Pipeline
+
+```
+                    ┌─────────────────────────┐
+                    │   Topic Request         │
+                    └───────────┬─────────────┘
+                                │
+                    ┌───────────▼─────────────┐
+                    │  InformationSeeker      │  ← NEW (4th head)
+                    │  ConfidenceNet [3.9M]   │
+                    │  → confidence [0,1]     │
+                    └───────────┬─────────────┘
+                                │ low confidence?
+                    ┌───────────▼─────────────┐
+                    │  QueryGenerator [5.2M]  │
+                    │  → retrieval query      │
+                    └───────────┬─────────────┘
+                                │
+                    ┌───────────▼─────────────┐
+                    │  SplatsDB.query()       │
+                    │  → entries, density     │
+                    └───────────┬─────────────┘
+                                │ density < threshold?
+                    ┌───────────▼─────────────┐
+                    │  IngestTrigger          │
+                    │  → IngestRequest        │
+                    └───────────┬─────────────┘
+                                │
+                    ┌───────────▼─────────────┐
+                    │  External Retriever     │
+                    │  (LLM / web search)     │
+                    │  → new text → embeddings│
+                    └───────────┬─────────────┘
+                                │
+                    ┌───────────▼─────────────┐
+                    │  SplatsDB.ingest()      │
+                    │  → knowledge base grows │
+                    └───────────┬─────────────┘
+                                │
+               ┌────────────────▼────────────────┐
+               │  Generator → Reviewer → Editor  │  (Phases 5-7)
+               │  → Topic-conditioned text       │
+               └─────────────────────────────────┘
+```
+
+### Components
+
+| Component | Params | Role |
+|-----------|--------|------|
+| ConfidenceNet | 3,884,545 | Predicts generation quality from topic embedding |
+| QueryGenerator | 5,206,408 | Generates retrieval queries from topic |
+| IngestTrigger | — (logic) | Decides when to trigger ingestion |
+| MockSplatsDB | — (simulator) | Simulates SplatsDB vector store |
+| MockExternalRetriever | — (simulator) | Simulates external LLM/web search |
+
+### Results [MEASURED]
+
+**Setup**: 13 categories with deliberate knowledge gaps:
+- 4 categories with 15 entries (sufficient coverage)
+- 3 categories with 3 entries (sparse)
+- 6 categories with 0 entries (knowledge gap)
+
+**InformationSeeker decisions** (100% accurate):
+
+| Category | Initial entries | Decision | After |
+|----------|:--------------:|----------|:-----:|
+| animals | 15 | ✓ sufficient | 15 |
+| nature | 15 | ✓ sufficient | 15 |
+| vehicles | 15 | ✓ sufficient | 15 |
+| plants | 15 | ✓ sufficient | 15 |
+| colors | 3 | ⚡ gap → ingest | 13 |
+| body | 3 | ⚡ gap → ingest | 13 |
+| places | 3 | ⚡ gap → ingest | 13 |
+| food | 0 | ⚡ gap → ingest | 10 |
+| emotions | 0 | ⚡ gap → ingest | 10 |
+| clothing | 0 | ⚡ gap → ingest | 10 |
+| tools | 0 | ⚡ gap → ingest | 10 |
+| professions | 0 | ⚡ gap → ingest | 10 |
+| materials | 0 | ⚡ gap → ingest | 10 |
+
+**Summary**:
+- **13/13 correct decisions** (4 skipped, 9 triggered)
+- **90 items ingested** across 9 gap categories
+- **SplatsDB grew from 69 → 159 entries** (+131%)
+
+### What Makes This Agentic
+
+1. **Self-awareness**: The system knows when it lacks knowledge (ConfidenceNet)
+2. **Goal-directed action**: It formulates queries to fill gaps (QueryGenerator)
+3. **External integration**: It can trigger and use external systems (IngestTrigger → retriever)
+4. **Knowledge growth**: SplatsDB grows on demand (ingest)
+
+A closed system regurgitates. An agentic system **learns what it doesn't know and seeks it**.
+
+### Honest Limitations
+
+1. **Mock external retriever**: Real integration would use web search APIs or LLMs. The mock simulates retrieval from the vocabulary.
+2. **ConfidenceNet 71% accuracy**: The confidence scores cluster around 0.55-0.72, making the threshold somewhat coarse. More diverse training data would improve discrimination.
+3. **QueryGenerator output**: Generates "tell me about `<unk>`" — category names aren't in the vocabulary. In production, this would produce structured queries for an API.
+4. **No persistence**: Each run starts fresh. Production would persist SplatsDB state across sessions.
+
+### The Complete 4-Head HRM System
+
+| Head | Params | Phase | Role |
+|------|--------|-------|------|
+| Generator | 16M | 5-7 | Generate text from topic |
+| Reviewer | 5M | 6-7 | Score grammar + topic consistency |
+| Editor | 16M | 6-7 | Fix bad/off-topic sequences |
+| **InformationSeeker** | **9M** | **8** | **Detect gaps, seek & ingest data** |
+| **TOTAL** | **46M** | | |
+
 ## Reproduce
 
 ```bash
@@ -528,6 +647,9 @@ python src/hrm_pipeline.py    # train Generator + Reviewer + Editor, generate 10
 
 # Phase 7: Topic-conditioned generation (~5 min total)
 python src/topic_mdlm.py      # latent diffusion → cross-attention → HRM, 79% on-topic
+
+# Phase 8: Agentic information seeking (~5 min total)
+python src/information_seeker.py  # gap detection → SplatsDB query → ingest trigger
 ```
 
 ## References
