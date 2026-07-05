@@ -206,6 +206,12 @@ FUNC = {
     "question_words": [
         "who", "what", "where", "when", "why", "how",
     ],
+    # Query words (for InformationSeeker QueryGenerator)
+    "query_words": [
+        "tell", "me", "about", "find", "information",
+        "search", "for", "learn", "more", "need",
+        "show", "get", "retrieve", "fetch", "data",
+    ],
     # Quantifiers (10)
     "quantifiers": [
         "one", "two", "three", "many", "several", "plenty", "enough",

@@ -1,0 +1,686 @@
+{
+  "experiment": "agentic_information_seeker",
+  "timestamp": "2026-07-05T22:32:39.622318",
+  "splatsdb_stats": {
+    "total_entries": 159,
+    "by_category": {
+      "animals": 15,
+      "colors": 13,
+      "nature": 15,
+      "body": 13,
+      "vehicles": 15,
+      "places": 13,
+      "plants": 15,
+      "food": 10,
+      "emotions": 10,
+      "clothing": 10,
+      "tools": 10,
+      "professions": 10,
+      "materials": 10
+    },
+    "by_source": {
+      "initial": 69,
+      "ingested": 90
+    },
+    "ingest_count": 90
+  },
+  "initial_coverage": {
+    "animals": 15,
+    "colors": 3,
+    "food": 0,
+    "emotions": 0,
+    "nature": 15,
+    "body": 3,
+    "clothing": 0,
+    "tools": 0,
+    "vehicles": 15,
+    "places": 3,
+    "professions": 0,
+    "materials": 0,
+    "plants": 15
+  },
+  "n_categories_triggered": 9,
+  "n_categories_skipped": 4,
+  "category_results": {
+    "animals": {
+      "confidence": 0.7020778059959412,
+      "steps": [
+        {
+          "step": "confidence_assessment",
+          "confidence": 0.7020778059959412,
+          "verdict": "high"
+        },
+        {
+          "step": "splatsdb_query",
+          "n_nearby": 5,
+          "density": 0.13377340137958527,
+          "category_count": 15,
+          "top_results": [
+            "sheep (animals)",
+            "bird (animals)",
+            "dog (animals)"
+          ]
+        },
+        {
+          "step": "no_ingestion_needed",
+          "confidence": 0.7020778059959412,
+          "density": 0.13377340137958527
+        }
+      ],
+      "generation": {
+        "samples": [
+          "the coral bear over that pigeon swims he",
+          "an squirrel eats those pigeon with him",
+          "that dirty fox that hears under the lavender lobster who hunts away drinks the rooster",
+          "these bored goat that makes over it builds down",
+          "the brown snake that would walks climbs those yogurt"
+        ],
+        "scores": [
+          0.9963077306747437,
+          0.9943346977233887,
+          0.9973310232162476,
+          0.9989283680915833,
+          0.9953439831733704
+        ],
+        "mean_score": 0.9964491724967957
+      }
+    },
+    "colors": {
+      "confidence": 0.7216898202896118,
+      "steps": [
+        {
+          "step": "confidence_assessment",
+          "confidence": 0.7216898202896118,
+          "verdict": "high"
+        },
+        {
+          "step": "splatsdb_query",
+          "n_nearby": 5,
+          "density": 0.0789627954363823,
+          "category_count": 3,
+          "top_results": [
+            "green (colors)",
+            "red (colors)",
+            "rabbit (animals)"
+          ]
+        },
+        {
+          "step": "ingest_triggered",
+          "query": "tell me about <unk>",
+          "reason": "low coverage (3 entries < 5 minimum)",
+          "target_category": "colors"
+        },
+        {
+          "step": "data_ingested",
+          "n_ingested": 10,
+          "density_before": 0.0789627954363823,
+          "density_after": 0.18004821240901947,
+          "category_count_before": 3,
+          "category_count_after": 13
+        }
+      ],
+      "generation": {
+        "samples": [
+          "that gold amber willow feels",
+          "these wagon plays these beige trunk at this white pink star",
+          "this ginger tells a crimson cliff to her",
+          "these bronze forest climbs slowly",
+          "these yellow actor that brings we jumps"
+        ],
+        "scores": [
+          0.998616099357605,
+          0.9974750876426697,
+          0.9988855719566345,
+          0.9988881945610046,
+          0.9994956254959106
+        ],
+        "mean_score": 0.9986721277236938
+      }
+    },
+    "food": {
+      "confidence": 0.6666746139526367,
+      "steps": [
+        {
+          "step": "confidence_assessment",
+          "confidence": 0.6666746139526367,
+          "verdict": "high"
+        },
+        {
+          "step": "splatsdb_query",
+          "n_nearby": 5,
+          "density": 0.06920809298753738,
+          "category_count": 0,
+          "top_results": [
+            "flower (plants)",
+            "bike (vehicles)",
+            "horse (animals)"
+          ]
+        },
+        {
+          "step": "ingest_triggered",
+          "query": "tell me about <unk>",
+          "reason": "low coverage (0 entries < 5 minimum)",
+          "target_category": "food"
+        },
+        {
+          "step": "data_ingested",
+          "n_ingested": 10,
+          "density_before": 0.06920809298753738,
+          "density_after": 0.18176168203353882,
+          "category_count_before": 0,
+          "category_count_after": 10
+        }
+      ],
+      "generation": {
+        "samples": [
+          "these wine must hears or this bread opens",
+          "this pepper calls this narrow cherry by we",
+          "she goes an pasta closes",
+          "those bread calls sometimes",
+          "it sleeps the bitter chicken that hunts their on that wine"
+        ],
+        "scores": [
+          0.9172016382217407,
+          0.9958798885345459,
+          0.9724515080451965,
+          0.985537588596344,
+          0.986349880695343
+        ],
+        "mean_score": 0.9714841246604919
+      }
+    },
+    "emotions": {
+      "confidence": 0.6818734407424927,
+      "steps": [
+        {
+          "step": "confidence_assessment",
+          "confidence": 0.6818734407424927,
+          "verdict": "high"
+        },
+        {
+          "step": "splatsdb_query",
+          "n_nearby": 5,
+          "density": 0.07592708617448807,
+          "category_count": 0,
+          "top_results": [
+            "earth (nature)",
+            "bus (vehicles)",
+            "sugar (food) [retrieved]"
+          ]
+        },
+        {
+          "step": "ingest_triggered",
+          "query": "tell me about <unk>",
+          "reason": "low coverage (0 entries < 5 minimum)",
+          "target_category": "emotions"
+        },
+        {
+          "step": "data_ingested",
+          "n_ingested": 10,
+          "density_before": 0.07592708617448807,
+          "density_after": 0.17272116243839264,
+          "category_count_before": 0,
+          "category_count_after": 10
+        }
+      ],
+      "generation": {
+        "samples": [
+          "an saw sings the calm tiger who wants these hot thorn",
+          "an hot anxious heavy hat sees down",
+          "these anxious proud saw sings",
+          "those excited jealous confused healer who can makes near they",
+          "this happy road to those tulip feels us"
+        ],
+        "scores": [
+          0.9517017006874084,
+          0.9995255470275879,
+          0.9993526339530945,
+          0.9993707537651062,
+          0.9828659892082214
+        ],
+        "mean_score": 0.9865633249282837
+      }
+    },
+    "nature": {
+      "confidence": 0.6859588027000427,
+      "steps": [
+        {
+          "step": "confidence_assessment",
+          "confidence": 0.6859588027000427,
+          "verdict": "high"
+        },
+        {
+          "step": "splatsdb_query",
+          "n_nearby": 5,
+          "density": 0.1301185041666031,
+          "category_count": 15,
+          "top_results": [
+            "sky (nature)",
+            "storm (nature)",
+            "ocean (nature)"
+          ]
+        },
+        {
+          "step": "no_ingestion_needed",
+          "confidence": 0.6859588027000427,
+          "density": 0.1301185041666031
+        }
+      ],
+      "generation": {
+        "samples": [
+          "this mist swims never",
+          "a long reef runs those beach",
+          "those desert feels we nowhere",
+          "those cloud shows we",
+          "these canyon builds nowhere quietly"
+        ],
+        "scores": [
+          0.9733702540397644,
+          0.9932426810264587,
+          0.9501280188560486,
+          0.9916443228721619,
+          0.9924876689910889
+        ],
+        "mean_score": 0.9801746606826782
+      }
+    },
+    "body": {
+      "confidence": 0.6141408681869507,
+      "steps": [
+        {
+          "step": "confidence_assessment",
+          "confidence": 0.6141408681869507,
+          "verdict": "high"
+        },
+        {
+          "step": "splatsdb_query",
+          "n_nearby": 5,
+          "density": 0.08590282499790192,
+          "category_count": 3,
+          "top_results": [
+            "foot (body)",
+            "head (body)",
+            "sugar (food) [retrieved]"
+          ]
+        },
+        {
+          "step": "ingest_triggered",
+          "query": "tell me about <unk>",
+          "reason": "low coverage (3 entries < 5 minimum)",
+          "target_category": "body"
+        },
+        {
+          "step": "data_ingested",
+          "n_ingested": 10,
+          "density_before": 0.08590282499790192,
+          "density_after": 0.17236706614494324,
+          "category_count_before": 3,
+          "category_count_after": 13
+        }
+      ],
+      "generation": {
+        "samples": [
+          "those ancient hand on an park knows",
+          "these chest smells the path",
+          "a deep ankle eats ear over it",
+          "these back sleeps we",
+          "these wrist jumps back"
+        ],
+        "scores": [
+          0.9941884279251099,
+          0.9848159551620483,
+          0.8885958790779114,
+          0.9577528834342957,
+          0.0179816372692585
+        ],
+        "mean_score": 0.7686669230461121
+      }
+    },
+    "clothing": {
+      "confidence": 0.6485065817832947,
+      "steps": [
+        {
+          "step": "confidence_assessment",
+          "confidence": 0.6485065817832947,
+          "verdict": "high"
+        },
+        {
+          "step": "splatsdb_query",
+          "n_nearby": 5,
+          "density": 0.06720738857984543,
+          "category_count": 0,
+          "top_results": [
+            "finger (body) [retrieved]",
+            "red (colors)",
+            "reed (plants)"
+          ]
+        },
+        {
+          "step": "ingest_triggered",
+          "query": "tell me about <unk>",
+          "reason": "low coverage (0 entries < 5 minimum)",
+          "target_category": "clothing"
+        },
+        {
+          "step": "data_ingested",
+          "n_ingested": 10,
+          "density_before": 0.06720738857984543,
+          "density_after": 0.17761267721652985,
+          "category_count_before": 0,
+          "category_count_after": 10
+        }
+      ],
+      "generation": {
+        "samples": [
+          "those scarf eats slowly",
+          "this fast helmet runs",
+          "those glove eats he",
+          "those boot swims gently",
+          "the shorts builds these pink tent coat to these ivory shorts"
+        ],
+        "scores": [
+          0.9431371688842773,
+          0.9850386381149292,
+          0.9616319537162781,
+          0.8224576115608215,
+          0.00015903741586953402
+        ],
+        "mean_score": 0.7424848675727844
+      }
+    },
+    "tools": {
+      "confidence": 0.635787844657898,
+      "steps": [
+        {
+          "step": "confidence_assessment",
+          "confidence": 0.635787844657898,
+          "verdict": "high"
+        },
+        {
+          "step": "splatsdb_query",
+          "n_nearby": 5,
+          "density": 0.04985351487994194,
+          "category_count": 0,
+          "top_results": [
+            "fern (plants)",
+            "sock (clothing) [retrieved]",
+            "grateful (emotions) [retrieved]"
+          ]
+        },
+        {
+          "step": "ingest_triggered",
+          "query": "tell me about <unk>",
+          "reason": "low coverage (0 entries < 5 minimum)",
+          "target_category": "tools"
+        },
+        {
+          "step": "data_ingested",
+          "n_ingested": 10,
+          "density_before": 0.04985351487994194,
+          "density_after": 0.17390753328800201,
+          "category_count_before": 0,
+          "category_count_after": 10
+        }
+      ],
+      "generation": {
+        "samples": [
+          "a screw brings carefully",
+          "that wheel shall walks",
+          "the compass jumps suddenly",
+          "the garden eats an screw happily",
+          "the sign writes easily in they"
+        ],
+        "scores": [
+          0.9724913239479065,
+          0.013131648302078247,
+          0.7610505819320679,
+          0.006340594496577978,
+          0.9673119783401489
+        ],
+        "mean_score": 0.5440652370452881
+      }
+    },
+    "vehicles": {
+      "confidence": 0.6571667790412903,
+      "steps": [
+        {
+          "step": "confidence_assessment",
+          "confidence": 0.6571667790412903,
+          "verdict": "high"
+        },
+        {
+          "step": "splatsdb_query",
+          "n_nearby": 5,
+          "density": 0.13471730053424835,
+          "category_count": 15,
+          "top_results": [
+            "truck (vehicles)",
+            "raft (vehicles)",
+            "wagon (vehicles)"
+          ]
+        },
+        {
+          "step": "no_ingestion_needed",
+          "confidence": 0.6571667790412903,
+          "density": 0.13471730053424835
+        }
+      ],
+      "generation": {
+        "samples": [
+          "an heavy submarine closes there",
+          "an poor canoe eats his",
+          "those train shall says",
+          "the scooter finds them",
+          "an train near her"
+        ],
+        "scores": [
+          0.02449673041701317,
+          0.9854879975318909,
+          0.9912882447242737,
+          0.994786262512207,
+          0.9861583113670349
+        ],
+        "mean_score": 0.796443521976471
+      }
+    },
+    "places": {
+      "confidence": 0.6263051629066467,
+      "steps": [
+        {
+          "step": "confidence_assessment",
+          "confidence": 0.6263051629066467,
+          "verdict": "high"
+        },
+        {
+          "step": "splatsdb_query",
+          "n_nearby": 5,
+          "density": 0.07830937951803207,
+          "category_count": 3,
+          "top_results": [
+            "tower (places)",
+            "house (places)",
+            "submarine (vehicles)"
+          ]
+        },
+        {
+          "step": "ingest_triggered",
+          "query": "tell me about <unk>",
+          "reason": "low coverage (3 entries < 5 minimum)",
+          "target_category": "places"
+        },
+        {
+          "step": "data_ingested",
+          "n_ingested": 10,
+          "density_before": 0.07830937951803207,
+          "density_after": 0.195636585354805,
+          "category_count_before": 3,
+          "category_count_after": 13
+        }
+      ],
+      "generation": {
+        "samples": [
+          "an barn feels again",
+          "an turquoise farmer that could flies will sleeps on this temple",
+          "that clean road opens",
+          "the barn finds sadly",
+          "this fast road must reads"
+        ],
+        "scores": [
+          0.8925046920776367,
+          0.0011499280808493495,
+          0.9686570763587952,
+          0.8376838564872742,
+          0.44028568267822266
+        ],
+        "mean_score": 0.6280562281608582
+      }
+    },
+    "professions": {
+      "confidence": 0.5500069260597229,
+      "steps": [
+        {
+          "step": "confidence_assessment",
+          "confidence": 0.5500069260597229,
+          "verdict": "high"
+        },
+        {
+          "step": "splatsdb_query",
+          "n_nearby": 5,
+          "density": 0.05773846060037613,
+          "category_count": 0,
+          "top_results": [
+            "submarine (vehicles)",
+            "afraid (emotions) [retrieved]",
+            "purple (colors) [retrieved]"
+          ]
+        },
+        {
+          "step": "ingest_triggered",
+          "query": "search for <unk>",
+          "reason": "low coverage (0 entries < 5 minimum)",
+          "target_category": "professions"
+        },
+        {
+          "step": "data_ingested",
+          "n_ingested": 10,
+          "density_before": 0.05773846060037613,
+          "density_after": 0.17067213356494904,
+          "category_count_before": 0,
+          "category_count_after": 10
+        }
+      ],
+      "generation": {
+        "samples": [
+          "an fierce tailor brings",
+          "a palm reads again",
+          "the stale sailor that knows",
+          "that wild tailor that opens",
+          "a soldier eats here"
+        ],
+        "scores": [
+          0.0002128187334164977,
+          0.0002009371091844514,
+          0.3367711305618286,
+          0.3779796361923218,
+          0.0005663118790835142
+        ],
+        "mean_score": 0.14314617216587067
+      }
+    },
+    "materials": {
+      "confidence": 0.6729994416236877,
+      "steps": [
+        {
+          "step": "confidence_assessment",
+          "confidence": 0.6729994416236877,
+          "verdict": "high"
+        },
+        {
+          "step": "splatsdb_query",
+          "n_nearby": 5,
+          "density": 0.07145191729068756,
+          "category_count": 0,
+          "top_results": [
+            "amazed (emotions) [retrieved]",
+            "nose (body) [retrieved]",
+            "hand (body)"
+          ]
+        },
+        {
+          "step": "ingest_triggered",
+          "query": "tell me about <unk>",
+          "reason": "low coverage (0 entries < 5 minimum)",
+          "target_category": "materials"
+        },
+        {
+          "step": "data_ingested",
+          "n_ingested": 10,
+          "density_before": 0.07145191729068756,
+          "density_after": 0.18186639249324799,
+          "category_count_before": 0,
+          "category_count_after": 10
+        }
+      ],
+      "generation": {
+        "samples": [
+          "the leather hunts slowly",
+          "the leather feels their",
+          "the leather thinks because closes",
+          "those marble brings everywhere because wants",
+          "the tiny brick sleeps"
+        ],
+        "scores": [
+          0.4300292432308197,
+          0.9026473760604858,
+          0.981374204158783,
+          0.9550402164459229,
+          0.7663105130195618
+        ],
+        "mean_score": 0.8070802688598633
+      }
+    },
+    "plants": {
+      "confidence": 0.604638934135437,
+      "steps": [
+        {
+          "step": "confidence_assessment",
+          "confidence": 0.604638934135437,
+          "verdict": "high"
+        },
+        {
+          "step": "splatsdb_query",
+          "n_nearby": 5,
+          "density": 0.12937794625759125,
+          "category_count": 15,
+          "top_results": [
+            "reed (plants)",
+            "tree (plants)",
+            "maple (plants)"
+          ]
+        },
+        {
+          "step": "no_ingestion_needed",
+          "confidence": 0.604638934135437,
+          "density": 0.12937794625759125
+        }
+      ],
+      "generation": {
+        "samples": [
+          "a clean leopard that closes might climbs",
+          "a palm sleeps gently",
+          "these fresh orchid opens",
+          "they writes these clean branch carefully",
+          "it writes a flower to those root"
+        ],
+        "scores": [
+          0.0002479292161297053,
+          0.9904650449752808,
+          0.00040434833499602973,
+          0.00078371207928285,
+          0.01679527573287487
+        ],
+        "mean_score": 0.20173926651477814
+      }
+    }
+  }
+}
