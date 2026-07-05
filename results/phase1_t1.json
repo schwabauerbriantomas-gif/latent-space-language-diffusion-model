@@ -1,0 +1,10 @@
+{
+  "test": "t1",
+  "timestamp": "2026-07-05T15:40:35.475322",
+  "t1a_point_auroc": 1.0,
+  "t1a_point_margin": 5.935605049133301,
+  "t1b_seq_auroc": 0.6628109375,
+  "t1b_seq_margin": 0.09629112482070923,
+  "verdict_t1a": "PASS",
+  "verdict_t1b": "FAIL"
+}

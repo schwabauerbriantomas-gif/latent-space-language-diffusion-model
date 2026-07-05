@@ -1,0 +1,10 @@
+{
+  "test": "t3",
+  "timestamp": "2026-07-05T15:40:39.816615",
+  "sample_std": 1.4147834777832031,
+  "pairwise_dist_mean": 63.27147674560547,
+  "near_real_ratio": 0.0,
+  "verdict_diversity": "PASS",
+  "verdict_near_data": "FAIL",
+  "verdict": "FAIL"
+}

@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+*.so
+
+# ML artifacts
+checkpoints/*.pt
+data/*.pt
+data/*.json
+*.ckpt
+wandb/
+runs/
+
+# Keep results (measured data)
+!results/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
