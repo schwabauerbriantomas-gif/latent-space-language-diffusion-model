@@ -1,0 +1,90 @@
+{
+  "experiment": "efficiency_benchmark",
+  "timestamp": "2026-07-05T22:42:07.683710",
+  "device": "cuda",
+  "model_params": 16076795,
+  "results": {
+    "ingest_latency": {
+      "n_entries": 1000,
+      "total_time_s": 0.23611140251159668,
+      "avg_per_entry_ms": 0.23556130797442165,
+      "throughput_entries_per_sec": 4235.288890594281
+    },
+    "query_latency": {
+      "100": {
+        "per_query_ms": 0.2700620099858497
+      },
+      "500": {
+        "per_query_ms": 0.25958101003197953
+      },
+      "1000": {
+        "per_query_ms": 0.21104100000229664
+      },
+      "5000": {
+        "per_query_ms": 0.19943900999351172
+      }
+    },
+    "generation_latency": {
+      "single_seq": {
+        "n_steps_10": {
+          "time_s": 0.12454372429965588
+        },
+        "n_steps_20": {
+          "time_s": 0.24290820890055329
+        },
+        "n_steps_40": {
+          "time_s": 0.48924113909997685
+        }
+      },
+      "batch_10": {
+        "total_s": 0.6289432240009774,
+        "per_seq_s": 0.06289432240009774
+      }
+    },
+    "retrain_cost": {
+      "100_epochs_s": 6.757020711898804,
+      "2500_epochs_estimated_s": 168.9255177974701,
+      "gpu_memory_gb": 1.71281408
+    },
+    "adaptation_test": {
+      "novel_mixed_topic": {
+        "generation_time_s": 0.876938916000654,
+        "reviewer_score": 0.9511418342590332,
+        "on_topic_rate": 0.6511627906976745,
+        "n_on_topic": 28,
+        "n_total_content": 43,
+        "samples": [
+          "the lizard comes away",
+          "a ancient stable under her swims these sharp pigeon who comes that parrot that swims",
+          "those fresh hamster that hunts hunts there",
+          "those penguin finds her",
+          "those black leopard who plays opens these small dew because finds this reed"
+        ]
+      },
+      "random_topic": {
+        "reviewer_score": 0.8496508002281189,
+        "samples": [
+          "these mud hears sadly",
+          "the beautiful bell in those beach calls",
+          "that dock knows this bitter helicopter"
+        ]
+      }
+    },
+    "finetune_vs_zeroshot": {
+      "zero_shot": {
+        "score": 0.9511418342590332,
+        "on_topic_rate": 0.6511627906976745,
+        "time_s": 0.0
+      },
+      "finetune_50_epochs": {
+        "score": 0.9546796679496765,
+        "on_topic_rate": 1.0,
+        "time_s": 2.8922953605651855
+      },
+      "improvement": {
+        "score_pp": 0.35378336906433105,
+        "on_topic_pp": 34.883720930232556
+      }
+    }
+  }
+}
