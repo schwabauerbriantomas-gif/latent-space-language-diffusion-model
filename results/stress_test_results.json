@@ -1,0 +1,80 @@
+{
+  "timestamp": "2026-07-05T20:31:27.276303",
+  "tests": [
+    {
+      "near_03": 0.75,
+      "near_01": 0.0,
+      "near_005": 0.0,
+      "median_dist": 0.20214666426181793,
+      "diversity": 0.3238835632801056,
+      "modes_reached": 5,
+      "total_modes": 5,
+      "k": 4,
+      "fit_time_s": 94.10285425186157,
+      "sample_time_s": 1.7938392162322998,
+      "total_time_s": 95.90713930130005,
+      "config": "c5_s0.005",
+      "verdict": "\u2705 SUCCESS"
+    },
+    {
+      "near_03": 0.6100000143051147,
+      "near_01": 0.0,
+      "near_005": 0.0,
+      "median_dist": 0.2604791820049286,
+      "diversity": 0.3857952356338501,
+      "modes_reached": 7,
+      "total_modes": 10,
+      "k": 9,
+      "fit_time_s": 84.17481660842896,
+      "sample_time_s": 1.7370080947875977,
+      "total_time_s": 85.92093229293823,
+      "config": "c10_s0.005",
+      "verdict": "\ud83d\udd36 GOOD"
+    },
+    {
+      "near_03": 0.0,
+      "near_01": 0.0,
+      "near_005": 0.0,
+      "median_dist": 0.7223678231239319,
+      "diversity": 0.7510676383972168,
+      "modes_reached": 14,
+      "total_modes": 20,
+      "k": 18,
+      "fit_time_s": 81.95623064041138,
+      "sample_time_s": 1.7878093719482422,
+      "total_time_s": 83.75228762626648,
+      "config": "c20_s0.005",
+      "verdict": "\u274c FAIL"
+    },
+    {
+      "near_03": 0.0,
+      "near_01": 0.0,
+      "near_005": 0.0,
+      "median_dist": 1.164718747138977,
+      "diversity": 0.2760516405105591,
+      "modes_reached": 2,
+      "total_modes": 50,
+      "k": 43,
+      "fit_time_s": 88.65741157531738,
+      "sample_time_s": 1.6939949989318848,
+      "total_time_s": 90.36040353775024,
+      "config": "c50_s0.005",
+      "verdict": "\u274c FAIL"
+    },
+    {
+      "near_03": 0.0,
+      "near_01": 0.0,
+      "near_005": 0.0,
+      "median_dist": 1.2011568546295166,
+      "diversity": 1.4031651020050049,
+      "modes_reached": 85,
+      "total_modes": 100,
+      "k": 83,
+      "fit_time_s": 81.45848727226257,
+      "sample_time_s": 1.7575180530548096,
+      "total_time_s": 83.22398614883423,
+      "config": "c100_s0.005",
+      "verdict": "\u274c FAIL"
+    }
+  ]
+}

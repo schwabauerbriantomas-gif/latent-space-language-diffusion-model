@@ -137,8 +137,8 @@ class SplatDBConnector:
             raise RuntimeError("Vocab not loaded")
 
         # Cosine similarity (SplatsDB uses cosine for bge-m3)
-        latent_norm = torch.nn.functional.normalize(latent, dim=-1)
-        token_norm = torch.nn.functional.normalize(self.token_embeddings, dim=-1)
+        latent_norm = torch.nn.functional.normalize(latent.cpu(), dim=-1)
+        token_norm = torch.nn.functional.normalize(self.token_embeddings.cpu(), dim=-1)
         sims = latent_norm @ token_norm.T  # [batch, vocab]
 
         best_idx = sims.argmax(dim=-1)  # [batch]

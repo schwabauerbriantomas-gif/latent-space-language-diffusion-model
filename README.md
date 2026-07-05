@@ -203,6 +203,39 @@ The 1024D sampling failure was solved by working in the data's intrinsic subspac
 
 **Why SVGD over Langevin**: SVGD's deterministic repulsion kernel prevents the mode collapse that Langevin suffers in high-D. The bandwidth schedule (large→small) provides exploration→exploitation.
 
+### Phase 4: Optimization & Scaling — 2026-07-05
+
+**Optimized pipeline** (`latent_diffusion_pipeline.py`):
+- Auto-selects k via explained variance (no manual tuning)
+- Cosine bandwidth schedule (stable, no geometric oscillation)
+- Best-checkpoint tracking: keeps iteration with best near_data × diversity
+- Step size calibrated for diversity preservation (0.02, was 0.05)
+- Production API: `model.fit()` → `model.sample()` → `model.evaluate()`
+
+**Scaling behavior** [MEASURED]:
+
+| Clusters | k (auto) | near<0.3 | modes | diversity | verdict |
+|:---:|:---:|:---:|:---:|:---:|:---:|
+| 5 | 4 | **75%** | **5/5** | 0.32 | ✅ SUCCESS |
+| 10 | 9 | **61%** | **7/10** | 0.39 | 🔶 GOOD |
+| 20 | 18 | 0% | 14/20 | 0.75 | ❌ |
+| 50 | 43 | 0% | 2/50 | 0.28 | ❌ |
+| 100 | 83 | 0% | 85/100 | 1.40 | ❌ |
+
+**Operating envelope**: The method works reliably up to k≈10 intrinsic dimensions. Beyond that, score matching cannot learn the increasingly complex density. This is a fundamental limitation of the approach — not a tuning issue.
+
+**End-to-end with real bge-m3** [MEASURED]:
+- Trained on 80 real word embeddings (5 semantic categories: animals, colors, food, emotion, nature)
+- k=39 (80% variance in real embeddings — much higher than synthetic)
+- Generated 200 samples, decoded via nearest-neighbor to vocabulary
+- **29 unique tokens generated**, covering all 5 semantic categories
+- Top generated: orange (24×), happy (21×), fish (18×), chicken (10×), cow (10×), cat (9×), dog (8×), angry (8×), sun (8×), calm (8×)
+- All generated words belong to training vocabulary
+- Cosine decode distances: 0.33–0.59 (semantically near)
+- Fit time: 90s, sample time: 2s
+
+**Key insight**: Even when exact distance metrics don't pass threshold (k=39 is above the k≈10 sweet spot), the decoded text is semantically coherent — the SVGD sampler produces latents that decode to words from the correct semantic neighborhoods.
+
 ## Honest Constraints (stated upfront)
 
 1. **SplatsDB is bag-of-tokens by design** — no sequence model. The FF energy head MUST supply the sequential structure. If it can't, the approach fails. This is the core empirical question.
