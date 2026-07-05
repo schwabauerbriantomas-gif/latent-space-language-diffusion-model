@@ -1,0 +1,175 @@
+{
+  "experiment": "topic_conditioned_mdlm",
+  "timestamp": "2026-07-05T21:53:44.741549",
+  "vocab_size": 635,
+  "n_categories": 13,
+  "model_params": {
+    "generator": 16076795,
+    "reviewer": 5105665,
+    "editor": 16076795,
+    "total": 37259255
+  },
+  "uniform_baseline_rate": 0.07692307692307693,
+  "avg_on_topic_rate": 0.7903084320088369,
+  "avg_improvement_x": 10.27400961611488,
+  "results_by_category": {
+    "animals": {
+      "on_topic_rate": 0.6842105263157895,
+      "n_content_words": 19,
+      "n_on_topic": 13,
+      "mean_score": 0.9934105277061462,
+      "samples": [
+        "a bird thinks the dirty cat",
+        "an stale turtle that could runs makes an cherry there",
+        "these lock plays a poor shark that shall jumps alone"
+      ]
+    },
+    "colors": {
+      "on_topic_rate": 0.46153846153846156,
+      "n_content_words": 26,
+      "n_on_topic": 12,
+      "mean_score": 0.993314266204834,
+      "samples": [
+        "this gold finger on her reads",
+        "this purple bridge gives together",
+        "this emerald dust goes easily"
+      ]
+    },
+    "food": {
+      "on_topic_rate": 0.7857142857142857,
+      "n_content_words": 14,
+      "n_on_topic": 11,
+      "mean_score": 0.7806386947631836,
+      "samples": [
+        "the cream flies a cookie on the yogurt",
+        "the mint swims everywhere",
+        "the chocolate sings this sun slowly"
+      ]
+    },
+    "emotions": {
+      "on_topic_rate": 0.5,
+      "n_content_words": 30,
+      "n_on_topic": 15,
+      "mean_score": 0.965236485004425,
+      "samples": [
+        "this worried curious concrete shows",
+        "this proud anxious shorts reads",
+        "that relaxed forest brings carefully"
+      ]
+    },
+    "nature": {
+      "on_topic_rate": 0.7777777777777778,
+      "n_content_words": 18,
+      "n_on_topic": 14,
+      "mean_score": 0.9658738374710083,
+      "samples": [
+        "this snow walks by an dew",
+        "that boulder smells to those bronze ice",
+        "an cloud goes sadly"
+      ]
+    },
+    "body": {
+      "on_topic_rate": 0.8571428571428571,
+      "n_content_words": 14,
+      "n_on_topic": 12,
+      "mean_score": 0.5972833633422852,
+      "samples": [
+        "you takes on those steel",
+        "an hip plays i",
+        "that nose says back"
+      ]
+    },
+    "clothing": {
+      "on_topic_rate": 0.8461538461538461,
+      "n_content_words": 13,
+      "n_on_topic": 11,
+      "mean_score": 0.460968017578125,
+      "samples": [
+        "those robe opens the worried plane at her",
+        "that slow shorts smells",
+        "these tie swims slowly"
+      ]
+    },
+    "tools": {
+      "on_topic_rate": 0.8333333333333334,
+      "n_content_words": 12,
+      "n_on_topic": 10,
+      "mean_score": 0.7806405425071716,
+      "samples": [
+        "this sail writes everywhere",
+        "those chain writes her",
+        "those key feels always"
+      ]
+    },
+    "vehicles": {
+      "on_topic_rate": 1.0,
+      "n_content_words": 11,
+      "n_on_topic": 11,
+      "mean_score": 0.6922985315322876,
+      "samples": [
+        "this scooter flies we",
+        "an rocket goes gently",
+        "an scooter sleeps her"
+      ]
+    },
+    "places": {
+      "on_topic_rate": 0.8333333333333334,
+      "n_content_words": 12,
+      "n_on_topic": 10,
+      "mean_score": 0.6109177470207214,
+      "samples": [
+        "these plane wants they",
+        "this tiny road eats them to an hospital",
+        "an tractor hears indeed"
+      ]
+    },
+    "professions": {
+      "on_topic_rate": 0.9090909090909091,
+      "n_content_words": 11,
+      "n_on_topic": 10,
+      "mean_score": 0.7846863865852356,
+      "samples": [
+        "an new artist who feels hunts gently",
+        "a fierce tailor that jumps",
+        "those this guide who hunts reads again"
+      ]
+    },
+    "materials": {
+      "on_topic_rate": 1.0,
+      "n_content_words": 10,
+      "n_on_topic": 10,
+      "mean_score": 0.5486737489700317,
+      "samples": [
+        "those leather feels together",
+        "that bitter bitter plastic over her sings indeed",
+        "that leather feels indeed"
+      ]
+    },
+    "plants": {
+      "on_topic_rate": 0.7857142857142857,
+      "n_content_words": 14,
+      "n_on_topic": 11,
+      "mean_score": 0.7004421353340149,
+      "samples": [
+        "a trunk flies again",
+        "that tulip swims together",
+        "that determined rose wants on this cool root"
+      ]
+    }
+  },
+  "baseline_distribution": {
+    "animals": 0,
+    "colors": 0,
+    "food": 0,
+    "emotions": 0,
+    "nature": 0,
+    "body": 0,
+    "clothing": 0,
+    "tools": 0,
+    "vehicles": 0,
+    "places": 0,
+    "professions": 0,
+    "materials": 0,
+    "plants": 0
+  }
+}
