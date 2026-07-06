@@ -18,8 +18,9 @@ tokenizer/*.json
 wandb/
 runs/
 
-# Keep results (measured data)
+# Keep results directory but exclude large model files
 !results/
+results/*.pt
 !scripts/
 
 # IDE
@@ -30,3 +31,6 @@ runs/
 # OS
 .DS_Store
 Thumbs.db
+
+# Model checkpoints (large, not tracked)
+checkpoints/*.pt
