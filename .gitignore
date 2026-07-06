@@ -7,16 +7,20 @@ build/
 .eggs/
 *.so
 
-# ML artifacts
+# ML artifacts — large, not tracked
 checkpoints/*.pt
 data/*.pt
 data/*.json
+data/*.jsonl
+data/*.npy
+tokenizer/*.json
 *.ckpt
 wandb/
 runs/
 
 # Keep results (measured data)
 !results/
+!scripts/
 
 # IDE
 .vscode/

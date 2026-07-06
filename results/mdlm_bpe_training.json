@@ -1,0 +1,11 @@
+{
+  "total_steps": 2610,
+  "time_seconds": 465.18270564079285,
+  "best_eval_loss": 7.389793801307678,
+  "final_train_loss": 7.366791725158691,
+  "model_params": 25626384,
+  "vocab_size": 10000,
+  "seq_len": 64,
+  "n_sequences": 222922,
+  "tokens_trained": 42762240
+}
