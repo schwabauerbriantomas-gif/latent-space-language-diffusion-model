@@ -35,10 +35,6 @@ sys.path.insert(0, str(REPO / "src"))
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
-from mdlm_bpe_v2 import (
-    MDLMConfig, MDLMBPEV2, BPETokenizer,
-)
-
 
 class RepetitionReviewer:
     """Detects repetition and poor local coherence in token sequences.
@@ -123,12 +119,11 @@ class RepetitionReviewer:
 class HRMRefiner:
     """HRM refinement loop: generate → detect → mask → regenerate.
 
-    Uses the MDLM-BPE v2 model for generation/infilling and the
+    Uses the MDLM model for generation/infilling and the
     RepetitionReviewer for quality detection.
     """
 
-    def __init__(self, model: MDLMBPEV2, tokenizer: BPETokenizer,
-                 max_rounds=5, temperature=0.6):
+    def __init__(self, model, tokenizer, max_rounds=5, temperature=0.6):
         self.model = model
         self.tokenizer = tokenizer
         self.reviewer = RepetitionReviewer(
@@ -238,7 +233,7 @@ class HRMRefiner:
         return tokens
 
 
-def generate_with_hrm(model: MDLMBPEV2, tokenizer: BPETokenizer,
+def generate_with_hrm(model, tokenizer,
                       prompt: str = None, seq_len: int = 64,
                       n_steps: int = 32, temperature: float = 0.7,
                       max_rounds: int = 5, device: str = DEVICE) -> Tuple[str, dict]:

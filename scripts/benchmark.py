@@ -15,8 +15,11 @@ Metrics:
   - Latency: wall-clock time per sequence
 """
 import sys, math, time
+from pathlib import Path
 import numpy as np
-sys.path.insert(0, "/root/ff-splatdiffusion/src")
+
+REPO = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(REPO / "src"))
 
 import torch
 import torch.nn.functional as F
@@ -26,7 +29,8 @@ from hybrid_speculative import HybridSpeculative
 from ar_oracle_hrm import load_oracle, build_token_alignment
 
 DEVICE = "cuda"
-ckpt = torch.load("/root/ff-splatdiffusion/checkpoints/mdlm_bpe_v3_best.pt",
+CKPT_DIR = REPO / "checkpoints"
+ckpt = torch.load(CKPT_DIR / "mdlm_bpe_v3_best.pt",
                    map_location=DEVICE, weights_only=False)
 config = MDLMConfig(**ckpt["config"])
 model = MDLMBPEV3(config).to(DEVICE)

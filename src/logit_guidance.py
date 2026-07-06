@@ -41,8 +41,6 @@ sys.path.insert(0, str(REPO / "src"))
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
-from mdlm_bpe_v2 import MDLMConfig, MDLMBPEV2, BPETokenizer
-
 
 def apply_frequency_penalty(logits: torch.Tensor, tokens: torch.Tensor,
                              penalty: float = 0.3,
@@ -183,8 +181,8 @@ def apply_no_repeat_ngram(logits: torch.Tensor, tokens: torch.Tensor,
 
 @torch.no_grad()
 def sample_with_guidance(
-    model: MDLMBPEV2,
-    tokenizer: BPETokenizer,
+    model,
+    tokenizer,
     prompt_ids: List[int] = None,
     seq_len: int = 64,
     n_samples: int = 1,
@@ -297,8 +295,8 @@ def sample_with_guidance(
 
 @torch.no_grad()
 def generate_response_guided(
-    model: MDLMBPEV2,
-    tokenizer: BPETokenizer,
+    model,
+    tokenizer,
     prompt: str,
     max_len: int = 48,
     n_steps: int = 24,
