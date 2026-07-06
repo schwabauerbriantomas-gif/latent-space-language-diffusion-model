@@ -34,3 +34,4 @@ Thumbs.db
 
 # Model checkpoints (large, not tracked)
 checkpoints/*.pt
+hf_model/
