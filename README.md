@@ -1,6 +1,22 @@
 # Latent Space Language Diffusion Model
 
-A masked diffusion language model (MDLM) that generates text by predicting all tokens in parallel, validated by an autoregressive oracle. Built on SplatsDB's vector infrastructure.
+<!-- SEO: keywords for discoverability -->
+<!--
+keywords: masked diffusion language model, MDLM, parallel text generation, diffusion model, non-autoregressive generation, bidirectional transformer, AR oracle validation, speculative decoding, Qwen3, SplatsDB, open weights, open source LLM, torch, safetensors
+-->
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
+[![PyTorch 2.6](https://img.shields.io/badge/PyTorch-2.6%2B-ee4c2c.svg)](https://pytorch.org/)
+[![Model: 201M](https://img.shields.io/badge/Params-201M-green.svg)](#results-at-a-glance)
+[![PPL: 102.6](https://img.shields.io/badge/Perplexity-102.6-orange.svg)](#honest-limitations)
+[![Speed: 2.4x](https://img.shields.io/badge/Speed-2.4%C3%97%20faster-brightgreen.svg)](#benchmark-measured)
+[![Open Weights](https://img.shields.io/badge/Weights-Open%20%E2%9C%93-success.svg)](https://huggingface.co/brianschwabauer/latent-space-language-diffusion-model)
+[![HuggingFace](https://img.shields.io/badge/%F0%9F%A4%97-HuggingFace-blue.svg)](https://huggingface.co/brianschwabauer/latent-space-language-diffusion-model)
+
+> **🤗 Download weights, tokenizer, and full inference code on [HuggingFace](https://huggingface.co/brianschwabauer/latent-space-language-diffusion-model)** — open weights (safetensors, 805 MB), open code (modeling + training scripts), fully reproducible. No black boxes.
+
+A **masked diffusion language model (MDLM)** that generates text by predicting all tokens in parallel, validated by an autoregressive oracle. Built on [SplatsDB](https://github.com/schwabauerbriantomas-gif/splatdb)'s vector infrastructure.
 
 **The core finding**: full-parallel masked diffusion with adaptive guidance + AR-oracle validation achieves **2.4× faster generation** than the equivalent autoregressive model while producing comparable text quality — no sequential decoding required.
 
@@ -238,9 +254,10 @@ MIT — see [LICENSE](LICENSE).
 
 ## Acknowledgments
 
-- [SplatsDB](https://github.com/schwabauerbriantomas-gif/splatdb) — vector memory infrastructure
-- [MDLM Logit Guidance](https://github.com/schwabauerbriantomas-gif/mdlm-logit-guidance) — adaptive guidance module (frequency/repetition/n-gram penalties, top-p)
-- [Ultra-FineWeb](https://huggingface.co/datasets/openbmb/Ultra-FineWeb) — training data
-- [Qwen3](https://huggingface.co/Qwen/Qwen3-0.6B) — AR oracle validation model
-- [MDLM](https://arxiv.org/abs/2406.03709) — Sahoo et al. 2024, masked diffusion language model
-- [Forward-Forward Algorithm](https://arxiv.org/abs/2212.13345) — Hinton 2022 (explored in Phase 1, refuted for generation)
+- 🤗 **[HuggingFace Model Card](https://huggingface.co/brianschwabauer/latent-space-language-diffusion-model)** — open weights + full inference code
+- **[SplatsDB](https://github.com/schwabauerbriantomas-gif/splatdb)** — vector memory infrastructure
+- **[MDLM Logit Guidance](https://github.com/schwabauerbriantomas-gif/mdlm-logit-guidance)** — adaptive guidance module (frequency/repetition/n-gram penalties, top-p)
+- **[Ultra-FineWeb](https://huggingface.co/datasets/openbmb/Ultra-FineWeb)** — training data
+- **[Qwen3](https://huggingface.co/Qwen/Qwen3-0.6B)** — AR oracle validation model
+- **[MDLM](https://arxiv.org/abs/2406.03709)** — Sahoo et al. 2024, masked diffusion language model
+- **[Forward-Forward Algorithm](https://arxiv.org/abs/2212.13345)** — Hinton 2022 (explored in Phase 1, refuted for generation)
