@@ -1,0 +1,8 @@
+{
+  "optimizer_steps": 49779,
+  "time": 24321.593525886536,
+  "best_eval_loss": 4.630399537086487,
+  "best_ppl": 102.55503046423597,
+  "final_loss": 4.901508569717407,
+  "tokens_trained": 815579136
+}

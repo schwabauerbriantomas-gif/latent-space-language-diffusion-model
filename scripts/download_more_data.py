@@ -11,7 +11,7 @@ from datasets import load_dataset
 REPO = Path(__file__).resolve().parent.parent
 DATA_DIR = REPO / "data"
 
-N_SAMPLES = 500_000
+N_SAMPLES = 1_000_000
 MIN_SCORE = 0.5
 MIN_CHARS = 200
 MAX_CHARS = 5000
