@@ -239,6 +239,7 @@ MIT — see [LICENSE](LICENSE).
 ## Acknowledgments
 
 - [SplatsDB](https://github.com/schwabauerbriantomas-gif/splatdb) — vector memory infrastructure
+- [MDLM Logit Guidance](https://github.com/schwabauerbriantomas-gif/mdlm-logit-guidance) — adaptive guidance module (frequency/repetition/n-gram penalties, top-p)
 - [Ultra-FineWeb](https://huggingface.co/datasets/openbmb/Ultra-FineWeb) — training data
 - [Qwen3](https://huggingface.co/Qwen/Qwen3-0.6B) — AR oracle validation model
 - [MDLM](https://arxiv.org/abs/2406.03709) — Sahoo et al. 2024, masked diffusion language model
