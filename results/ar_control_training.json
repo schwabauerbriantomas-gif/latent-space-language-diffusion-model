@@ -1,0 +1,13 @@
+{
+  "optimizer_steps": 49779,
+  "time": 29770.179374694824,
+  "best_eval_loss": 2.9596245646476746,
+  "best_ppl": 19.29072797454838,
+  "final_holdout_ppl": 18.46785209810448,
+  "final_holdout_loss": 2.9160314960629923,
+  "final_loss": 3.098533868789673,
+  "tokens_trained": 815579136,
+  "n_params": 199149328,
+  "n_layers": 15,
+  "model_type": "autoregressive_control"
+}

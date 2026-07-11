@@ -28,6 +28,10 @@ results/*.pt
 .idea/
 *.swp
 
+# Virtual environments
+venv/
+.venv/
+
 # OS
 .DS_Store
 Thumbs.db

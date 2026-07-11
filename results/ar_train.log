@@ -1,0 +1,741 @@
+======================================================================
+TRAINING AR CONTROL MODEL (199M PARAMS)
+======================================================================
+Loading data...
+  Cached: /root/ff-splatdiffusion/data/train_tokens_v3_128.npy (2,123,928 seqs, mmap)
+  Total sequences: 2,123,928
+  Model: 199,149,328 (199.1M)
+  Layers: 15 (MDLM v3 has 10 + AdaLN)
+  Data: 2,123,928 seqs × 128 tokens = 271,862,784 tokens
+  Epochs: 3, Batch: 32, Accum: 4
+  Effective batch: 128
+  Opt steps/epoch: 16,593
+
+  [E1 O100] loss=7.5404 avg=7.9376 lr=1.31e-05 1.5 opt/s 24,914 tok/s
+  [E1 O200] loss=7.1257 avg=7.6192 lr=1.66e-05 1.6 opt/s 26,465 tok/s
+  [E1 O300] loss=6.8823 avg=7.4207 lr=2.22e-05 1.6 opt/s 26,999 tok/s
+  [E1 O400] loss=6.7280 avg=7.2657 lr=3.00e-05 1.7 opt/s 27,262 tok/s
+  [E1 O500] loss=6.3829 avg=7.1219 lr=3.98e-05 1.7 opt/s 27,411 tok/s
+    → eval_loss=6.3998 PPL=601.7
+    → Best sample (AR):
+      d F C N 101
+ Sk BOS
+
+ Inc And B N The The A 0 ForUR The3 Con W P That
+ A For F The The The The R The A Obs You Eas A A L Theate The The Eng /a A The B
+  [E1 O600] loss=6.1447 avg=6.9803 lr=5.14e-05 1.6 opt/s 26,263 tok/s
+  [E1 O700] loss=6.0195 avg=6.8517 lr=6.47e-05 1.6 opt/s 26,588 tok/s
+  [E1 O800] loss=5.8393 avg=6.7328 lr=7.94e-05 1.6 opt/s 26,818 tok/s
+  [E1 O900] loss=5.6266 avg=6.6220 lr=9.54e-05 1.6 opt/s 27,003 tok/s
+  [E1 O1,000] loss=5.4857 avg=6.5165 lr=1.12e-04 1.7 opt/s 27,175 tok/s
+    → eval_loss=5.5041 PPL=245.7
+    → Best sample (AR):
+      Spec T R When There So Ad Your Ex The
+ The On - This
+ I
+ We The The F The The G M The The The The The The App The Why Se The R
+ The How
+ You This If M
+  [E1 O1,100] loss=5.3641 avg=6.4159 lr=1.30e-04 1.6 opt/s 26,941 tok/s
+  [E1 O1,200] loss=5.1989 avg=6.3194 lr=1.48e-04 1.7 opt/s 27,072 tok/s
+  [E1 O1,300] loss=5.0284 avg=6.2276 lr=1.66e-04 1.7 opt/s 27,192 tok/s
+  [E1 O1,400] loss=4.9584 avg=6.1399 lr=1.84e-04 1.7 opt/s 27,294 tok/s
+  [E1 O1,500] loss=4.8502 avg=6.0569 lr=2.02e-04 1.7 opt/s 27,394 tok/s
+    → eval_loss=4.8381 PPL=126.2
+    → Best sample (AR):
+      F Ne S D The For Are L N The Data The D Well New The - D The The N How Co The B New M D - Why is Pre More Th B
+ 3
+ L
+ How The
+ This The The With The
+
+
+  [E1 O1,600] loss=4.7731 avg=5.9782 lr=2.19e-04 1.7 opt/s 27,192 tok/s
+  [E1 O1,700] loss=4.6193 avg=5.9037 lr=2.34e-04 1.7 opt/s 27,283 tok/s
+  [E1 O1,800] loss=4.5863 avg=5.8332 lr=2.49e-04 1.7 opt/s 27,364 tok/s
+  [E1 O1,900] loss=4.5237 avg=5.7666 lr=2.62e-04 1.7 opt/s 27,435 tok/s
+  [E1 O2,000] loss=4.4225 avg=5.7029 lr=2.74e-04 1.7 opt/s 27,501 tok/s
+    → eval_loss=4.4471 PPL=85.4
+    → Best sample (AR):
+      Today Image A This L The By Comp The R A -
+ The Our In The St
+ D This The In Back The H
+ About My An Sk How It A I Def It The A Global To 1 H M You Th
+  [E1 O2,100] loss=4.4551 avg=5.6422 lr=2.83e-04 1.7 opt/s 27,344 tok/s
+  [E1 O2,200] loss=4.2971 avg=5.5839 lr=2.91e-04 1.7 opt/s 27,398 tok/s
+  [E1 O2,300] loss=4.2476 avg=5.5287 lr=2.96e-04 1.7 opt/s 27,457 tok/s
+  [E1 O2,400] loss=4.2877 avg=5.4764 lr=2.99e-04 1.7 opt/s 27,512 tok/s
+  [E1 O2,500] loss=4.1939 avg=5.4266 lr=3.00e-04 1.7 opt/s 27,563 tok/s
+    → eval_loss=4.2486 PPL=70.0
+    → Best sample (AR):
+      F The Design The In In The The E In The C H If The Al The The R While The A The 1 It What The The L D A What In L The If The This A G L P If F This L 
+  [E1 O2,600] loss=4.1511 avg=5.3793 lr=3.00e-04 1.7 opt/s 27,437 tok/s
+  [E1 O2,700] loss=4.1046 avg=5.3341 lr=3.00e-04 1.7 opt/s 27,486 tok/s
+  [E1 O2,800] loss=4.0936 avg=5.2910 lr=3.00e-04 1.7 opt/s 27,532 tok/s
+  [E1 O2,900] loss=4.0946 avg=5.2502 lr=3.00e-04 1.7 opt/s 27,575 tok/s
+  [E1 O3,000] loss=4.0700 avg=5.2110 lr=3.00e-04 1.7 opt/s 27,615 tok/s
+    → eval_loss=4.0558 PPL=57.7
+    → Best sample (AR):
+      | This The Our I The The This This R After The The How The The In What Y Common It W W This The These With The The N A Use A P In These The In P What 
+  [E1 O3,100] loss=4.0017 avg=5.1737 lr=3.00e-04 1.7 opt/s 27,535 tok/s
+  [E1 O3,200] loss=4.1302 avg=5.1380 lr=3.00e-04 1.7 opt/s 27,574 tok/s
+  [E1 O3,300] loss=4.0598 avg=5.1041 lr=3.00e-04 1.7 opt/s 27,602 tok/s
+  [E1 O3,400] loss=3.9613 avg=5.0713 lr=3.00e-04 1.7 opt/s 27,636 tok/s
+  [E1 O3,500] loss=3.9926 avg=5.0401 lr=3.00e-04 1.7 opt/s 27,669 tok/s
+    → eval_loss=3.9381 PPL=51.3
+    → Best sample (AR):
+      First
+ Do The What The The Over Just The P The
+
+ The - Many The C H During Ast What By The John A The The M The The Rec - My The After The The J The D
+  [E1 O3,600] loss=3.9619 avg=5.0100 lr=3.00e-04 1.7 opt/s 27,575 tok/s
+  [E1 O3,700] loss=3.8909 avg=4.9813 lr=3.00e-04 1.7 opt/s 27,608 tok/s
+  [E1 O3,800] loss=3.8697 avg=4.9537 lr=2.99e-04 1.7 opt/s 27,637 tok/s
+  [E1 O3,900] loss=3.9573 avg=4.9270 lr=2.99e-04 1.7 opt/s 27,662 tok/s
+  [E1 O4,000] loss=3.9379 avg=4.9012 lr=2.99e-04 1.7 opt/s 27,686 tok/s
+    → eval_loss=3.8569 PPL=47.3
+    → Best sample (AR):
+      P The How What As Question General The The “ An I T C M The S Now There M The The Ind
+ You The A Ch The The Have F The I R Trans This Using Also Every
+  [E1 O4,100] loss=3.8789 avg=4.8764 lr=2.99e-04 1.7 opt/s 27,606 tok/s
+  [E1 O4,200] loss=3.8479 avg=4.8523 lr=2.99e-04 1.7 opt/s 27,633 tok/s
+  [E1 O4,300] loss=3.8337 avg=4.8294 lr=2.99e-04 1.7 opt/s 27,656 tok/s
+  [E1 O4,400] loss=3.8306 avg=4.8072 lr=2.99e-04 1.7 opt/s 27,671 tok/s
+  [E1 O4,500] loss=3.8052 avg=4.7858 lr=2.99e-04 1.7 opt/s 27,688 tok/s
+    → eval_loss=3.8215 PPL=45.7
+    → Best sample (AR):
+      P The The F The A There Ed The The B A We F - B | Cl Many F A Sym G N In The The What The R Do This The This Is Can Met In Trans When A The This N A F
+  [E1 O4,600] loss=3.8783 avg=4.7650 lr=2.99e-04 1.7 opt/s 27,619 tok/s
+  [E1 O4,700] loss=3.7745 avg=4.7449 lr=2.98e-04 1.7 opt/s 27,644 tok/s
+  [E1 O4,800] loss=3.8166 avg=4.7254 lr=2.98e-04 1.7 opt/s 27,666 tok/s
+  [E1 O4,900] loss=3.8379 avg=4.7065 lr=2.98e-04 1.7 opt/s 27,680 tok/s
+  [E1 O5,000] loss=3.8131 avg=4.6881 lr=2.98e-04 1.7 opt/s 27,702 tok/s
+    → eval_loss=3.7691 PPL=43.3
+    → Best sample (AR):
+      H D In H We Re The Ge The About The As The This This In It ( When As The - B The by The Re The The I A St We The It - Every Ab The In First In A An Th
+  [E1 O5,100] loss=3.7083 avg=4.6705 lr=2.98e-04 1.7 opt/s 27,639 tok/s
+  [E1 O5,200] loss=3.7513 avg=4.6534 lr=2.98e-04 1.7 opt/s 27,655 tok/s
+  [E1 O5,300] loss=3.7564 avg=4.6367 lr=2.97e-04 1.7 opt/s 27,672 tok/s
+  [E1 O5,400] loss=3.7563 avg=4.6204 lr=2.97e-04 1.7 opt/s 27,690 tok/s
+  [E1 O5,500] loss=3.6746 avg=4.6045 lr=2.97e-04 1.7 opt/s 27,706 tok/s
+    → eval_loss=3.7207 PPL=41.3
+    → Best sample (AR):
+      As St Sp How What
+  [E1 O5,600] loss=3.6584 avg=4.5891 lr=2.97e-04 1.7 opt/s 27,648 tok/s
+  [E1 O5,700] loss=3.7364 avg=4.5742 lr=2.97e-04 1.7 opt/s 27,660 tok/s
+  [E1 O5,800] loss=3.7305 avg=4.5596 lr=2.96e-04 1.7 opt/s 27,671 tok/s
+  [E1 O5,900] loss=3.7187 avg=4.5453 lr=2.96e-04 1.7 opt/s 27,686 tok/s
+  [E1 O6,000] loss=3.6911 avg=4.5315 lr=2.96e-04 1.7 opt/s 27,697 tok/s
+    → eval_loss=3.6871 PPL=39.9
+    → Best sample (AR):
+      The We For - For National Play I Why B D - M A The The List In Department This E N W Im The E 10 - The This L The
+ The F The By The Make M W About The
+  [E1 O6,100] loss=3.6626 avg=4.5181 lr=2.96e-04 1.7 opt/s 27,647 tok/s
+  [E1 O6,200] loss=3.6997 avg=4.5049 lr=2.95e-04 1.7 opt/s 27,662 tok/s
+  [E1 O6,300] loss=3.7410 avg=4.4921 lr=2.95e-04 1.7 opt/s 27,680 tok/s
+  [E1 O6,400] loss=3.6541 avg=4.4796 lr=2.95e-04 1.7 opt/s 27,693 tok/s
+  [E1 O6,500] loss=3.6264 avg=4.4674 lr=2.95e-04 1.7 opt/s 27,709 tok/s
+    → eval_loss=3.6419 PPL=38.2
+    → Best sample (AR):
+      B If The Be To O What This “ The How When In In In Use What This If The The The Su We By Int L There - The This It Why You Also What Ab Cl L - The The
+  [E1 O6,600] loss=3.6879 avg=4.4554 lr=2.94e-04 1.7 opt/s 27,651 tok/s
+  [E1 O6,700] loss=3.7181 avg=4.4437 lr=2.94e-04 1.7 opt/s 27,666 tok/s
+  [E1 O6,800] loss=3.6799 avg=4.4323 lr=2.94e-04 1.7 opt/s 27,682 tok/s
+  [E1 O6,900] loss=3.6489 avg=4.4211 lr=2.94e-04 1.7 opt/s 27,696 tok/s
+  [E1 O7,000] loss=3.6805 avg=4.4102 lr=2.93e-04 1.7 opt/s 27,711 tok/s
+    → eval_loss=3.6191 PPL=37.3
+    → Best sample (AR):
+      The
+ M Fe He The “ What It L On The S T A K The The A The
+ W A He The This
+ - WH In N W V H Before How Are What S W Despite The The The The G An Inter
+  [E1 O7,100] loss=3.6659 avg=4.3995 lr=2.93e-04 1.7 opt/s 27,664 tok/s
+  [E1 O7,200] loss=3.6741 avg=4.3890 lr=2.93e-04 1.7 opt/s 27,678 tok/s
+  [E1 O7,300] loss=3.7166 avg=4.3787 lr=2.92e-04 1.7 opt/s 27,664 tok/s
+  [E1 O7,400] loss=3.5942 avg=4.3687 lr=2.92e-04 1.7 opt/s 27,663 tok/s
+  [E1 O7,500] loss=3.6955 avg=4.3587 lr=2.92e-04 1.7 opt/s 27,646 tok/s
+    → eval_loss=3.6051 PPL=36.8
+    → Best sample (AR):
+      This H H Prot In How A Search We This M by The C Un The The During P R This The The You F There Trans When G Can Why The Ins A We This L Ab There For 
+  [E1 O7,600] loss=3.5743 avg=4.3490 lr=2.91e-04 1.7 opt/s 27,560 tok/s
+  [E1 O7,700] loss=3.5722 avg=4.3395 lr=2.91e-04 1.7 opt/s 27,543 tok/s
+  [E1 O7,800] loss=3.6656 avg=4.3303 lr=2.91e-04 1.7 opt/s 27,556 tok/s
+  [E1 O7,900] loss=3.6175 avg=4.3212 lr=2.90e-04 1.7 opt/s 27,561 tok/s
+  [E1 O8,000] loss=3.6637 avg=4.3124 lr=2.90e-04 1.7 opt/s 27,573 tok/s
+    → eval_loss=3.5563 PPL=35.0
+    → Best sample (AR):
+      The The “ B It What H This Inf The
+ The It The The If The The “ A The The The Here We The There To The Find 2 The Every - - N What Here Our H We P Whe
+  [E1 O8,100] loss=3.5897 avg=4.3036 lr=2.90e-04 1.7 opt/s 27,535 tok/s
+  [E1 O8,200] loss=3.6498 avg=4.2950 lr=2.89e-04 1.7 opt/s 27,549 tok/s
+  [E1 O8,300] loss=3.6215 avg=4.2866 lr=2.89e-04 1.7 opt/s 27,574 tok/s
+  [E1 O8,400] loss=3.4956 avg=4.2781 lr=2.89e-04 1.7 opt/s 27,595 tok/s
+  [E1 O8,500] loss=3.5555 avg=4.2701 lr=2.88e-04 1.7 opt/s 27,609 tok/s
+    → eval_loss=3.5559 PPL=35.0
+    → Best sample (AR):
+      And All At “ The A How In F I G Re The Com This What This The The The The Today The A L A D | The A The A The In The What The C The The To When A C I 
+  [E1 O8,600] loss=3.5639 avg=4.2621 lr=2.88e-04 1.7 opt/s 27,584 tok/s
+  [E1 O8,700] loss=3.5337 avg=4.2543 lr=2.87e-04 1.7 opt/s 27,593 tok/s
+  [E1 O8,800] loss=3.5867 avg=4.2465 lr=2.87e-04 1.7 opt/s 27,603 tok/s
+  [E1 O8,900] loss=3.5121 avg=4.2389 lr=2.87e-04 1.7 opt/s 27,605 tok/s
+  [E1 O9,000] loss=3.5915 avg=4.2315 lr=2.86e-04 1.7 opt/s 27,617 tok/s
+    → eval_loss=3.5108 PPL=33.5
+    → Best sample (AR):
+      The - A A H I The The The What The In Su The - M E [ I P 1 - N Even - " The 1 Research Add The “ English In For H The This The The  Add M I | Create I
+  [E1 O9,100] loss=3.5384 avg=4.2241 lr=2.86e-04 1.7 opt/s 27,587 tok/s
+  [E1 O9,200] loss=3.6326 avg=4.2169 lr=2.85e-04 1.7 opt/s 27,598 tok/s
+  [E1 O9,300] loss=3.4879 avg=4.2097 lr=2.85e-04 1.7 opt/s 27,610 tok/s
+  [E1 O9,400] loss=3.6126 avg=4.2027 lr=2.84e-04 1.7 opt/s 27,618 tok/s
+  [E1 O9,500] loss=3.4829 avg=4.1959 lr=2.84e-04 1.7 opt/s 27,627 tok/s
+    → eval_loss=3.5011 PPL=33.2
+    → Best sample (AR):
+      In A I Did Do We 2 P The The The G B In The G We B Co B B What We G L The If K When The This Just L H THE S N The A The 2 The These The L I For There 
+  [E1 O9,600] loss=3.6318 avg=4.1891 lr=2.84e-04 1.7 opt/s 27,604 tok/s
+  [E1 O9,700] loss=3.4750 avg=4.1825 lr=2.83e-04 1.7 opt/s 27,615 tok/s
+  [E1 O9,800] loss=3.5532 avg=4.1759 lr=2.83e-04 1.7 opt/s 27,626 tok/s
+  [E1 O9,900] loss=3.5267 avg=4.1694 lr=2.82e-04 1.7 opt/s 27,636 tok/s
+  [E1 O10,000] loss=3.5478 avg=4.1630 lr=2.82e-04 1.7 opt/s 27,646 tok/s
+    → eval_loss=3.4829 PPL=32.6
+    → Best sample (AR):
+      F With The Me Is The A G W A The Once A L L - Sh Two It P This Object D Education The O See In The A A A How O In A P The F The - Why In The Why T ‘ T
+  [E1 O10,100] loss=3.5531 avg=4.1566 lr=2.81e-04 1.7 opt/s 27,619 tok/s
+  [E1 O10,200] loss=3.4475 avg=4.1504 lr=2.81e-04 1.7 opt/s 27,624 tok/s
+  [E1 O10,300] loss=3.5086 avg=4.1442 lr=2.80e-04 1.7 opt/s 27,632 tok/s
+  [E1 O10,400] loss=3.5401 avg=4.1382 lr=2.80e-04 1.7 opt/s 27,640 tok/s
+  [E1 O10,500] loss=3.5215 avg=4.1322 lr=2.79e-04 1.7 opt/s 27,649 tok/s
+    → eval_loss=3.4858 PPL=32.6
+  [E1 O10,600] loss=3.6159 avg=4.1273 lr=2.79e-04 1.7 opt/s 27,645 tok/s
+  [E1 O10,700] loss=3.6218 avg=4.1223 lr=2.78e-04 1.7 opt/s 27,647 tok/s
+  [E1 O10,800] loss=3.6088 avg=4.1174 lr=2.78e-04 1.7 opt/s 27,647 tok/s
+  [E1 O10,900] loss=3.5329 avg=4.1126 lr=2.77e-04 1.7 opt/s 27,642 tok/s
+  [E1 O11,000] loss=3.5840 avg=4.1077 lr=2.77e-04 1.7 opt/s 27,632 tok/s
+    → eval_loss=3.4395 PPL=31.2
+    → Best sample (AR):
+      C B R If The The - WH You In Have I the G To I It 1 How The What Back From Back A I The For In S The No Pl F How Cl The 3 No The The The New L D It Wh
+  [E1 O11,100] loss=3.4849 avg=4.1023 lr=2.76e-04 1.7 opt/s 27,607 tok/s
+  [E1 O11,200] loss=3.5424 avg=4.0969 lr=2.76e-04 1.7 opt/s 27,612 tok/s
+  [E1 O11,300] loss=3.5011 avg=4.0916 lr=2.75e-04 1.7 opt/s 27,616 tok/s
+  [E1 O11,400] loss=3.5591 avg=4.0864 lr=2.74e-04 1.7 opt/s 27,616 tok/s
+  [E1 O11,500] loss=3.4932 avg=4.0812 lr=2.74e-04 1.7 opt/s 27,615 tok/s
+    → eval_loss=3.3820 PPL=29.4
+    → Best sample (AR):
+      What I W - The The A We The When The A L by I Every The I L The What P The We | - The What When The - A The A Inter - A On The What Web F R H In Digit
+  [E1 O11,600] loss=3.4177 avg=4.0761 lr=2.73e-04 1.7 opt/s 27,583 tok/s
+  [E1 O11,700] loss=3.4485 avg=4.0711 lr=2.73e-04 1.7 opt/s 27,584 tok/s
+  [E1 O11,800] loss=3.5028 avg=4.0661 lr=2.72e-04 1.7 opt/s 27,586 tok/s
+  [E1 O11,900] loss=3.4965 avg=4.0612 lr=2.72e-04 1.7 opt/s 27,583 tok/s
+  [E1 O12,000] loss=3.4631 avg=4.0563 lr=2.71e-04 1.7 opt/s 27,582 tok/s
+    → eval_loss=3.4297 PPL=30.9
+  [E1 O12,100] loss=3.5533 avg=4.0524 lr=2.70e-04 1.7 opt/s 27,575 tok/s
+  [E1 O12,200] loss=3.5745 avg=4.0483 lr=2.70e-04 1.7 opt/s 27,575 tok/s
+  [E1 O12,300] loss=3.5032 avg=4.0443 lr=2.69e-04 1.7 opt/s 27,574 tok/s
+  [E1 O12,400] loss=3.5470 avg=4.0403 lr=2.69e-04 1.7 opt/s 27,568 tok/s
+  [E1 O12,500] loss=3.5478 avg=4.0364 lr=2.68e-04 1.7 opt/s 27,555 tok/s
+    → eval_loss=3.3843 PPL=29.5
+  [E1 O12,600] loss=3.5905 avg=4.0325 lr=2.67e-04 1.7 opt/s 27,545 tok/s
+  [E1 O12,700] loss=3.5648 avg=4.0286 lr=2.67e-04 1.7 opt/s 27,539 tok/s
+  [E1 O12,800] loss=3.5434 avg=4.0248 lr=2.66e-04 1.7 opt/s 27,534 tok/s
+  [E1 O12,900] loss=3.5835 avg=4.0209 lr=2.66e-04 1.7 opt/s 27,528 tok/s
+  [E1 O13,000] loss=3.5333 avg=4.0172 lr=2.65e-04 1.7 opt/s 27,523 tok/s
+    → eval_loss=3.3699 PPL=29.1
+    → Best sample (AR):
+      A The Z The If Ev This This Fin There The I A The The The Here O The The This Is The The How Have When A John 1 A R The B H The Why For H The I Did Y 
+  [E1 O13,100] loss=3.4252 avg=4.0128 lr=2.64e-04 1.7 opt/s 27,497 tok/s
+  [E1 O13,200] loss=3.4415 avg=4.0087 lr=2.64e-04 1.7 opt/s 27,502 tok/s
+  [E1 O13,300] loss=3.4259 avg=4.0045 lr=2.63e-04 1.7 opt/s 27,508 tok/s
+  [E1 O13,400] loss=3.4660 avg=4.0003 lr=2.62e-04 1.7 opt/s 27,515 tok/s
+  [E1 O13,500] loss=3.4254 avg=3.9963 lr=2.62e-04 1.7 opt/s 27,523 tok/s
+    → eval_loss=3.4042 PPL=30.1
+  [E1 O13,600] loss=3.5789 avg=3.9928 lr=2.61e-04 1.7 opt/s 27,521 tok/s
+  [E1 O13,700] loss=3.5923 avg=3.9894 lr=2.60e-04 1.7 opt/s 27,524 tok/s
+  [E1 O13,800] loss=3.4874 avg=3.9860 lr=2.60e-04 1.7 opt/s 27,519 tok/s
+  [E1 O13,900] loss=3.5481 avg=3.9827 lr=2.59e-04 1.7 opt/s 27,516 tok/s
+  [E1 O14,000] loss=3.5429 avg=3.9793 lr=2.58e-04 1.7 opt/s 27,519 tok/s
+    → eval_loss=3.3594 PPL=28.8
+    → Best sample (AR):
+      A I The This This The I The This Rec Y I The The The Are " Be Introduction E Start W The O “ In The The Every - F 1 Fl If The B IN This B In From Ch T
+  [E1 O14,100] loss=3.4820 avg=3.9755 lr=2.58e-04 1.7 opt/s 27,498 tok/s
+  [E1 O14,200] loss=3.4341 avg=3.9716 lr=2.57e-04 1.7 opt/s 27,503 tok/s
+  [E1 O14,300] loss=3.4121 avg=3.9679 lr=2.56e-04 1.7 opt/s 27,509 tok/s
+  [E1 O14,400] loss=3.4892 avg=3.9641 lr=2.55e-04 1.7 opt/s 27,513 tok/s
+  [E1 O14,500] loss=3.4535 avg=3.9604 lr=2.55e-04 1.7 opt/s 27,515 tok/s
+    → eval_loss=3.3407 PPL=28.2
+    → Best sample (AR):
+      The - L G The Sk All A Do While A O B A A T G Human A The N C The How What The The - Th A - V P The | This A “ H N From By The The T How This T As I T
+  [E1 O14,600] loss=3.4476 avg=3.9567 lr=2.54e-04 1.7 opt/s 27,492 tok/s
+  [E1 O14,700] loss=3.4363 avg=3.9531 lr=2.53e-04 1.7 opt/s 27,500 tok/s
+  [E1 O14,800] loss=3.4370 avg=3.9495 lr=2.53e-04 1.7 opt/s 27,507 tok/s
+  [E1 O14,900] loss=3.4034 avg=3.9459 lr=2.52e-04 1.7 opt/s 27,512 tok/s
+  [E1 O15,000] loss=3.3586 avg=3.9423 lr=2.51e-04 1.7 opt/s 27,519 tok/s
+    → eval_loss=3.3602 PPL=28.8
+  [E1 O15,100] loss=3.5070 avg=3.9394 lr=2.50e-04 1.7 opt/s 27,515 tok/s
+  [E1 O15,200] loss=3.4904 avg=3.9365 lr=2.50e-04 1.7 opt/s 27,515 tok/s
+  [E1 O15,300] loss=3.5364 avg=3.9335 lr=2.49e-04 1.7 opt/s 27,514 tok/s
+  [E1 O15,400] loss=3.5336 avg=3.9306 lr=2.48e-04 1.7 opt/s 27,515 tok/s
+  [E1 O15,500] loss=3.5061 avg=3.9277 lr=2.47e-04 1.7 opt/s 27,517 tok/s
+    → eval_loss=3.3516 PPL=28.5
+  [E1 O15,600] loss=3.4683 avg=3.9248 lr=2.47e-04 1.7 opt/s 27,515 tok/s
+  [E1 O15,700] loss=3.5409 avg=3.9220 lr=2.46e-04 1.7 opt/s 27,517 tok/s
+  [E1 O15,800] loss=3.4805 avg=3.9192 lr=2.45e-04 1.7 opt/s 27,516 tok/s
+  [E1 O15,900] loss=3.4088 avg=3.9164 lr=2.44e-04 1.7 opt/s 27,517 tok/s
+  [E1 O16,000] loss=3.4173 avg=3.9136 lr=2.44e-04 1.7 opt/s 27,520 tok/s
+    → eval_loss=3.3345 PPL=28.1
+    → Best sample (AR):
+      If A The The This This What A Health 1 When The When The P From S The The “ Ar The H What S This Why The If The In M N 1 Back The The As L | The P The
+  [E1 O16,100] loss=3.3892 avg=3.9104 lr=2.43e-04 1.7 opt/s 27,503 tok/s
+  [E1 O16,200] loss=3.4192 avg=3.9072 lr=2.42e-04 1.7 opt/s 27,510 tok/s
+  [E1 O16,300] loss=3.4159 avg=3.9040 lr=2.41e-04 1.7 opt/s 27,517 tok/s
+  [E1 O16,400] loss=3.4474 avg=3.9010 lr=2.40e-04 1.7 opt/s 27,524 tok/s
+  [E1 O16,500] loss=3.3671 avg=3.8979 lr=2.40e-04 1.7 opt/s 27,531 tok/s
+    → eval_loss=3.3316 PPL=28.0
+    → Best sample (AR):
+      This " Some In H A S A What The Common How How St In It - A More C T To F By The The S How Ed C S The While The Due Mult Sub The How I Mult The This I
+  [E2 O16,600] loss=3.4012 avg=3.2998 lr=2.39e-04 1.7 opt/s 27,509 tok/s
+  [E2 O16,700] loss=3.3381 avg=3.3116 lr=2.38e-04 1.7 opt/s 27,516 tok/s
+  [E2 O16,800] loss=3.3942 avg=3.3139 lr=2.37e-04 1.7 opt/s 27,522 tok/s
+  [E2 O16,900] loss=3.2975 avg=3.3134 lr=2.36e-04 1.7 opt/s 27,528 tok/s
+  [E2 O17,000] loss=3.3879 avg=3.3134 lr=2.36e-04 1.7 opt/s 27,535 tok/s
+    → eval_loss=3.2980 PPL=27.1
+    → Best sample (AR):
+      A This The Ed When In This Do Many He Since A A Since A I E It In Ant The For In The - I T A E N It How I R This Search Step The S A In This T What Th
+  [E2 O17,100] loss=3.3326 avg=3.3134 lr=2.35e-04 1.7 opt/s 27,520 tok/s
+  [E2 O17,200] loss=3.3006 avg=3.3131 lr=2.34e-04 1.7 opt/s 27,527 tok/s
+  [E2 O17,300] loss=3.3171 avg=3.3132 lr=2.33e-04 1.7 opt/s 27,533 tok/s
+  [E2 O17,400] loss=3.3742 avg=3.3129 lr=2.32e-04 1.7 opt/s 27,538 tok/s
+  [E2 O17,500] loss=3.3328 avg=3.3124 lr=2.31e-04 1.7 opt/s 27,545 tok/s
+    → eval_loss=3.2851 PPL=26.7
+    → Best sample (AR):
+      “ P The | There In T A L A
+  [E2 O17,600] loss=3.2751 avg=3.3114 lr=2.31e-04 1.7 opt/s 27,533 tok/s
+  [E2 O17,700] loss=3.2784 avg=3.3109 lr=2.30e-04 1.7 opt/s 27,539 tok/s
+  [E2 O17,800] loss=3.2806 avg=3.3105 lr=2.29e-04 1.7 opt/s 27,545 tok/s
+  [E2 O17,900] loss=3.2302 avg=3.3103 lr=2.28e-04 1.7 opt/s 27,551 tok/s
+  [E2 O18,000] loss=3.2877 avg=3.3099 lr=2.27e-04 1.7 opt/s 27,558 tok/s
+    → eval_loss=3.2669 PPL=26.2
+    → Best sample (AR):
+      Why This The The Do - B We The The The The Our The This S The The M What From An As In Let Do The Article P The All F | The There Data ( What This In 
+  [E2 O18,100] loss=3.2487 avg=3.3098 lr=2.26e-04 1.7 opt/s 27,543 tok/s
+  [E2 O18,200] loss=3.3003 avg=3.3091 lr=2.25e-04 1.7 opt/s 27,549 tok/s
+  [E2 O18,300] loss=3.2414 avg=3.3087 lr=2.25e-04 1.7 opt/s 27,555 tok/s
+  [E2 O18,400] loss=3.2193 avg=3.3081 lr=2.24e-04 1.7 opt/s 27,561 tok/s
+  [E2 O18,500] loss=3.1735 avg=3.3074 lr=2.23e-04 1.7 opt/s 27,567 tok/s
+    → eval_loss=3.2780 PPL=26.5
+  [E2 O18,600] loss=3.3922 avg=3.3122 lr=2.22e-04 1.7 opt/s 27,565 tok/s
+  [E2 O18,700] loss=3.3671 avg=3.3164 lr=2.21e-04 1.7 opt/s 27,567 tok/s
+  [E2 O18,800] loss=3.4443 avg=3.3198 lr=2.20e-04 1.7 opt/s 27,569 tok/s
+  [E2 O18,900] loss=3.4018 avg=3.3231 lr=2.19e-04 1.7 opt/s 27,571 tok/s
+  [E2 O19,000] loss=3.3871 avg=3.3258 lr=2.18e-04 1.7 opt/s 27,572 tok/s
+    → eval_loss=3.2627 PPL=26.1
+    → Best sample (AR):
+      The How St In Many An This R The G 3 B I The This The The In - I Def - The N W This M  P S A G The The I - B As As A B The L How How The How In What H
+  [E2 O19,100] loss=3.2392 avg=3.3247 lr=2.18e-04 1.7 opt/s 27,554 tok/s
+  [E2 O19,200] loss=3.2126 avg=3.3236 lr=2.17e-04 1.7 opt/s 27,558 tok/s
+  [E2 O19,300] loss=3.3381 avg=3.3228 lr=2.16e-04 1.7 opt/s 27,563 tok/s
+  [E2 O19,400] loss=3.2662 avg=3.3216 lr=2.15e-04 1.7 opt/s 27,568 tok/s
+  [E2 O19,500] loss=3.3038 avg=3.3206 lr=2.14e-04 1.7 opt/s 27,573 tok/s
+    → eval_loss=3.2488 PPL=25.8
+    → Best sample (AR):
+      How Many What I Teaching D B - To I Am - N The D I I S Don Free “ This Why The S The The Ch This Even P The - The W - Re The Ch N -  An The On The 1 W
+  [E2 O19,600] loss=3.2099 avg=3.3196 lr=2.13e-04 1.7 opt/s 27,554 tok/s
+  [E2 O19,700] loss=3.2883 avg=3.3185 lr=2.12e-04 1.7 opt/s 27,560 tok/s
+  [E2 O19,800] loss=3.2457 avg=3.3172 lr=2.11e-04 1.7 opt/s 27,565 tok/s
+  [E2 O19,900] loss=3.2644 avg=3.3163 lr=2.10e-04 1.7 opt/s 27,570 tok/s
+  [E2 O20,000] loss=3.2882 avg=3.3152 lr=2.09e-04 1.7 opt/s 27,575 tok/s
+    → eval_loss=3.2279 PPL=25.2
+    → Best sample (AR):
+      The The An The The P The - F “ A For The This In A I The In A Un The This In In The This Sum C If The I Sc High In W The What In This A The If In The 
+  [E2 O20,100] loss=3.2895 avg=3.3143 lr=2.09e-04 1.7 opt/s 27,562 tok/s
+  [E2 O20,200] loss=3.3302 avg=3.3134 lr=2.08e-04 1.7 opt/s 27,568 tok/s
+  [E2 O20,300] loss=3.3142 avg=3.3127 lr=2.07e-04 1.7 opt/s 27,573 tok/s
+  [E2 O20,400] loss=3.2369 avg=3.3119 lr=2.06e-04 1.7 opt/s 27,578 tok/s
+  [E2 O20,500] loss=3.2878 avg=3.3111 lr=2.05e-04 1.7 opt/s 27,583 tok/s
+    → eval_loss=3.2353 PPL=25.4
+  [E2 O20,600] loss=3.3957 avg=3.3129 lr=2.04e-04 1.7 opt/s 27,582 tok/s
+  [E2 O20,700] loss=3.4179 avg=3.3144 lr=2.03e-04 1.7 opt/s 27,583 tok/s
+  [E2 O20,800] loss=3.3696 avg=3.3156 lr=2.02e-04 1.7 opt/s 27,585 tok/s
+  [E2 O20,900] loss=3.3699 avg=3.3169 lr=2.01e-04 1.7 opt/s 27,586 tok/s
+  [E2 O21,000] loss=3.3517 avg=3.3180 lr=2.00e-04 1.7 opt/s 27,587 tok/s
+    → eval_loss=3.2228 PPL=25.1
+    → Best sample (AR):
+      The E A A D We The B
+ The M All E As How I D The What The All As A What 7 If D - M There The The The A 1 The As A The What The 1 It There L The B T F 
+  [E2 O21,100] loss=3.3104 avg=3.3172 lr=1.99e-04 1.7 opt/s 27,574 tok/s
+  [E2 O21,200] loss=3.2293 avg=3.3160 lr=1.98e-04 1.7 opt/s 27,579 tok/s
+  [E2 O21,300] loss=3.3021 avg=3.3152 lr=1.97e-04 1.7 opt/s 27,584 tok/s
+  [E2 O21,400] loss=3.2697 avg=3.3142 lr=1.96e-04 1.7 opt/s 27,589 tok/s
+  [E2 O21,500] loss=3.3269 avg=3.3133 lr=1.95e-04 1.7 opt/s 27,593 tok/s
+    → eval_loss=3.2089 PPL=24.8
+    → Best sample (AR):
+      Key 2 In This What This Is In In This The L The F Most This The The F I The The A Z [ An P B Inter - The B I The the Last You This - Most 1 P P Using 
+  [E2 O21,600] loss=3.2116 avg=3.3124 lr=1.94e-04 1.7 opt/s 27,581 tok/s
+  [E2 O21,700] loss=3.3044 avg=3.3116 lr=1.94e-04 1.7 opt/s 27,585 tok/s
+  [E2 O21,800] loss=3.2931 avg=3.3108 lr=1.93e-04 1.7 opt/s 27,590 tok/s
+  [E2 O21,900] loss=3.2829 avg=3.3100 lr=1.92e-04 1.7 opt/s 27,594 tok/s
+  [E2 O22,000] loss=3.2364 avg=3.3092 lr=1.91e-04 1.7 opt/s 27,599 tok/s
+    → eval_loss=3.2503 PPL=25.8
+  [E2 O22,100] loss=3.3809 avg=3.3104 lr=1.90e-04 1.7 opt/s 27,598 tok/s
+  [E2 O22,200] loss=3.3089 avg=3.3111 lr=1.89e-04 1.7 opt/s 27,599 tok/s
+  [E2 O22,300] loss=3.3799 avg=3.3119 lr=1.88e-04 1.7 opt/s 27,600 tok/s
+  [E2 O22,400] loss=3.3429 avg=3.3128 lr=1.87e-04 1.7 opt/s 27,601 tok/s
+  [E2 O22,500] loss=3.3887 avg=3.3133 lr=1.86e-04 1.7 opt/s 27,603 tok/s
+    → eval_loss=3.1960 PPL=24.4
+    → Best sample (AR):
+      The The A The Question The The A Ac The How What M The B Here A In If The - N The - The The The The What A I In You F A Data A I The The 1 M The In I 
+  [E2 O22,600] loss=3.2718 avg=3.3124 lr=1.85e-04 1.7 opt/s 27,585 tok/s
+  [E2 O22,700] loss=3.2850 avg=3.3116 lr=1.84e-04 1.7 opt/s 27,586 tok/s
+  [E2 O22,800] loss=3.2591 avg=3.3107 lr=1.83e-04 1.7 opt/s 27,590 tok/s
+  [E2 O22,900] loss=3.2593 avg=3.3099 lr=1.82e-04 1.7 opt/s 27,594 tok/s
+  [E2 O23,000] loss=3.2822 avg=3.3090 lr=1.81e-04 1.7 opt/s 27,599 tok/s
+    → eval_loss=3.1865 PPL=24.2
+    → Best sample (AR):
+      The This V The S In In Ab The Please A Every This Com N I Over When V A You M F The The The The * The The B The The Man The The The The The How R The 
+  [E2 O23,100] loss=3.2924 avg=3.3083 lr=1.80e-04 1.7 opt/s 27,583 tok/s
+  [E2 O23,200] loss=3.2371 avg=3.3075 lr=1.79e-04 1.7 opt/s 27,588 tok/s
+  [E2 O23,300] loss=3.3089 avg=3.3067 lr=1.78e-04 1.7 opt/s 27,592 tok/s
+  [E2 O23,400] loss=3.2790 avg=3.3059 lr=1.77e-04 1.7 opt/s 27,596 tok/s
+  [E2 O23,500] loss=3.2204 avg=3.3050 lr=1.76e-04 1.7 opt/s 27,599 tok/s
+    → eval_loss=3.1930 PPL=24.4
+  [E2 O23,600] loss=3.4008 avg=3.3057 lr=1.75e-04 1.7 opt/s 27,598 tok/s
+  [E2 O23,700] loss=3.3837 avg=3.3063 lr=1.74e-04 1.7 opt/s 27,599 tok/s
+  [E2 O23,800] loss=3.3173 avg=3.3069 lr=1.73e-04 1.7 opt/s 27,600 tok/s
+  [E2 O23,900] loss=3.3363 avg=3.3074 lr=1.72e-04 1.7 opt/s 27,600 tok/s
+  [E2 O24,000] loss=3.3444 avg=3.3078 lr=1.71e-04 1.7 opt/s 27,600 tok/s
+    → eval_loss=3.2030 PPL=24.6
+  [E2 O24,100] loss=3.2486 avg=3.3082 lr=1.70e-04 1.7 opt/s 27,598 tok/s
+  [E2 O24,200] loss=3.3060 avg=3.3086 lr=1.69e-04 1.7 opt/s 27,598 tok/s
+  [E2 O24,300] loss=3.2914 avg=3.3088 lr=1.68e-04 1.7 opt/s 27,598 tok/s
+  [E2 O24,400] loss=3.4155 avg=3.3092 lr=1.67e-04 1.7 opt/s 27,598 tok/s
+  [E2 O24,500] loss=3.3391 avg=3.3094 lr=1.66e-04 1.7 opt/s 27,596 tok/s
+    → eval_loss=3.1704 PPL=23.8
+    → Best sample (AR):
+      B When - As 1 What A F C Rel - The Today In In In The In When A Here B A G We While - T The The What - International The “ About How N The This I The 
+  [E2 O24,600] loss=3.2311 avg=3.3085 lr=1.65e-04 1.7 opt/s 27,584 tok/s
+  [E2 O24,700] loss=3.2530 avg=3.3076 lr=1.64e-04 1.7 opt/s 27,588 tok/s
+  [E2 O24,800] loss=3.2534 avg=3.3067 lr=1.63e-04 1.7 opt/s 27,592 tok/s
+  [E2 O24,900] loss=3.2534 avg=3.3060 lr=1.62e-04 1.7 opt/s 27,596 tok/s
+  [E2 O25,000] loss=3.3070 avg=3.3051 lr=1.61e-04 1.7 opt/s 27,600 tok/s
+    → eval_loss=3.1777 PPL=24.0
+  [E2 O25,100] loss=3.3758 avg=3.3055 lr=1.60e-04 1.7 opt/s 27,598 tok/s
+  [E2 O25,200] loss=3.3176 avg=3.3057 lr=1.59e-04 1.7 opt/s 27,599 tok/s
+  [E2 O25,300] loss=3.2504 avg=3.3059 lr=1.58e-04 1.7 opt/s 27,600 tok/s
+  [E2 O25,400] loss=3.3016 avg=3.3061 lr=1.57e-04 1.7 opt/s 27,601 tok/s
+  [E2 O25,500] loss=3.3392 avg=3.3062 lr=1.56e-04 1.7 opt/s 27,602 tok/s
+    → eval_loss=3.2193 PPL=25.0
+  [E2 O25,600] loss=3.2999 avg=3.3064 lr=1.55e-04 1.7 opt/s 27,600 tok/s
+  [E2 O25,700] loss=3.2696 avg=3.3066 lr=1.54e-04 1.7 opt/s 27,601 tok/s
+  [E2 O25,800] loss=3.3188 avg=3.3067 lr=1.53e-04 1.7 opt/s 27,602 tok/s
+  [E2 O25,900] loss=3.2956 avg=3.3067 lr=1.52e-04 1.7 opt/s 27,601 tok/s
+  [E2 O26,000] loss=3.3346 avg=3.3068 lr=1.51e-04 1.7 opt/s 27,599 tok/s
+    → eval_loss=3.1827 PPL=24.1
+  [E2 O26,100] loss=3.3488 avg=3.3069 lr=1.50e-04 1.7 opt/s 27,593 tok/s
+  [E2 O26,200] loss=3.3496 avg=3.3070 lr=1.49e-04 1.7 opt/s 27,593 tok/s
+  [E2 O26,300] loss=3.3159 avg=3.3070 lr=1.48e-04 1.7 opt/s 27,590 tok/s
+  [E2 O26,400] loss=3.4061 avg=3.3071 lr=1.47e-04 1.7 opt/s 27,589 tok/s
+  [E2 O26,500] loss=3.3602 avg=3.3071 lr=1.46e-04 1.7 opt/s 27,588 tok/s
+    → eval_loss=3.1530 PPL=23.4
+    → Best sample (AR):
+      How The This A You Our A The The The “ In D F A The The For The We A G This Present Sp Yes In H I The The This What C Did S R The We This - This The S
+  [E2 O26,600] loss=3.2090 avg=3.3063 lr=1.45e-04 1.7 opt/s 27,576 tok/s
+  [E2 O26,700] loss=3.1938 avg=3.3054 lr=1.44e-04 1.7 opt/s 27,578 tok/s
+  [E2 O26,800] loss=3.1684 avg=3.3046 lr=1.43e-04 1.7 opt/s 27,580 tok/s
+  [E2 O26,900] loss=3.2182 avg=3.3038 lr=1.42e-04 1.7 opt/s 27,583 tok/s
+  [E2 O27,000] loss=3.2221 avg=3.3030 lr=1.41e-04 1.7 opt/s 27,584 tok/s
+    → eval_loss=3.1129 PPL=22.5
+    → Best sample (AR):
+      The The The A St WH The The T Mod App He The 5 The The The On What About F Object The H T The Z I A How Def The This - Search As ( The The What K L We
+  [E2 O27,100] loss=3.1842 avg=3.3021 lr=1.40e-04 1.7 opt/s 27,570 tok/s
+  [E2 O27,200] loss=3.2257 avg=3.3013 lr=1.39e-04 1.7 opt/s 27,569 tok/s
+  [E2 O27,300] loss=3.2193 avg=3.3005 lr=1.38e-04 1.7 opt/s 27,573 tok/s
+  [E2 O27,400] loss=3.2365 avg=3.2997 lr=1.37e-04 1.7 opt/s 27,577 tok/s
+  [E2 O27,500] loss=3.2602 avg=3.2988 lr=1.36e-04 1.7 opt/s 27,581 tok/s
+    → eval_loss=3.1407 PPL=23.1
+  [E2 O27,600] loss=3.2960 avg=3.2989 lr=1.35e-04 1.7 opt/s 27,579 tok/s
+  [E2 O27,700] loss=3.3340 avg=3.2990 lr=1.34e-04 1.7 opt/s 27,578 tok/s
+  [E2 O27,800] loss=3.2949 avg=3.2991 lr=1.33e-04 1.7 opt/s 27,574 tok/s
+  [E2 O27,900] loss=3.2583 avg=3.2991 lr=1.32e-04 1.7 opt/s 27,568 tok/s
+  [E2 O28,000] loss=3.2639 avg=3.2991 lr=1.31e-04 1.7 opt/s 27,561 tok/s
+    → eval_loss=3.1298 PPL=22.9
+  [E2 O28,100] loss=3.2570 avg=3.2990 lr=1.30e-04 1.7 opt/s 27,558 tok/s
+  [E2 O28,200] loss=3.2968 avg=3.2989 lr=1.29e-04 1.7 opt/s 27,556 tok/s
+  [E2 O28,300] loss=3.3261 avg=3.2988 lr=1.28e-04 1.7 opt/s 27,553 tok/s
+  [E2 O28,400] loss=3.2704 avg=3.2988 lr=1.27e-04 1.7 opt/s 27,551 tok/s
+  [E2 O28,500] loss=3.2709 avg=3.2987 lr=1.27e-04 1.7 opt/s 27,550 tok/s
+    → eval_loss=3.1252 PPL=22.8
+  [E2 O28,600] loss=3.3150 avg=3.2986 lr=1.26e-04 1.7 opt/s 27,546 tok/s
+  [E2 O28,700] loss=3.3423 avg=3.2986 lr=1.25e-04 1.7 opt/s 27,541 tok/s
+  [E2 O28,800] loss=3.2668 avg=3.2985 lr=1.24e-04 1.7 opt/s 27,539 tok/s
+  [E2 O28,900] loss=3.3164 avg=3.2984 lr=1.23e-04 1.7 opt/s 27,532 tok/s
+  [E2 O29,000] loss=3.2469 avg=3.2983 lr=1.22e-04 1.7 opt/s 27,530 tok/s
+    → eval_loss=3.1209 PPL=22.7
+  [E2 O29,100] loss=3.3460 avg=3.2982 lr=1.21e-04 1.7 opt/s 27,524 tok/s
+  [E2 O29,200] loss=3.3264 avg=3.2982 lr=1.20e-04 1.7 opt/s 27,521 tok/s
+  [E2 O29,300] loss=3.3044 avg=3.2980 lr=1.19e-04 1.7 opt/s 27,516 tok/s
+  [E2 O29,400] loss=3.2674 avg=3.2979 lr=1.18e-04 1.7 opt/s 27,514 tok/s
+  [E2 O29,500] loss=3.2731 avg=3.2978 lr=1.17e-04 1.7 opt/s 27,512 tok/s
+    → eval_loss=3.1103 PPL=22.4
+    → Best sample (AR):
+      The The The D The The The N As The - Re The The The S The Your Top In The The | The | T G An The The The The An The This C In The Sp The Dr P The The 
+  [E2 O29,600] loss=3.1944 avg=3.2969 lr=1.16e-04 1.7 opt/s 27,498 tok/s
+  [E2 O29,700] loss=3.2342 avg=3.2962 lr=1.15e-04 1.7 opt/s 27,492 tok/s
+  [E2 O29,800] loss=3.1867 avg=3.2954 lr=1.14e-04 1.7 opt/s 27,489 tok/s
+  [E2 O29,900] loss=3.2544 avg=3.2946 lr=1.13e-04 1.7 opt/s 27,490 tok/s
+  [E2 O30,000] loss=3.1861 avg=3.2938 lr=1.12e-04 1.7 opt/s 27,489 tok/s
+    → eval_loss=3.1336 PPL=23.0
+  [E2 O30,100] loss=3.2524 avg=3.2937 lr=1.11e-04 1.7 opt/s 27,488 tok/s
+  [E2 O30,200] loss=3.3001 avg=3.2935 lr=1.10e-04 1.7 opt/s 27,486 tok/s
+  [E2 O30,300] loss=3.2689 avg=3.2935 lr=1.09e-04 1.7 opt/s 27,486 tok/s
+  [E2 O30,400] loss=3.2554 avg=3.2933 lr=1.08e-04 1.7 opt/s 27,487 tok/s
+  [E2 O30,500] loss=3.2462 avg=3.2932 lr=1.07e-04 1.7 opt/s 27,488 tok/s
+    → eval_loss=3.0932 PPL=22.0
+    → Best sample (AR):
+      The This 3 Once What R The The For F The A Study This - A For THE The He A The The A M De The J E A F W A A In H Why Use Tra This Rec The In L T Sum A
+  [E2 O30,600] loss=3.0909 avg=3.2924 lr=1.06e-04 1.7 opt/s 27,474 tok/s
+  [E2 O30,700] loss=3.1595 avg=3.2916 lr=1.05e-04 1.7 opt/s 27,477 tok/s
+  [E2 O30,800] loss=3.1124 avg=3.2908 lr=1.04e-04 1.7 opt/s 27,481 tok/s
+  [E2 O30,900] loss=3.2159 avg=3.2900 lr=1.03e-04 1.7 opt/s 27,485 tok/s
+  [E2 O31,000] loss=3.2136 avg=3.2893 lr=1.02e-04 1.7 opt/s 27,489 tok/s
+    → eval_loss=3.1036 PPL=22.3
+  [E2 O31,100] loss=3.2542 avg=3.2892 lr=1.01e-04 1.7 opt/s 27,488 tok/s
+  [E2 O31,200] loss=3.2479 avg=3.2891 lr=1.00e-04 1.7 opt/s 27,490 tok/s
+  [E2 O31,300] loss=3.2830 avg=3.2889 lr=9.95e-05 1.7 opt/s 27,491 tok/s
+  [E2 O31,400] loss=3.2979 avg=3.2888 lr=9.86e-05 1.7 opt/s 27,491 tok/s
+  [E2 O31,500] loss=3.2759 avg=3.2886 lr=9.76e-05 1.7 opt/s 27,493 tok/s
+    → eval_loss=3.1150 PPL=22.5
+  [E2 O31,600] loss=3.2424 avg=3.2884 lr=9.67e-05 1.7 opt/s 27,492 tok/s
+  [E2 O31,700] loss=3.2585 avg=3.2883 lr=9.58e-05 1.7 opt/s 27,493 tok/s
+  [E2 O31,800] loss=3.2362 avg=3.2881 lr=9.49e-05 1.7 opt/s 27,494 tok/s
+  [E2 O31,900] loss=3.2843 avg=3.2879 lr=9.39e-05 1.7 opt/s 27,496 tok/s
+  [E2 O32,000] loss=3.2497 avg=3.2878 lr=9.30e-05 1.7 opt/s 27,497 tok/s
+    → eval_loss=3.0749 PPL=21.6
+    → Best sample (AR):
+      J Water A This The - This The This D One The How E I For A The G The What What The What C H Me T - How What T The The We Your The Making St On A A H T
+  [E2 O32,100] loss=3.1848 avg=3.2870 lr=9.21e-05 1.7 opt/s 27,489 tok/s
+  [E2 O32,200] loss=3.1202 avg=3.2863 lr=9.12e-05 1.7 opt/s 27,493 tok/s
+  [E2 O32,300] loss=3.2437 avg=3.2855 lr=9.03e-05 1.7 opt/s 27,496 tok/s
+  [E2 O32,400] loss=3.1614 avg=3.2848 lr=8.93e-05 1.7 opt/s 27,500 tok/s
+  [E2 O32,500] loss=3.1588 avg=3.2841 lr=8.84e-05 1.7 opt/s 27,504 tok/s
+    → eval_loss=3.0863 PPL=21.9
+  [E2 O32,600] loss=3.2700 avg=3.2839 lr=8.75e-05 1.7 opt/s 27,503 tok/s
+  [E2 O32,700] loss=3.2355 avg=3.2838 lr=8.66e-05 1.7 opt/s 27,505 tok/s
+  [E2 O32,800] loss=3.2846 avg=3.2836 lr=8.57e-05 1.7 opt/s 27,506 tok/s
+  [E2 O32,900] loss=3.3362 avg=3.2835 lr=8.48e-05 1.7 opt/s 27,508 tok/s
+  [E2 O33,000] loss=3.1920 avg=3.2833 lr=8.39e-05 1.7 opt/s 27,509 tok/s
+    → eval_loss=3.0701 PPL=21.5
+    → Best sample (AR):
+      A This B F For In The “ Digital N As The A The A Pre Here The - Let The The In A The Is We H When Rec It Art - The Gu J This In The - When The What It
+  [E2 O33,100] loss=3.2023 avg=3.2826 lr=8.30e-05 1.7 opt/s 27,498 tok/s
+  [E3 O33,200] loss=3.0237 avg=3.0477 lr=8.21e-05 1.7 opt/s 27,499 tok/s
+  [E3 O33,300] loss=3.0838 avg=3.0569 lr=8.13e-05 1.7 opt/s 27,503 tok/s
+  [E3 O33,400] loss=3.0215 avg=3.0603 lr=8.04e-05 1.7 opt/s 27,505 tok/s
+  [E3 O33,500] loss=3.1076 avg=3.0602 lr=7.95e-05 1.7 opt/s 27,507 tok/s
+    → eval_loss=3.0342 PPL=20.8
+    → Best sample (AR):
+      I This The The H R The The | Every The An Many I W What Key A The What R A Researchers The The It ( With A I In The H A In Search T The In The This N 
+  [E3 O33,600] loss=2.9816 avg=3.0603 lr=7.86e-05 1.7 opt/s 27,497 tok/s
+  [E3 O33,700] loss=3.0307 avg=3.0609 lr=7.77e-05 1.7 opt/s 27,500 tok/s
+  [E3 O33,800] loss=3.0435 avg=3.0619 lr=7.69e-05 1.7 opt/s 27,503 tok/s
+  [E3 O33,900] loss=3.1328 avg=3.0618 lr=7.60e-05 1.7 opt/s 27,506 tok/s
+  [E3 O34,000] loss=3.0441 avg=3.0614 lr=7.51e-05 1.7 opt/s 27,508 tok/s
+    → eval_loss=3.0472 PPL=21.1
+  [E3 O34,100] loss=3.1322 avg=3.0738 lr=7.43e-05 1.7 opt/s 27,507 tok/s
+  [E3 O34,200] loss=3.1781 avg=3.0831 lr=7.34e-05 1.7 opt/s 27,507 tok/s
+  [E3 O34,300] loss=3.1808 avg=3.0913 lr=7.26e-05 1.7 opt/s 27,508 tok/s
+  [E3 O34,400] loss=3.1898 avg=3.0979 lr=7.17e-05 1.7 opt/s 27,508 tok/s
+  [E3 O34,500] loss=3.1665 avg=3.1036 lr=7.09e-05 1.7 opt/s 27,508 tok/s
+    → eval_loss=3.0540 PPL=21.2
+  [E3 O34,600] loss=3.2347 avg=3.1075 lr=7.00e-05 1.7 opt/s 27,507 tok/s
+  [E3 O34,700] loss=3.1833 avg=3.1110 lr=6.92e-05 1.7 opt/s 27,507 tok/s
+  [E3 O34,800] loss=3.1868 avg=3.1147 lr=6.83e-05 1.7 opt/s 27,508 tok/s
+  [E3 O34,900] loss=3.2244 avg=3.1175 lr=6.75e-05 1.7 opt/s 27,508 tok/s
+  [E3 O35,000] loss=3.2038 avg=3.1201 lr=6.67e-05 1.7 opt/s 27,504 tok/s
+    → eval_loss=3.0756 PPL=21.7
+  [E3 O35,100] loss=3.3152 avg=3.1226 lr=6.58e-05 1.7 opt/s 27,503 tok/s
+  [E3 O35,200] loss=3.1803 avg=3.1243 lr=6.50e-05 1.7 opt/s 27,501 tok/s
+  [E3 O35,300] loss=3.1435 avg=3.1261 lr=6.42e-05 1.7 opt/s 27,499 tok/s
+  [E3 O35,400] loss=3.1258 avg=3.1278 lr=6.34e-05 1.7 opt/s 27,495 tok/s
+  [E3 O35,500] loss=3.1692 avg=3.1298 lr=6.26e-05 1.7 opt/s 27,493 tok/s
+    → eval_loss=3.0351 PPL=20.8
+  [E3 O35,600] loss=3.2117 avg=3.1313 lr=6.18e-05 1.7 opt/s 27,492 tok/s
+  [E3 O35,700] loss=3.0694 avg=3.1328 lr=6.10e-05 1.7 opt/s 27,493 tok/s
+  [E3 O35,800] loss=3.2007 avg=3.1337 lr=6.02e-05 1.7 opt/s 27,494 tok/s
+  [E3 O35,900] loss=3.1889 avg=3.1347 lr=5.94e-05 1.7 opt/s 27,495 tok/s
+  [E3 O36,000] loss=3.2056 avg=3.1359 lr=5.86e-05 1.7 opt/s 27,496 tok/s
+    → eval_loss=3.0545 PPL=21.2
+  [E3 O36,100] loss=3.2142 avg=3.1365 lr=5.78e-05 1.7 opt/s 27,495 tok/s
+  [E3 O36,200] loss=3.1763 avg=3.1374 lr=5.70e-05 1.7 opt/s 27,495 tok/s
+  [E3 O36,300] loss=3.1627 avg=3.1380 lr=5.62e-05 1.7 opt/s 27,492 tok/s
+  [E3 O36,400] loss=3.1588 avg=3.1385 lr=5.54e-05 1.7 opt/s 27,489 tok/s
+  [E3 O36,500] loss=3.1669 avg=3.1393 lr=5.47e-05 1.7 opt/s 27,489 tok/s
+    → eval_loss=3.0635 PPL=21.4
+  [E3 O36,600] loss=3.1498 avg=3.1397 lr=5.39e-05 1.7 opt/s 27,483 tok/s
+  [E3 O36,700] loss=3.1452 avg=3.1405 lr=5.31e-05 1.7 opt/s 27,481 tok/s
+  [E3 O36,800] loss=3.2026 avg=3.1411 lr=5.24e-05 1.7 opt/s 27,479 tok/s
+  [E3 O36,900] loss=3.2263 avg=3.1417 lr=5.16e-05 1.7 opt/s 27,477 tok/s
+  [E3 O37,000] loss=3.2017 avg=3.1422 lr=5.09e-05 1.7 opt/s 27,475 tok/s
+    → eval_loss=3.0704 PPL=21.6
+  [E3 O37,100] loss=3.1042 avg=3.1426 lr=5.01e-05 1.7 opt/s 27,472 tok/s
+  [E3 O37,200] loss=3.1104 avg=3.1426 lr=4.94e-05 1.7 opt/s 27,471 tok/s
+  [E3 O37,300] loss=3.1262 avg=3.1428 lr=4.87e-05 1.7 opt/s 27,470 tok/s
+  [E3 O37,400] loss=3.1334 avg=3.1431 lr=4.79e-05 1.7 opt/s 27,467 tok/s
+  [E3 O37,500] loss=3.2432 avg=3.1433 lr=4.72e-05 1.7 opt/s 27,466 tok/s
+    → eval_loss=3.0088 PPL=20.3
+    → Best sample (AR):
+      Ant The The The If 5 L B The In At The The Re - The - Present A We A C This I - E T The When - Home What Ch Why The The The A The I How W What In The 
+  [E3 O37,600] loss=3.0284 avg=3.1413 lr=4.65e-05 1.7 opt/s 27,454 tok/s
+  [E3 O37,700] loss=3.0145 avg=3.1393 lr=4.58e-05 1.7 opt/s 27,456 tok/s
+  [E3 O37,800] loss=3.0346 avg=3.1374 lr=4.50e-05 1.7 opt/s 27,454 tok/s
+  [E3 O37,900] loss=3.0608 avg=3.1355 lr=4.43e-05 1.7 opt/s 27,453 tok/s
+  [E3 O38,000] loss=3.0842 avg=3.1335 lr=4.36e-05 1.7 opt/s 27,451 tok/s
+    → eval_loss=3.0361 PPL=20.8
+  [E3 O38,100] loss=3.1681 avg=3.1339 lr=4.29e-05 1.7 opt/s 27,447 tok/s
+  [E3 O38,200] loss=3.1795 avg=3.1342 lr=4.22e-05 1.7 opt/s 27,447 tok/s
+  [E3 O38,300] loss=3.1522 avg=3.1346 lr=4.15e-05 1.7 opt/s 27,447 tok/s
+  [E3 O38,400] loss=3.1721 avg=3.1350 lr=4.08e-05 1.7 opt/s 27,446 tok/s
+  [E3 O38,500] loss=3.1548 avg=3.1354 lr=4.02e-05 1.7 opt/s 27,445 tok/s
+    → eval_loss=3.0232 PPL=20.6
+  [E3 O38,600] loss=3.1539 avg=3.1357 lr=3.95e-05 1.7 opt/s 27,442 tok/s
+  [E3 O38,700] loss=3.0609 avg=3.1359 lr=3.88e-05 1.7 opt/s 27,443 tok/s
+  [E3 O38,800] loss=3.1143 avg=3.1361 lr=3.82e-05 1.7 opt/s 27,440 tok/s
+  [E3 O38,900] loss=3.1645 avg=3.1362 lr=3.75e-05 1.7 opt/s 27,440 tok/s
+  [E3 O39,000] loss=3.1999 avg=3.1365 lr=3.68e-05 1.7 opt/s 27,437 tok/s
+    → eval_loss=3.0149 PPL=20.4
+  [E3 O39,100] loss=3.1472 avg=3.1368 lr=3.62e-05 1.7 opt/s 27,430 tok/s
+  [E3 O39,200] loss=3.2239 avg=3.1369 lr=3.55e-05 1.7 opt/s 27,426 tok/s
+  [E3 O39,300] loss=3.1781 avg=3.1372 lr=3.49e-05 1.7 opt/s 27,428 tok/s
+  [E3 O39,400] loss=3.1385 avg=3.1374 lr=3.43e-05 1.7 opt/s 27,427 tok/s
+  [E3 O39,500] loss=3.1292 avg=3.1375 lr=3.36e-05 1.7 opt/s 27,425 tok/s
+    → eval_loss=3.0196 PPL=20.5
+  [E3 O39,600] loss=3.0963 avg=3.1378 lr=3.30e-05 1.7 opt/s 27,423 tok/s
+  [E3 O39,700] loss=3.0684 avg=3.1380 lr=3.24e-05 1.7 opt/s 27,425 tok/s
+  [E3 O39,800] loss=3.2073 avg=3.1379 lr=3.18e-05 1.7 opt/s 27,426 tok/s
+  [E3 O39,900] loss=3.1644 avg=3.1381 lr=3.12e-05 1.7 opt/s 27,427 tok/s
+  [E3 O40,000] loss=3.1571 avg=3.1383 lr=3.06e-05 1.7 opt/s 27,428 tok/s
+    → eval_loss=3.0169 PPL=20.4
+  [E3 O40,100] loss=3.0934 avg=3.1383 lr=2.99e-05 1.7 opt/s 27,426 tok/s
+  [E3 O40,200] loss=3.1653 avg=3.1384 lr=2.94e-05 1.7 opt/s 27,422 tok/s
+  [E3 O40,300] loss=3.1891 avg=3.1383 lr=2.88e-05 1.7 opt/s 27,419 tok/s
+  [E3 O40,400] loss=3.1615 avg=3.1382 lr=2.82e-05 1.7 opt/s 27,414 tok/s
+  [E3 O40,500] loss=3.2356 avg=3.1383 lr=2.76e-05 1.7 opt/s 27,410 tok/s
+    → eval_loss=3.0067 PPL=20.2
+    → Best sample (AR):
+      ‘ N A “ A | - In In The A Human The The The What C This The First Comp The There The There | In If The The How This This 3 Pre The The  An The - The L
+  [E3 O40,600] loss=3.0648 avg=3.1369 lr=2.70e-05 1.7 opt/s 27,395 tok/s
+  [E3 O40,700] loss=3.0468 avg=3.1356 lr=2.65e-05 1.7 opt/s 27,392 tok/s
+  [E3 O40,800] loss=2.9719 avg=3.1343 lr=2.59e-05 1.7 opt/s 27,390 tok/s
+  [E3 O40,900] loss=3.0654 avg=3.1330 lr=2.53e-05 1.7 opt/s 27,387 tok/s
+  [E3 O41,000] loss=3.0995 avg=3.1319 lr=2.48e-05 1.7 opt/s 27,384 tok/s
+    → eval_loss=2.9770 PPL=19.6
+    → Best sample (AR):
+      A Whether Health F A C * The A The J The Ch This H In N This The The Our P This The The What A This The My F What The Why F I S The The A Does A R | I
+  [E3 O41,100] loss=3.0002 avg=3.1307 lr=2.42e-05 1.7 opt/s 27,372 tok/s
+  [E3 O41,200] loss=3.0408 avg=3.1295 lr=2.37e-05 1.7 opt/s 27,374 tok/s
+  [E3 O41,300] loss=3.0698 avg=3.1283 lr=2.32e-05 1.7 opt/s 27,377 tok/s
+  [E3 O41,400] loss=3.0098 avg=3.1273 lr=2.26e-05 1.7 opt/s 27,380 tok/s
+  [E3 O41,500] loss=2.9890 avg=3.1261 lr=2.21e-05 1.7 opt/s 27,383 tok/s
+    → eval_loss=3.0105 PPL=20.3
+  [E3 O41,600] loss=3.2233 avg=3.1264 lr=2.16e-05 1.7 opt/s 27,382 tok/s
+  [E3 O41,700] loss=3.1855 avg=3.1265 lr=2.11e-05 1.7 opt/s 27,383 tok/s
+  [E3 O41,800] loss=3.1385 avg=3.1267 lr=2.06e-05 1.7 opt/s 27,384 tok/s
+  [E3 O41,900] loss=3.1537 avg=3.1269 lr=2.01e-05 1.7 opt/s 27,385 tok/s
+  [E3 O42,000] loss=3.1468 avg=3.1271 lr=1.96e-05 1.7 opt/s 27,385 tok/s
+    → eval_loss=2.9901 PPL=19.9
+  [E3 O42,100] loss=3.1846 avg=3.1273 lr=1.91e-05 1.7 opt/s 27,385 tok/s
+  [E3 O42,200] loss=3.1352 avg=3.1274 lr=1.86e-05 1.7 opt/s 27,386 tok/s
+  [E3 O42,300] loss=3.2279 avg=3.1275 lr=1.81e-05 1.7 opt/s 27,387 tok/s
+  [E3 O42,400] loss=3.1394 avg=3.1276 lr=1.77e-05 1.7 opt/s 27,388 tok/s
+  [E3 O42,500] loss=3.1816 avg=3.1277 lr=1.72e-05 1.7 opt/s 27,389 tok/s
+    → eval_loss=2.9999 PPL=20.1
+  [E3 O42,600] loss=3.1258 avg=3.1279 lr=1.67e-05 1.7 opt/s 27,388 tok/s
+  [E3 O42,700] loss=3.1648 avg=3.1280 lr=1.63e-05 1.7 opt/s 27,390 tok/s
+  [E3 O42,800] loss=3.0968 avg=3.1280 lr=1.58e-05 1.7 opt/s 27,391 tok/s
+  [E3 O42,900] loss=3.1032 avg=3.1281 lr=1.54e-05 1.7 opt/s 27,392 tok/s
+  [E3 O43,000] loss=3.1626 avg=3.1282 lr=1.50e-05 1.7 opt/s 27,393 tok/s
+    → eval_loss=2.9875 PPL=19.8
+  [E3 O43,100] loss=3.1511 avg=3.1283 lr=1.45e-05 1.7 opt/s 27,393 tok/s
+  [E3 O43,200] loss=3.1198 avg=3.1284 lr=1.41e-05 1.7 opt/s 27,395 tok/s
+  [E3 O43,300] loss=3.1278 avg=3.1285 lr=1.37e-05 1.7 opt/s 27,396 tok/s
+  [E3 O43,400] loss=3.1052 avg=3.1286 lr=1.33e-05 1.7 opt/s 27,397 tok/s
+  [E3 O43,500] loss=3.1542 avg=3.1287 lr=1.29e-05 1.7 opt/s 27,398 tok/s
+    → eval_loss=3.0038 PPL=20.2
+  [E3 O43,600] loss=3.1891 avg=3.1288 lr=1.25e-05 1.7 opt/s 27,398 tok/s
+  [E3 O43,700] loss=3.1282 avg=3.1288 lr=1.21e-05 1.7 opt/s 27,399 tok/s
+  [E3 O43,800] loss=3.1471 avg=3.1289 lr=1.17e-05 1.7 opt/s 27,400 tok/s
+  [E3 O43,900] loss=3.1196 avg=3.1289 lr=1.13e-05 1.7 opt/s 27,401 tok/s
+  [E3 O44,000] loss=3.1010 avg=3.1290 lr=1.09e-05 1.7 opt/s 27,402 tok/s
+    → eval_loss=2.9961 PPL=20.0
+  [E3 O44,100] loss=3.1912 avg=3.1291 lr=1.05e-05 1.7 opt/s 27,401 tok/s
+  [E3 O44,200] loss=3.1400 avg=3.1292 lr=1.02e-05 1.7 opt/s 27,403 tok/s
+  [E3 O44,300] loss=3.1190 avg=3.1292 lr=9.82e-06 1.7 opt/s 27,404 tok/s
+  [E3 O44,400] loss=3.1191 avg=3.1292 lr=9.47e-06 1.7 opt/s 27,404 tok/s
+  [E3 O44,500] loss=3.0940 avg=3.1292 lr=9.13e-06 1.7 opt/s 27,406 tok/s
+    → eval_loss=3.0204 PPL=20.5
+  [E3 O44,600] loss=3.1259 avg=3.1292 lr=8.79e-06 1.7 opt/s 27,405 tok/s
+  [E3 O44,700] loss=3.1232 avg=3.1292 lr=8.46e-06 1.7 opt/s 27,407 tok/s
+  [E3 O44,800] loss=3.1480 avg=3.1292 lr=8.13e-06 1.7 opt/s 27,408 tok/s
+  [E3 O44,900] loss=3.0911 avg=3.1293 lr=7.81e-06 1.7 opt/s 27,409 tok/s
+  [E3 O45,000] loss=3.1080 avg=3.1293 lr=7.49e-06 1.7 opt/s 27,410 tok/s
+    → eval_loss=2.9917 PPL=19.9
+  [E3 O45,100] loss=3.1592 avg=3.1293 lr=7.19e-06 1.7 opt/s 27,410 tok/s
+  [E3 O45,200] loss=3.0955 avg=3.1294 lr=6.88e-06 1.7 opt/s 27,411 tok/s
+  [E3 O45,300] loss=3.1094 avg=3.1294 lr=6.59e-06 1.7 opt/s 27,412 tok/s
+  [E3 O45,400] loss=3.2028 avg=3.1294 lr=6.30e-06 1.7 opt/s 27,414 tok/s
+  [E3 O45,500] loss=3.1777 avg=3.1294 lr=6.02e-06 1.7 opt/s 27,415 tok/s
+    → eval_loss=3.0088 PPL=20.3
+  [E3 O45,600] loss=3.1286 avg=3.1294 lr=5.74e-06 1.7 opt/s 27,414 tok/s
+  [E3 O45,700] loss=3.1064 avg=3.1294 lr=5.47e-06 1.7 opt/s 27,415 tok/s
+  [E3 O45,800] loss=3.0982 avg=3.1295 lr=5.21e-06 1.7 opt/s 27,416 tok/s
+  [E3 O45,900] loss=3.0877 avg=3.1295 lr=4.95e-06 1.7 opt/s 27,416 tok/s
+  [E3 O46,000] loss=3.1235 avg=3.1295 lr=4.70e-06 1.7 opt/s 27,416 tok/s
+    → eval_loss=2.9904 PPL=19.9
+  [E3 O46,100] loss=3.0308 avg=3.1295 lr=4.46e-06 1.7 opt/s 27,413 tok/s
+  [E3 O46,200] loss=3.0953 avg=3.1295 lr=4.22e-06 1.7 opt/s 27,414 tok/s
+  [E3 O46,300] loss=3.2062 avg=3.1295 lr=3.99e-06 1.7 opt/s 27,414 tok/s
+  [E3 O46,400] loss=3.1618 avg=3.1295 lr=3.76e-06 1.7 opt/s 27,414 tok/s
+  [E3 O46,500] loss=3.1441 avg=3.1295 lr=3.54e-06 1.7 opt/s 27,414 tok/s
+    → eval_loss=2.9596 PPL=19.3
+    → Best sample (AR):
+      All S - T It Can Sum The The The - This Comp The Back The A The A This It What Create We A A The How The The H I We The ‘ We - In With Why The My The 
+  [E3 O46,600] loss=3.0697 avg=3.1287 lr=3.33e-06 1.7 opt/s 27,408 tok/s
+  [E3 O46,700] loss=3.1136 avg=3.1279 lr=3.13e-06 1.7 opt/s 27,410 tok/s
+  [E3 O46,800] loss=3.0573 avg=3.1271 lr=2.93e-06 1.7 opt/s 27,410 tok/s
+  [E3 O46,900] loss=3.0295 avg=3.1263 lr=2.73e-06 1.7 opt/s 27,412 tok/s
+  [E3 O47,000] loss=2.9661 avg=3.1256 lr=2.55e-06 1.7 opt/s 27,414 tok/s
+    → eval_loss=2.9662 PPL=19.4
+  [E3 O47,100] loss=3.1518 avg=3.1257 lr=2.37e-06 1.7 opt/s 27,413 tok/s
+  [E3 O47,200] loss=3.0936 avg=3.1258 lr=2.20e-06 1.7 opt/s 27,412 tok/s
+  [E3 O47,300] loss=3.1290 avg=3.1258 lr=2.03e-06 1.7 opt/s 27,413 tok/s
+  [E3 O47,400] loss=3.1935 avg=3.1259 lr=1.87e-06 1.7 opt/s 27,413 tok/s
+  [E3 O47,500] loss=3.1304 avg=3.1259 lr=1.72e-06 1.7 opt/s 27,413 tok/s
+    → eval_loss=3.0109 PPL=20.3
+  [E3 O47,600] loss=3.0712 avg=3.1259 lr=1.57e-06 1.7 opt/s 27,412 tok/s
+  [E3 O47,700] loss=3.1672 avg=3.1259 lr=1.43e-06 1.7 opt/s 27,413 tok/s
+  [E3 O47,800] loss=3.1624 avg=3.1259 lr=1.29e-06 1.7 opt/s 27,414 tok/s
+  [E3 O47,900] loss=3.1255 avg=3.1260 lr=1.17e-06 1.7 opt/s 27,415 tok/s
+  [E3 O48,000] loss=3.1535 avg=3.1260 lr=1.05e-06 1.7 opt/s 27,416 tok/s
+    → eval_loss=2.9668 PPL=19.4
+  [E3 O48,100] loss=3.1956 avg=3.1260 lr=9.32e-07 1.7 opt/s 27,415 tok/s
+  [E3 O48,200] loss=3.1440 avg=3.1260 lr=8.25e-07 1.7 opt/s 27,415 tok/s
+  [E3 O48,300] loss=3.0384 avg=3.1260 lr=7.24e-07 1.7 opt/s 27,416 tok/s
+  [E3 O48,400] loss=3.1252 avg=3.1260 lr=6.29e-07 1.7 opt/s 27,418 tok/s
+  [E3 O48,500] loss=3.1226 avg=3.1261 lr=5.41e-07 1.7 opt/s 27,418 tok/s
+    → eval_loss=2.9826 PPL=19.7
+  [E3 O48,600] loss=3.1769 avg=3.1261 lr=4.60e-07 1.7 opt/s 27,416 tok/s
+  [E3 O48,700] loss=3.0996 avg=3.1262 lr=3.86e-07 1.7 opt/s 27,417 tok/s
+  [E3 O48,800] loss=3.1176 avg=3.1262 lr=3.18e-07 1.7 opt/s 27,418 tok/s
+  [E3 O48,900] loss=3.0738 avg=3.1262 lr=2.56e-07 1.7 opt/s 27,415 tok/s
+  [E3 O49,000] loss=3.0976 avg=3.1262 lr=2.02e-07 1.7 opt/s 27,410 tok/s
+    → eval_loss=2.9838 PPL=19.8
+  [E3 O49,100] loss=3.1528 avg=3.1263 lr=1.53e-07 1.7 opt/s 27,405 tok/s
+  [E3 O49,200] loss=3.1440 avg=3.1263 lr=1.12e-07 1.7 opt/s 27,402 tok/s
+  [E3 O49,300] loss=3.1224 avg=3.1263 lr=7.68e-08 1.7 opt/s 27,402 tok/s
+  [E3 O49,400] loss=3.0602 avg=3.1263 lr=4.85e-08 1.7 opt/s 27,402 tok/s
+  [E3 O49,500] loss=3.1618 avg=3.1263 lr=2.68e-08 1.7 opt/s 27,403 tok/s
+    → eval_loss=3.0117 PPL=20.3
+  [E3 O49,600] loss=3.2370 avg=3.1263 lr=1.17e-08 1.7 opt/s 27,400 tok/s
+  [E3 O49,700] loss=3.0655 avg=3.1264 lr=3.21e-09 1.7 opt/s 27,397 tok/s
+
+======================================================================
+TRAINING COMPLETE — 29770.2s (496.2 min)
+  Optimizer steps: 49779
+  Best eval loss (training): 2.9596 (PPL=19.3)
+  Final holdout PPL: 18.5 (loss=2.9160)

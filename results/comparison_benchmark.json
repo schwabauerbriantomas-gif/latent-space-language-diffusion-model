@@ -1,0 +1,157 @@
+{
+  "timestamp": "2026-07-11 00:58:53",
+  "gpu": "NVIDIA GeForce RTX 3090",
+  "mdlm": {
+    "params": 201258768,
+    "config": {
+      "vocab_size": 10000,
+      "d_model": 1024,
+      "n_heads": 16,
+      "n_layers": 10,
+      "max_seq_len": 256,
+      "d_ff": 4096,
+      "dropout": 0.1
+    },
+    "perplexity": 114.87156103612708,
+    "eval_loss": 4.743814643654312,
+    "throughput": {
+      "batch_1": {
+        "tps": 3032.9479489912883,
+        "latency_ms": 42.20316410064697,
+        "steps": 20
+      },
+      "batch_8": {
+        "tps": 21959.673123047196,
+        "latency_ms": 46.63093090057373,
+        "steps": 20
+      },
+      "batch_32": {
+        "tps": 113160.87596933436,
+        "latency_ms": 36.196255683898926,
+        "steps": 20
+      }
+    },
+    "generation": {
+      "full_parallel_tps": 42.620482639558205,
+      "semi_ar_tps": 46.01716476057389
+    },
+    "samples": [
+      {
+        "prompt": "Climate change is one of the biggest challenges",
+        "text": " Climate change is one of the biggest challenges of global warming.\nThe flooding is one of the major devastating impacts of climate change. One of the major causes of climate change is the loss of biodiversity and habitat loss, due to the increase due to the increase of forest cover and habitat loss",
+        "quality": {
+          "repetition_score": 0.667,
+          "distinct_1": 0.409,
+          "distinct_2": 0.667,
+          "n_words": 115,
+          "n_chars": 650
+        }
+      },
+      {
+        "prompt": "The future of artificial intelligence depends on",
+        "text": " The future of artificial intelligence depends on the future of a machine and network. There is a decision that can be made to position a machine or network as a device. A decision that is made to position a device is a process in which a person will have to hold the device in the future.\nThe future",
+        "quality": {
+          "repetition_score": 0.752,
+          "distinct_1": 0.424,
+          "distinct_2": 0.752,
+          "n_words": 118,
+          "n_chars": 630
+        }
+      },
+      {
+        "prompt": "Education systems around the world need to",
+        "text": " Education systems around the world need to be focused on the development of education standards, and leading to a lens and advocate for the values of social responsibility.\nIn this workshop, we will address a growing number of issues in the field of education and health, including the environment, ",
+        "quality": {
+          "repetition_score": 0.809,
+          "distinct_1": 0.514,
+          "distinct_2": 0.809,
+          "n_words": 111,
+          "n_chars": 674
+        }
+      }
+    ]
+  },
+  "ar": {
+    "params": 199149328,
+    "config": {
+      "vocab_size": 10000,
+      "d_model": 1024,
+      "n_heads": 16,
+      "n_layers": 15,
+      "max_seq_len": 256,
+      "d_ff": 4096,
+      "dropout": 0.1
+    },
+    "perplexity": 18.50511617949881,
+    "eval_loss": 2.9180472440944882,
+    "throughput": {
+      "batch_1": {
+        "tps": 4006.7637925192007,
+        "latency_ms": 31.69640302658081,
+        "steps": 20
+      },
+      "batch_8": {
+        "tps": 33739.120476814816,
+        "latency_ms": 30.11341094970703,
+        "steps": 20
+      },
+      "batch_32": {
+        "tps": 85362.9600309288,
+        "latency_ms": 47.60847091674805,
+        "steps": 20
+      }
+    },
+    "generation": {
+      "tps": 37.17049304973749
+    },
+    "samples": [
+      {
+        "prompt": "Climate change is one of the biggest challenges",
+        "text": " facing humanity today. So if you\u2019re like most people, you know what it\u2019s like to be at the top of the world.\nAs we live in a climate emergency, we\u2019re exposed to the elements that make us feel \u201chappy\u201d or \u201ccold\u201d.\nThe fact that",
+        "quality": {
+          "repetition_score": 1.0,
+          "distinct_1": 0.886,
+          "distinct_2": 1.0,
+          "n_words": 44,
+          "n_chars": 225
+        }
+      },
+      {
+        "prompt": "The future of artificial intelligence depends on",
+        "text": " a combination of factors including:\n- The power of machine learning\n- The power of machine learning\n- The ability to analyze data\n- The ability to extract patterns from data\n- The ability to map patterns to new patterns\nAI is a technology that provides an alternative to traditional technology such ",
+        "quality": {
+          "repetition_score": 0.745,
+          "distinct_1": 0.571,
+          "distinct_2": 0.745,
+          "n_words": 56,
+          "n_chars": 330
+        }
+      },
+      {
+        "prompt": "Education systems around the world need to",
+        "text": " have the right tools and the right tools to support their decision-making processes. The current world is not the same as the one used to support education, but it is far from the only thing that can be improved. However, there are many things that can be improved, including the right tools, the ri",
+        "quality": {
+          "repetition_score": 0.852,
+          "distinct_1": 0.691,
+          "distinct_2": 0.852,
+          "n_words": 55,
+          "n_chars": 310
+        }
+      }
+    ]
+  },
+  "oracle": {
+    "mdlm": [
+      -2.75,
+      -3.0,
+      -3.453125
+    ],
+    "ar": [
+      -3.265625,
+      -2.71875,
+      -2.828125
+    ],
+    "mdlm_mean": -3.0677083333333335,
+    "ar_mean": -2.9375
+  }
+}

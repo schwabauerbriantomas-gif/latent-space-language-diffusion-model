@@ -2,7 +2,7 @@
 
 <!-- SEO: keywords for discoverability -->
 <!--
-keywords: masked diffusion language model, MDLM, parallel text generation, diffusion model, non-autoregressive generation, bidirectional transformer, AR oracle validation, speculative decoding, Qwen3, SplatsDB, open weights, open source LLM, torch, safetensors
+keywords: masked diffusion language model, MDLM, parallel text generation, diffusion model, non-autoregressive generation, bidirectional transformer, AR oracle validation, speculative decoding, Qwen3, SplatsDB, open weights, open source LLM, torch, safetensors, autoregressive control, architectural comparison
 -->
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -129,16 +129,61 @@ Qwen3-0.6B (reference):
 
 ## Honest Limitations
 
-This project demonstrates that masked diffusion is a viable architecture for fast text generation. The **quality gap** between the MDLM and a production AR model is real and driven by scale:
+This project demonstrates that masked diffusion is a viable architecture for fast text generation, but **an architectural quality gap exists** beyond what scale alone explains. A controlled experiment (below) confirms this.
 
-| | MDLM v3 | Qwen3-0.6B | Ratio |
-|--|--------:|-----------:|------:|
-| Parameters | 201M | 596M | 0.34× |
-| Training tokens | 272M | ~trillions | ~0.0003× |
-| Oracle log-prob | -3.55 | -1.18 | — |
-| Perplexity | 102.6 | ~15-20 | ~5× worse |
+### Controlled Comparison: MDLM vs AR (Same Scale)
 
-**The quality gap is a resource constraint, not an architectural one.** The MDLM was trained on 272M tokens (1M documents) on a single RTX 3090 in ~7 hours. Production models train on trillions of tokens across GPU clusters. The throughput advantage of masked diffusion (1.8-3.9× faster forward pass, 2.4× faster generation) is architecture-level and would compound at scale.
+To answer "is the quality gap architectural or just scale?", we trained an **autoregressive control model** from scratch with matched parameters, identical data, and the same compute budget:
+
+| | MDLM v3 | AR Control | Qwen3-0.6B |
+|--|---------|------------|------------|
+| Architecture | Masked diffusion (bidirectional) | Autoregressive (causal) | Autoregressive (causal) |
+| Parameters | 201.3M | 199.1M | 596M |
+| Layers | 10 + AdaLN | 15 (standard pre-LN) | 28 |
+| Training data | Ultra-FineWeb 1M docs | **Same** | ~trillions |
+| Training tokens | 272M | **272M (same .npy)** | ~trillions |
+| Tokenizer | 16K BPE | **Same** | 151K BPE |
+| Training time | 6.8h | 8.3h | — |
+| Hardware | RTX 3090 | RTX 3090 | GPU cluster |
+
+**Head-to-head results** (all measured on RTX 3090, identical prompts):
+
+| Metric | MDLM v3 | AR Control | Notes |
+|--------|:-------:|:----------:|-------|
+| Oracle log-prob (Qwen3) | -3.068 | **-2.938** | AR produces more coherent text |
+| Perplexity (reported) | 114.9 | 18.5 | Not directly comparable (see below) |
+| Forward TPS (batch=1) | 3,033 | 4,007 | AR faster (fewer layers, no AdaLN) |
+| Forward TPS (batch=8) | 21,960 | 33,739 | AR 1.5× faster |
+| Forward TPS (batch=32) | **113,161** | 85,363 | MDLM 1.3× faster (parallel advantage) |
+| Generation TPS | **46.0** | 37.2 | MDLM 1.2× faster (parallel decoding) |
+
+**Sample comparison** (greedy, same prompt):
+
+```
+Prompt: "Climate change is one of the biggest challenges"
+
+MDLM v3:  "...of global warming. The flooding is one of the major
+           devastating impacts of climate change. One of the..."
+
+AR:       "...facing humanity today. So if you're like most people,
+           you know what it's like to be at the top of the world.
+           As we live in a climate emergency, we're..."
+
+Prompt: "Education systems around the world need to"
+
+MDLM v3:  "...be focused on the development of education standards,
+           and leading to a lens and advocate for the values of..."
+
+AR:       "...have the right tools and the right tools to support
+           their decision-making processes. The current world is
+           not the same as the one used to support edu..."
+```
+
+**Why the PPL values are not directly comparable**: MDLM's perplexity (114.9) is computed by sampling random masking ratios t~U(0,1) and averaging CE over masked positions only. This averages over all difficulty levels — from trivial (t≈0, 1 masked token with 127 of context, PPL≈4.6) to extremely hard (t≈1, all tokens masked, no context, PPL≈1562). The AR model's PPL (18.5) is a single, stable next-token prediction task. The oracle log-prob under Qwen3-0.6B is the fair cross-architecture metric, and there the AR wins (-2.94 vs -3.07).
+
+**Conclusion**: With matched parameters (199M vs 201M), identical data (272M tokens), and equivalent compute (3 epochs, RTX 3090), the autoregressive architecture produces **more coherent text** (higher oracle LP) than masked diffusion. The MDLM compensates with **faster parallel generation** (46 vs 37 tok/s). The quality gap between MDLM and Qwen3-0.6B is therefore driven by **both** architecture and scale — not scale alone as previously stated.
+
+Full benchmark code: [`scripts/benchmark_comparison.py`](scripts/benchmark_comparison.py) · AR model: [`src/ar_control.py`](src/ar_control.py) · Training: [`scripts/train_ar.py`](scripts/train_ar.py)
 
 ### What Guidance Can and Cannot Fix
 
@@ -166,6 +211,7 @@ The successful approach: **segment-level regeneration** by the oracle (+0.22), n
 latent-space-language-diffusion-model/
 ├── src/                        # Core modules
 │   ├── mdlm_bpe_v3.py          #   201M param model + full-parallel sampling
+│   ├── ar_control.py           #   199M param AR control model (causal, KV cache)
 │   ├── logit_guidance.py       #   Adaptive guidance (rep/freq/n-gram/top-p)
 │   ├── hrm_refiner.py          #   RepetitionReviewer (geometric, 0 params)
 │   ├── hybrid_speculative.py   #   MDLM draft + Qwen3 segment refinement
@@ -174,9 +220,11 @@ latent-space-language-diffusion-model/
 │   └── semantic_hrm.py         #   Embedding-based coherence (experimental)
 ├── scripts/                    # Training & evaluation
 │   ├── train.py                #   Train MDLM v3 from scratch
+│   ├── train_ar.py             #   Train AR control model (matched params/data)
 │   ├── finetune.py             #   SFT fine-tune on UltraChat
 │   ├── benchmark.py            #   Full benchmark (all methods)
 │   ├── benchmark_parallel.py   #   Full-parallel vs semi-AR comparison
+│   ├── benchmark_comparison.py #   Head-to-head: MDLM vs AR control
 │   ├── download_data.py        #   Download Ultra-FineWeb
 │   ├── prepare_data.py         #   Tokenize + pack into memmap
 │   └── train_tokenizer.py      #   Train BPE tokenizer
@@ -233,6 +281,7 @@ This repo documents a complete research arc. The `experiments/` directory preser
 | 7 | Can SplatsDB latent space control topic? | ✅ 79% on-topic, 10.3× over baseline |
 | 8 | Can the system detect and fill knowledge gaps? | ✅ 100% gap detection accuracy |
 | 9-10 | Can MDLM scale to coherent real text at speed? | ✅ 2.4× faster, quality-limited by scale |
+| 11 | Is the quality gap architectural or just scale? | AR control wins on coherence (-2.94 vs -3.07 oracle LP), MDLM wins on speed (46 vs 37 tok/s) |
 
 ## Citation
 
