@@ -1,0 +1,38 @@
+{
+  "version": "v4",
+  "timestamp": "2026-08-04 13:28:15",
+  "gpu": "NVIDIA GeForce RTX 3090",
+  "params": {
+    "total": 182795264,
+    "trainable": 182795264
+  },
+  "throughput": {
+    "1": {
+      "tps": 6024.023478021334,
+      "latency_ms": 21.248257160186768,
+      "steps": 20
+    },
+    "8": {
+      "tps": 56225.71748554582,
+      "latency_ms": 18.2123064994812,
+      "steps": 20
+    },
+    "32": {
+      "tps": 130781.84374876299,
+      "latency_ms": 31.31933212280273,
+      "steps": 20
+    }
+  },
+  "peak_vram_gb": 4.373854208,
+  "config": {
+    "vocab_size": 10000,
+    "d_model": 1024,
+    "n_heads": 16,
+    "n_layers": 10,
+    "max_seq_len": 256,
+    "d_ff": 2816,
+    "dropout": 0.1,
+    "use_rmsnorm": true,
+    "use_checkpointing": false
+  }
+}

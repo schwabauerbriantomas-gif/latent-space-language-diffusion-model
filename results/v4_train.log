@@ -1,0 +1,27 @@
+======================================================================
+TRAINING MDLM v4 (OPTIMIZED)
+======================================================================
+Loading data...
+  Cached: /mnt/d/latent-space-language-diffusion-model/data/train_tokens_v4_128.npy (212,346 seqs, mmap)
+  Total sequences: 212,346
+  Model: 182,795,264 (182.8M)
+  Data: 212,346 seqs × 128 tokens = 27,180,288 tokens
+  Epochs: 3, Batch: 32, Accum: 4
+  Effective batch: 128
+  Total opt steps: 4,976
+  [E1 O100] loss=28.4362 avg=25.5975 lr=1.13e-04 2.0 opt/s 33,337 tok/s VRAM=6.4GB
+  [E1 O200] loss=23.3832 avg=25.0520 lr=2.74e-04 2.0 opt/s 33,075 tok/s VRAM=6.4GB
+  [E1 O300] loss=23.0337 avg=24.5216 lr=3.00e-04 2.0 opt/s 33,390 tok/s VRAM=6.4GB
+  [E1 O400] loss=21.5761 avg=24.0411 lr=2.99e-04 2.0 opt/s 33,210 tok/s VRAM=6.4GB
+  [E1 O500] loss=20.1576 avg=23.6175 lr=2.98e-04 2.0 opt/s 33,435 tok/s VRAM=6.4GB
+    → eval_loss=21.4733 PPL=3269017.4
+    → Best samples (full-parallel):
+      [0] ed. The nison of the hyperel have cause the time to the the a product, and the chemical. The brain is the state, the the
+      [1] .
+-. But you can be a the number of to to the a new question, a topic, or comparoring, in the development of the product
+      [2] be the world. If the most affected from the this time of, how it if you are a to treat, the to the a house to
+Youating i
+  [E1 O600] loss=20.9045 avg=23.2014 lr=2.96e-04 2.0 opt/s 32,466 tok/s VRAM=6.4GB
+  [E1 O700] loss=19.3729 avg=22.8764 lr=2.93e-04 2.0 opt/s 32,524 tok/s VRAM=6.4GB
+  [E1 O800] loss=17.0946 avg=22.5894 lr=2.90e-04 2.0 opt/s 32,477 tok/s VRAM=6.4GB
+  [E1 O900] loss=19.0027 avg=22.3542 lr=2.86e-04 2.0 opt/s 32,668 tok/s VRAM=6.4GB

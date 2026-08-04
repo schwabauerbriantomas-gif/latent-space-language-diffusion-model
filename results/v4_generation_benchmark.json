@@ -1,0 +1,103 @@
+{
+  "version": "v4",
+  "timestamp": "2026-08-04 13:29:09",
+  "gpu": "NVIDIA GeForce RTX 3090",
+  "results": [
+    {
+      "method": "full_parallel",
+      "prompt": "The future of artificial intelligence",
+      "text": " The future of artificial intelligence and methods in the design of technologies and researchers and the introduction of scientific research. ItThis book examines the history of of this research, focu",
+      "tps": 58.39159762339417,
+      "time_s": 1.1816768646240234,
+      "rep": 0.9411764705882353
+    },
+    {
+      "method": "full_parallel",
+      "prompt": "To build a reliable system, you need",
+      "text": " To build a reliable system, you need to have a browser or service, you can access to another user or free.\nThis is a collection and web document that e.. a site, help you to use your own administr yo",
+      "tps": 113.39060214805652,
+      "time_s": 0.6261541843414307,
+      "rep": 0.9714285714285714
+    },
+    {
+      "method": "full_parallel",
+      "prompt": "Climate change is one of the biggest challenges",
+      "text": " Climate change is one of the biggest challenges to climate, and thrive in the life of the climate.\n this is Lake Olbfort that the and change, the efforts of the Marshots at the understanding of globa",
+      "tps": 117.83145713620173,
+      "time_s": 0.6110422611236572,
+      "rep": 0.9295774647887324
+    },
+    {
+      "method": "full_parallel",
+      "prompt": "The key to success in any project is",
+      "text": " The key to success in any project is done. The proper electromagnetic system is allocated through a system, will learn the impact of wheel and coordin, and safety for an area.\nOfficiency heart rate a",
+      "tps": 90.62677354581922,
+      "time_s": 0.7944672107696533,
+      "rep": 1.0
+    },
+    {
+      "method": "full_parallel",
+      "prompt": "Education is important because",
+      "text": " Education is important because of the reason, it may be difficult for, but also due to this issue.\nIf, you\u2019ve happy,, the\u2019s not want to to discover the importance of the ones that you want to go toda",
+      "tps": 92.20220350889443,
+      "time_s": 0.7375094890594482,
+      "rep": 0.9402985074626866
+    },
+    {
+      "method": "full_parallel",
+      "prompt": "Programming is a skill that requires",
+      "text": " Programming is a skill that requires learning and understand their skills. Math, e-learning, lesson-, and activities, and.\nitize the students learn when the student is to offer an students to develop",
+      "tps": 106.61112781782616,
+      "time_s": 0.6659717559814453,
+      "rep": 0.9142857142857143
+    },
+    {
+      "method": "full_parallel_guided",
+      "prompt": "The future of artificial intelligence",
+      "text": " The future of artificial intelligence is a by focusing on science: SocialMot's challenges...\nThe we are\nand enjoy often asking way it learn, but what they been used for others in order to manage them",
+      "tps": 24.076019227776683,
+      "time_s": 2.6582467555999756,
+      "rep": 1.0
+    },
+    {
+      "method": "full_parallel_guided",
+      "prompt": "To build a reliable system, you need",
+      "text": " To build a reliable system, you need to get to ensure that everyone:\nShar in terms of additions as they can change up with their own new artwork. (How can be put together from your life in our online",
+      "tps": 19.96214950567485,
+      "time_s": 3.2060675621032715,
+      "rep": 1.0
+    },
+    {
+      "method": "full_parallel_guided",
+      "prompt": "Climate change is one of the biggest challenges",
+      "text": " Climate change is one of the biggest challenges in climate..\n. The report has also advantages that ( impacts on) as its well results of U.-Finaven, have. AsThe US suggests increased financial analysi",
+      "tps": 23.24034789657035,
+      "time_s": 2.7108027935028076,
+      "rep": 1.0
+    },
+    {
+      "method": "full_parallel_guided",
+      "prompt": "The key to success in any project is",
+      "text": " The key to success in any project is by establishing the costs of its setting and depend on a plan., this service is based with an international state-based process approach that execute resolving as",
+      "tps": 26.039257121680453,
+      "time_s": 2.3810203075408936,
+      "rep": 1.0
+    },
+    {
+      "method": "full_parallel_guided",
+      "prompt": "Education is important because",
+      "text": " Education is important because it does not need to do with the same name from a new one or.\nThere are also most common major reasons why people suffer from any case, and their own way that they\u2019t kno",
+      "tps": 24.872564033759954,
+      "time_s": 2.5731163024902344,
+      "rep": 0.9850746268656716
+    },
+    {
+      "method": "full_parallel_guided",
+      "prompt": "Programming is a skill that requires",
+      "text": " Programming is a skill that requires the support of challenges and ability to interacting with\nThe Undergraduate classroom curriculum is an online\nThis program provides vital foundation for business,",
+      "tps": 12.786280589779318,
+      "time_s": 5.005364894866943,
+      "rep": 1.0
+    }
+  ]
+}

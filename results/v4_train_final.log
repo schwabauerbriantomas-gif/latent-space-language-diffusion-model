@@ -1,0 +1,111 @@
+======================================================================
+TRAINING MDLM v4 (OPTIMIZED)
+======================================================================
+Loading data...
+  Cached: /mnt/d/latent-space-language-diffusion-model/data/train_tokens_v4_128.npy (212,346 seqs, mmap)
+  Total sequences: 212,346
+  Model: 182,795,264 (182.8M)
+  Data: 212,346 seqs × 128 tokens = 27,180,288 tokens
+  Epochs: 3, Batch: 32, Accum: 4
+  Effective batch: 128
+  Total opt steps: 4,976
+  [E1 O100] loss=24.5449 avg=25.8436 lr=1.13e-04 2.0 opt/s 33,360 tok/s VRAM=6.4GB
+  [E1 O200] loss=21.7463 avg=24.9911 lr=2.74e-04 2.0 opt/s 32,889 tok/s VRAM=6.4GB
+  [E1 O300] loss=21.5058 avg=24.4144 lr=3.00e-04 2.0 opt/s 33,300 tok/s VRAM=6.4GB
+  [E1 O400] loss=17.7980 avg=23.9005 lr=2.99e-04 2.0 opt/s 33,001 tok/s VRAM=6.4GB
+  [E1 O500] loss=22.3732 avg=23.4834 lr=2.98e-04 2.0 opt/s 33,296 tok/s VRAM=6.4GB
+    → eval_loss=22.2038 PPL=3269017.4
+    → Best samples (full-parallel):
+      [0] of the field of the muscles and the case effect by the state of the objective. The the option, we do that the a height t
+      [1] to calculate a sense of the kids.
+- Print your pet indicators may be used to be and security the website of the than and
+      [2] the ability of the loss and its challenges.
+- Body how the is able toance and un- the
+ the of the performance with a own
+  [E1 O600] loss=21.8827 avg=23.1272 lr=2.96e-04 2.0 opt/s 32,296 tok/s VRAM=6.4GB
+  [E1 O700] loss=24.0749 avg=22.8552 lr=2.93e-04 2.0 opt/s 32,504 tok/s VRAM=6.4GB
+  [E1 O800] loss=20.1915 avg=22.5782 lr=2.90e-04 2.0 opt/s 32,571 tok/s VRAM=6.4GB
+  [E1 O900] loss=19.5628 avg=22.3648 lr=2.86e-04 2.0 opt/s 32,784 tok/s VRAM=6.4GB
+  [E1 O1,000] loss=19.3171 avg=22.1799 lr=2.82e-04 2.0 opt/s 32,948 tok/s VRAM=6.4GB
+    → eval_loss=19.8751 PPL=3269017.4
+    → Best samples (full-parallel):
+      [0] and develop their own. This is the middle of of poverty by the world of, as well. the and the targets change it does a a
+      [1] ment.
+The aim of on the formed a point of is about this, and one of this test is, and with an interest, demonstrating a 
+      [2] to the context and of the Ugage. in H12 was the World (3.7 and Treat. (6. 2.) 3. 77,000,000C,, MD, 1977,000, and., Furnc
+  [E1 O1,100] loss=20.2042 avg=21.9570 lr=2.77e-04 2.0 opt/s 32,655 tok/s VRAM=6.4GB
+  [E1 O1,200] loss=20.1054 avg=21.7952 lr=2.71e-04 2.0 opt/s 32,809 tok/s VRAM=6.4GB
+  [E1 O1,300] loss=19.1533 avg=21.6248 lr=2.65e-04 2.0 opt/s 32,745 tok/s VRAM=6.4GB
+  [E1 O1,400] loss=20.3334 avg=21.4897 lr=2.58e-04 2.0 opt/s 32,849 tok/s VRAM=6.4GB
+  [E1 O1,500] loss=17.3746 avg=21.3180 lr=2.51e-04 2.0 opt/s 32,804 tok/s VRAM=6.4GB
+    → eval_loss=19.4264 PPL=3269017.4
+    → Best samples (full-parallel):
+      [0] the basis of Randsh it is true, as it takes on the value of intelligent words.This is is that the ears to of the CO6 syn
+      [1] oar is, the mass of both a forming and.
+- group of the distribution of the foundation to the base of, it is for the volt
+      [2] the “mardy” even” of we see the the the impact of the arguments to the same way.
+The sense of the objects are not select
+  [E1 O1,600] loss=20.0685 avg=21.1839 lr=2.43e-04 2.0 opt/s 32,699 tok/s VRAM=6.4GB
+  [E1 O1,700] loss=21.2917 avg=21.0896 lr=2.35e-04 2.0 opt/s 32,719 tok/s VRAM=6.4GB
+  [E1 O1,800] loss=18.3160 avg=20.9941 lr=2.27e-04 2.0 opt/s 32,814 tok/s VRAM=6.4GB
+  [E1 O1,900] loss=18.8826 avg=20.8875 lr=2.18e-04 2.0 opt/s 32,784 tok/s VRAM=6.4GB
+  [E1 O2,000] loss=17.2031 avg=20.8032 lr=2.09e-04 2.0 opt/s 32,829 tok/s VRAM=6.4GB
+    → eval_loss=17.2124 PPL=3269017.4
+    → Best samples (full-parallel):
+      [0] the 7, 2015 and theThe University of has generally the stages of the year and is of every 7.0 years. the rise of new, th
+      [1] the same that is then for a set of to the distance. a point of the universe is true, the universe should be the same in 
+      [2] th-1940” (building the end of the nation, is theraneanary of the region by the small, in the country's body as a series 
+  [E1 O2,100] loss=16.5910 avg=20.7238 lr=2.00e-04 2.0 opt/s 32,571 tok/s VRAM=6.4GB
+  [E1 O2,200] loss=20.0388 avg=20.6462 lr=1.91e-04 2.0 opt/s 32,625 tok/s VRAM=6.4GB
+  [E1 O2,300] loss=21.8327 avg=20.5564 lr=1.81e-04 2.0 opt/s 32,501 tok/s VRAM=6.4GB
+  [E1 O2,400] loss=16.0179 avg=20.4863 lr=1.71e-04 2.0 opt/s 32,450 tok/s VRAM=6.4GB
+  [E1 O2,500] loss=16.0580 avg=20.4228 lr=1.61e-04 2.0 opt/s 32,360 tok/s VRAM=6.4GB
+    → eval_loss=20.0883 PPL=3269017.4
+  [E1 O2,600] loss=20.7579 avg=20.3715 lr=1.51e-04 2.0 opt/s 32,334 tok/s VRAM=6.4GB
+  [E1 O2,700] loss=18.9721 avg=20.3114 lr=1.41e-04 2.0 opt/s 32,284 tok/s VRAM=6.4GB
+  [E1 O2,800] loss=21.8042 avg=20.2568 lr=1.31e-04 2.0 opt/s 32,284 tok/s VRAM=6.4GB
+  [E1 O2,900] loss=19.1260 avg=20.1904 lr=1.21e-04 2.0 opt/s 32,241 tok/s VRAM=6.4GB
+  [E1 O3,000] loss=18.8667 avg=20.1325 lr=1.12e-04 2.0 opt/s 32,262 tok/s VRAM=6.4GB
+    → eval_loss=17.6577 PPL=3269017.4
+  [E1 O3,100] loss=18.7088 avg=20.0816 lr=1.02e-04 2.0 opt/s 32,194 tok/s VRAM=6.4GB
+  [E1 O3,200] loss=16.9135 avg=20.0296 lr=9.28e-05 2.0 opt/s 32,235 tok/s VRAM=6.4GB
+  [E1 O3,300] loss=16.2369 avg=19.9928 lr=8.37e-05 2.0 opt/s 32,221 tok/s VRAM=6.4GB
+  [E1 O3,400] loss=15.4264 avg=19.9416 lr=7.49e-05 2.0 opt/s 32,246 tok/s VRAM=6.4GB
+  [E1 O3,500] loss=16.9012 avg=19.8968 lr=6.65e-05 2.0 opt/s 32,210 tok/s VRAM=6.4GB
+    → eval_loss=17.0947 PPL=3269017.4
+    → Best samples (full-parallel):
+      [0] can range from the data and data that the same.
+i- A combination of data in to data. data synthesized data related to co
+      [1] .
+- is a to an important for the for of people and a basic diet.
+- The goal of in the,t give you the ability to be. and 
+      [2] ismic, organism in theun and the, the region of of these culture nation-s mythology ( of the 1970 of).
+The war and along
+  [E1 O3,600] loss=16.8132 avg=19.8485 lr=5.84e-05 2.0 opt/s 32,057 tok/s VRAM=6.4GB
+  [E1 O3,700] loss=16.8209 avg=19.8013 lr=5.07e-05 2.0 opt/s 32,080 tok/s VRAM=6.4GB
+  [E1 O3,800] loss=17.0262 avg=19.7665 lr=4.35e-05 2.0 opt/s 32,029 tok/s VRAM=6.4GB
+  [E1 O3,900] loss=19.4501 avg=19.7320 lr=3.67e-05 2.0 opt/s 32,061 tok/s VRAM=6.4GB
+  [E1 O4,000] loss=19.0354 avg=19.6953 lr=3.04e-05 2.0 opt/s 32,022 tok/s VRAM=6.4GB
+    → eval_loss=18.7924 PPL=3269017.4
+  [E1 O4,100] loss=21.9166 avg=19.6544 lr=2.47e-05 2.0 opt/s 31,999 tok/s VRAM=6.4GB
+  [E1 O4,200] loss=18.3678 avg=19.6264 lr=1.95e-05 2.0 opt/s 31,995 tok/s VRAM=6.4GB
+  [E1 O4,300] loss=19.6429 avg=19.5932 lr=1.48e-05 2.0 opt/s 32,000 tok/s VRAM=6.4GB
+  [E1 O4,400] loss=18.8223 avg=19.5551 lr=1.08e-05 2.0 opt/s 31,966 tok/s VRAM=6.4GB
+  [E1 O4,500] loss=16.3470 avg=19.5190 lr=7.41e-06 2.0 opt/s 31,982 tok/s VRAM=6.4GB
+    → eval_loss=18.7315 PPL=3269017.4
+  [E1 O4,600] loss=22.4538 avg=19.4906 lr=4.64e-06 2.0 opt/s 31,962 tok/s VRAM=6.4GB
+  [E1 O4,700] loss=20.2141 avg=19.4664 lr=2.50e-06 2.0 opt/s 31,986 tok/s VRAM=6.4GB
+  [E1 O4,800] loss=18.3824 avg=19.4446 lr=1.01e-06 2.0 opt/s 31,981 tok/s VRAM=6.4GB
+  [E1 O4,900] loss=16.9461 avg=19.4193 lr=1.87e-07 2.0 opt/s 31,983 tok/s VRAM=6.4GB
+  [E1 O5,000] loss=19.7809 avg=19.3922 lr=1.23e-09 1.9 opt/s 31,947 tok/s VRAM=6.4GB
+    → eval_loss=17.9331 PPL=3269017.4
+  [E1 O5,100] loss=19.9283 avg=19.3635 lr=1.23e-09 2.0 opt/s 31,952 tok/s VRAM=6.4GB
+  [E1 O5,200] loss=17.0751 avg=19.3408 lr=1.23e-09 1.9 opt/s 31,931 tok/s VRAM=6.4GB
+  [E1 O5,300] loss=23.6622 avg=19.3278 lr=1.23e-09 1.9 opt/s 31,938 tok/s VRAM=6.4GB
+  [E1 O5,400] loss=18.0548 avg=19.3046 lr=1.23e-09 1.9 opt/s 31,917 tok/s VRAM=6.4GB
+  [E1 O5,500] loss=21.8956 avg=19.2785 lr=1.23e-09 1.9 opt/s 31,940 tok/s VRAM=6.4GB
+    → eval_loss=18.5156 PPL=3269017.4
+  [E1 O5,600] loss=16.5343 avg=19.2567 lr=1.23e-09 1.9 opt/s 31,892 tok/s VRAM=6.4GB
+  [E1 O5,700] loss=18.3719 avg=19.2326 lr=1.23e-09 1.9 opt/s 31,909 tok/s VRAM=6.4GB
+  [E1 O5,800] loss=19.3050 avg=19.2134 lr=1.23e-09 1.9 opt/s 31,903 tok/s VRAM=6.4GB
+  [E1 O5,900] loss=21.0958 avg=19.1898 lr=1.23e-09 1.9 opt/s 31,921 tok/s VRAM=6.4GB
