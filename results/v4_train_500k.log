@@ -1,0 +1,442 @@
+======================================================================
+TRAINING MDLM v4 (OPTIMIZED)
+======================================================================
+Loading data...
+  500,000 documents
+  Streaming tokenize → memmap (chunk=1000)...
+    [50,000/500,000] seqs=106,270
+    [100,000/500,000] seqs=212,345
+    [150,000/500,000] seqs=318,506
+    [200,000/500,000] seqs=424,757
+    [250,000/500,000] seqs=530,800
+    [300,000/500,000] seqs=636,992
+    [350,000/500,000] seqs=743,073
+    [400,000/500,000] seqs=849,589
+    [450,000/500,000] seqs=955,575
+    [500,000/500,000] seqs=1,061,978
+  Saved: 1,061,979 sequences (271.9 MB)
+  Total sequences: 1,061,979
+  Model: 182,795,264 (182.8M)
+  Data: 1,061,979 seqs × 128 tokens = 135,933,312 tokens
+  Epochs: 3, Batch: 32, Accum: 4
+  Effective batch: 128
+  Total opt steps: 24,889
+  [E1 O100] loss=25.9206 avg=25.7656 lr=1.66e-05 1.8 opt/s 30,105 tok/s VRAM=6.4GB
+  [E1 O200] loss=23.3264 avg=25.0375 lr=3.00e-05 1.9 opt/s 31,185 tok/s VRAM=6.4GB
+  [E1 O300] loss=20.6676 avg=24.6363 lr=5.14e-05 1.9 opt/s 31,038 tok/s VRAM=6.4GB
+  [E1 O400] loss=26.9591 avg=24.4832 lr=7.95e-05 1.9 opt/s 30,821 tok/s VRAM=6.4GB
+  [E1 O500] loss=22.5580 avg=24.3079 lr=1.12e-04 1.9 opt/s 30,920 tok/s VRAM=6.4GB
+    → eval_loss=24.6688 PPL=3269017.4
+    → Best samples (full-parallel):
+      [0] is serious’’’s’’re a thats’’’s’t’s’s there’ts’’s’ more’’’’ss helps’’s’’s’’s approach’ ss’’s What foundation,’s’ its’tsta
+      [1] , andy,ations, our and their the, and the off of the, the of the parts’ of of in which the a by the characteristics of, 
+      [2] of review two- a the keys, one with ofally the. The the In. The is place using it isrand to and the, this inready.
+The I
+  [E1 O600] loss=23.5040 avg=24.1303 lr=1.48e-04 1.9 opt/s 30,369 tok/s VRAM=6.4GB
+  [E1 O700] loss=17.9158 avg=23.8562 lr=1.84e-04 1.9 opt/s 30,445 tok/s VRAM=6.4GB
+  [E1 O800] loss=22.4257 avg=23.5935 lr=2.19e-04 1.9 opt/s 30,518 tok/s VRAM=6.4GB
+  [E1 O900] loss=18.3434 avg=23.3474 lr=2.49e-04 1.9 opt/s 30,705 tok/s VRAM=6.4GB
+  [E1 O1,000] loss=16.9217 avg=23.1107 lr=2.74e-04 1.9 opt/s 30,685 tok/s VRAM=6.4GB
+    → eval_loss=20.6178 PPL=3269017.4
+    → Best samples (full-parallel):
+      [0] a pattern, with the different nervement and the first to accelerator and the prior of the actual.
+The word is one of the
+      [1] in a Finally. The lesson is often a part of plants in the person is that to a, if that will take a, that a significant p
+      [2] .
+-.3.160003.1
+Step 10.016...2..2.1. 50: 507.2.
+2.7
+~.:, 0.
+- . 2.org:1..2.=..00/ ===8:: $2.====)).6: 1 4:= = 11.85.3.4.
+  [E1 O1,100] loss=22.6957 avg=22.8778 lr=2.91e-04 1.8 opt/s 30,259 tok/s VRAM=6.4GB
+  [E1 O1,200] loss=23.6343 avg=22.6993 lr=2.99e-04 1.9 opt/s 30,424 tok/s VRAM=6.4GB
+  [E1 O1,300] loss=20.4506 avg=22.5137 lr=3.00e-04 1.9 opt/s 30,558 tok/s VRAM=6.4GB
+  [E1 O1,400] loss=22.1167 avg=22.3320 lr=3.00e-04 1.9 opt/s 30,753 tok/s VRAM=6.4GB
+  [E1 O1,500] loss=19.1765 avg=22.1726 lr=3.00e-04 1.9 opt/s 30,939 tok/s VRAM=6.4GB
+    → eval_loss=20.1733 PPL=3269017.4
+    → Best samples (full-parallel):
+      [0] enough to log.
+We woot can the RBS access to your family and order to them through the., and the support the health acti
+      [1] - Publication:
+- Relation
+ive B Static and House
+-
+-urared Stage
+- Eist Filli
+a NuA Ka:
+-Miónu, Alaska- Jacket M. Dr.
+- 
+      [2] to the climate and in the world.
+- Reorganization of the Europe
+- The.
+ have the third school-priptational which to be a
+  [E1 O1,600] loss=20.5293 avg=22.0362 lr=3.00e-04 1.9 opt/s 30,770 tok/s VRAM=6.4GB
+  [E1 O1,700] loss=22.4204 avg=21.8909 lr=3.00e-04 1.9 opt/s 30,883 tok/s VRAM=6.4GB
+  [E1 O1,800] loss=20.5240 avg=21.7370 lr=3.00e-04 1.9 opt/s 31,058 tok/s VRAM=6.4GB
+  [E1 O1,900] loss=22.0270 avg=21.6131 lr=2.99e-04 1.9 opt/s 31,209 tok/s VRAM=6.4GB
+  [E1 O2,000] loss=20.8882 avg=21.5114 lr=2.99e-04 1.9 opt/s 31,293 tok/s VRAM=6.4GB
+    → eval_loss=18.8509 PPL=3269017.4
+    → Best samples (full-parallel):
+      [0] b)
+(1 p)); c(1)? (the type 1,9; Yes, the) will give you on the brain groups of the. IfD's are your blood, the relationsh
+      [1] this of the.g., the result of the spondering destruction or various of the rules that may also be used for the form of..
+      [2] is an action with advice?
+- How is the resources init is: to pay?ed? you are what you to about the parts of a through th
+  [E1 O2,100] loss=19.3116 avg=21.3777 lr=2.99e-04 1.9 opt/s 31,248 tok/s VRAM=6.4GB
+  [E1 O2,200] loss=22.1855 avg=21.2889 lr=2.99e-04 1.9 opt/s 31,290 tok/s VRAM=6.4GB
+  [E1 O2,300] loss=15.5932 avg=21.1813 lr=2.99e-04 1.9 opt/s 31,328 tok/s VRAM=6.4GB
+  [E1 O2,400] loss=14.5134 avg=21.0850 lr=2.98e-04 1.9 opt/s 31,353 tok/s VRAM=6.4GB
+  [E1 O2,500] loss=17.8004 avg=20.9987 lr=2.98e-04 1.9 opt/s 31,434 tok/s VRAM=6.4GB
+    → eval_loss=18.8802 PPL=3269017.4
+  [E1 O2,600] loss=20.7912 avg=20.9361 lr=2.98e-04 1.9 opt/s 31,455 tok/s VRAM=6.4GB
+  [E1 O2,700] loss=21.4544 avg=20.8574 lr=2.97e-04 1.9 opt/s 31,530 tok/s VRAM=6.4GB
+  [E1 O2,800] loss=18.6041 avg=20.7941 lr=2.97e-04 1.9 opt/s 31,539 tok/s VRAM=6.4GB
+  [E1 O2,900] loss=17.5891 avg=20.7221 lr=2.96e-04 1.9 opt/s 31,579 tok/s VRAM=6.4GB
+  [E1 O3,000] loss=15.7912 avg=20.6509 lr=2.96e-04 1.9 opt/s 31,576 tok/s VRAM=6.4GB
+    → eval_loss=18.8403 PPL=3269017.4
+    → Best samples (full-parallel):
+      [0] and phosphorusolin, and predod in the skin.. The is one of the skin,, of the sun, it is a very- of the skin the stomach,
+      [1] has been established to the understood of the community.
+- We will access to the possible UN of the citizenship sign the
+      [2] when the car, you would try to get a that help you increase the the amount of time.
+Theounting is the for that you can y
+  [E1 O3,100] loss=17.9390 avg=20.5920 lr=2.95e-04 1.9 opt/s 31,459 tok/s VRAM=6.4GB
+  [E1 O3,200] loss=21.4226 avg=20.5359 lr=2.95e-04 1.9 opt/s 31,537 tok/s VRAM=6.4GB
+  [E1 O3,300] loss=17.7257 avg=20.4936 lr=2.94e-04 1.9 opt/s 31,571 tok/s VRAM=6.4GB
+  [E1 O3,400] loss=18.5209 avg=20.4362 lr=2.94e-04 1.9 opt/s 31,647 tok/s VRAM=6.4GB
+  [E1 O3,500] loss=16.1810 avg=20.3821 lr=2.93e-04 1.9 opt/s 31,683 tok/s VRAM=6.4GB
+    → eval_loss=17.8255 PPL=3269017.4
+    → Best samples (full-parallel):
+      [0] a two-olded model was a of. 4 C.0, 4.7 and and 1/ CI = 1 = 3. In the, term, of the participants were isolated from the s
+      [1] him that the world has a challenge.
+Looding quality was exciting.
+B is of new and interactive activities tools of educat
+      [2] and can be the to that word.
+It is also a type of-alone of the same 8 names: that are words in one of the same,. It .
+Fo
+  [E1 O3,600] loss=20.4759 avg=20.3342 lr=2.93e-04 1.9 opt/s 31,653 tok/s VRAM=6.4GB
+  [E1 O3,700] loss=19.7028 avg=20.2893 lr=2.92e-04 1.9 opt/s 31,653 tok/s VRAM=6.4GB
+  [E1 O3,800] loss=18.4300 avg=20.2328 lr=2.91e-04 1.9 opt/s 31,717 tok/s VRAM=6.4GB
+  [E1 O3,900] loss=16.4395 avg=20.1826 lr=2.91e-04 1.9 opt/s 31,722 tok/s VRAM=6.4GB
+  [E1 O4,000] loss=20.2309 avg=20.1368 lr=2.90e-04 1.9 opt/s 31,761 tok/s VRAM=6.4GB
+    → eval_loss=18.0032 PPL=3269017.4
+  [E1 O4,100] loss=17.3139 avg=20.0916 lr=2.89e-04 1.9 opt/s 31,761 tok/s VRAM=6.4GB
+  [E1 O4,200] loss=18.4809 avg=20.0391 lr=2.89e-04 1.9 opt/s 31,812 tok/s VRAM=6.4GB
+  [E1 O4,300] loss=20.0348 avg=20.0008 lr=2.88e-04 1.9 opt/s 31,855 tok/s VRAM=6.4GB
+  [E1 O4,400] loss=18.9247 avg=19.9609 lr=2.87e-04 1.9 opt/s 31,869 tok/s VRAM=6.4GB
+  [E1 O4,500] loss=16.5756 avg=19.9228 lr=2.86e-04 1.9 opt/s 31,903 tok/s VRAM=6.4GB
+    → eval_loss=17.4080 PPL=3269017.4
+    → Best samples (full-parallel):
+      [0] group which is to be their ownion to reflections of settled. more. the every by being, considered, and in the defined la
+      [1] - 10.0. 4: nm2
+-, 10.15
+- no. Vol, 1993.
+- Tyan, Jing
+- Dammaver 2005, 1, 1979
+- 181: 9007.-57.1894,. 20, 19182. 1879 19
+      [2] .
+- The environmental support, a the, and and and matters such as such as,consnnia safety, maintenance,, safety: vulnera
+  [E1 O4,600] loss=17.6362 avg=19.8870 lr=2.85e-04 1.9 opt/s 31,822 tok/s VRAM=6.4GB
+  [E1 O4,700] loss=14.6547 avg=19.8525 lr=2.84e-04 1.9 opt/s 31,871 tok/s VRAM=6.4GB
+  [E1 O4,800] loss=15.6662 avg=19.8210 lr=2.84e-04 1.9 opt/s 31,896 tok/s VRAM=6.4GB
+  [E1 O4,900] loss=15.7160 avg=19.7856 lr=2.83e-04 1.9 opt/s 31,943 tok/s VRAM=6.4GB
+  [E1 O5,000] loss=17.2185 avg=19.7535 lr=2.82e-04 2.0 opt/s 31,966 tok/s VRAM=6.4GB
+    → eval_loss=16.8902 PPL=3269017.4
+    → Best samples (full-parallel):
+      [0] with the purpose of the argument.
+The the purpose of the paper and so, the author of the paper are and obligation, the r
+      [1] to the brain is the body. called just happens the body really now and side of the body blood the body is the brain and a
+      [2] and its use of give, to the, even that in the cover its own of some of the sentence,“More’s an error of a foul, and its 
+  [E1 O5,100] loss=17.2093 avg=19.7244 lr=2.81e-04 1.9 opt/s 31,938 tok/s VRAM=6.4GB
+  [E1 O5,200] loss=17.4275 avg=19.6830 lr=2.80e-04 2.0 opt/s 31,950 tok/s VRAM=6.4GB
+  [E1 O5,300] loss=18.3838 avg=19.6535 lr=2.79e-04 2.0 opt/s 31,984 tok/s VRAM=6.4GB
+  [E1 O5,400] loss=15.4531 avg=19.6266 lr=2.78e-04 2.0 opt/s 31,994 tok/s VRAM=6.4GB
+  [E1 O5,500] loss=20.6253 avg=19.5931 lr=2.77e-04 2.0 opt/s 32,021 tok/s VRAM=6.4GB
+    → eval_loss=18.1871 PPL=3269017.4
+  [E1 O5,600] loss=19.9815 avg=19.5751 lr=2.76e-04 2.0 opt/s 32,018 tok/s VRAM=6.4GB
+  [E1 O5,700] loss=16.8301 avg=19.5574 lr=2.74e-04 2.0 opt/s 32,035 tok/s VRAM=6.4GB
+  [E1 O5,800] loss=18.3490 avg=19.5353 lr=2.73e-04 2.0 opt/s 32,040 tok/s VRAM=6.4GB
+  [E1 O5,900] loss=21.5883 avg=19.5092 lr=2.72e-04 2.0 opt/s 32,060 tok/s VRAM=6.4GB
+  [E1 O6,000] loss=18.7880 avg=19.4832 lr=2.71e-04 2.0 opt/s 32,090 tok/s VRAM=6.4GB
+    → eval_loss=17.4930 PPL=3269017.4
+  [E1 O6,100] loss=20.5951 avg=19.4565 lr=2.70e-04 2.0 opt/s 32,085 tok/s VRAM=6.4GB
+  [E1 O6,200] loss=18.0257 avg=19.4357 lr=2.69e-04 2.0 opt/s 32,116 tok/s VRAM=6.4GB
+  [E1 O6,300] loss=17.2286 avg=19.4159 lr=2.67e-04 2.0 opt/s 32,122 tok/s VRAM=6.4GB
+  [E1 O6,400] loss=20.0237 avg=19.3907 lr=2.66e-04 2.0 opt/s 32,146 tok/s VRAM=6.4GB
+  [E1 O6,500] loss=19.4264 avg=19.3666 lr=2.65e-04 2.0 opt/s 32,145 tok/s VRAM=6.4GB
+    → eval_loss=18.0645 PPL=3269017.4
+  [E1 O6,600] loss=21.6723 avg=19.3462 lr=2.64e-04 2.0 opt/s 32,163 tok/s VRAM=6.4GB
+  [E1 O6,700] loss=18.9418 avg=19.3264 lr=2.62e-04 2.0 opt/s 32,169 tok/s VRAM=6.4GB
+  [E1 O6,800] loss=14.6063 avg=19.3107 lr=2.61e-04 2.0 opt/s 32,190 tok/s VRAM=6.4GB
+  [E1 O6,900] loss=16.6793 avg=19.2881 lr=2.60e-04 2.0 opt/s 32,190 tok/s VRAM=6.4GB
+  [E1 O7,000] loss=16.6676 avg=19.2695 lr=2.58e-04 2.0 opt/s 32,206 tok/s VRAM=6.4GB
+    → eval_loss=18.9606 PPL=3269017.4
+  [E1 O7,100] loss=16.9347 avg=19.2449 lr=2.57e-04 2.0 opt/s 32,198 tok/s VRAM=6.4GB
+  [E1 O7,200] loss=17.0333 avg=19.2250 lr=2.55e-04 2.0 opt/s 32,200 tok/s VRAM=6.4GB
+  [E1 O7,300] loss=19.9603 avg=19.2117 lr=2.54e-04 2.0 opt/s 32,207 tok/s VRAM=6.4GB
+  [E1 O7,400] loss=18.7781 avg=19.1997 lr=2.53e-04 2.0 opt/s 32,223 tok/s VRAM=6.4GB
+  [E1 O7,500] loss=18.9398 avg=19.1803 lr=2.51e-04 2.0 opt/s 32,239 tok/s VRAM=6.4GB
+    → eval_loss=20.0629 PPL=3269017.4
+  [E1 O7,600] loss=17.4439 avg=19.1593 lr=2.50e-04 2.0 opt/s 32,229 tok/s VRAM=6.4GB
+  [E1 O7,700] loss=15.0808 avg=19.1385 lr=2.48e-04 2.0 opt/s 32,240 tok/s VRAM=6.4GB
+  [E1 O7,800] loss=18.9512 avg=19.1194 lr=2.47e-04 2.0 opt/s 32,238 tok/s VRAM=6.4GB
+  [E1 O7,900] loss=18.0416 avg=19.1046 lr=2.45e-04 2.0 opt/s 32,256 tok/s VRAM=6.4GB
+  [E1 O8,000] loss=15.6567 avg=19.0904 lr=2.44e-04 2.0 opt/s 32,256 tok/s VRAM=6.4GB
+    → eval_loss=16.8126 PPL=3269017.4
+    → Best samples (full-parallel):
+      [0] ars, have occurred, these changes in addition temporal disease, and early the consequences for these structures which ma
+      [1] - The teaching process,ball,,s, konut,boths, multi, meats, and stories that expresses the opponents.
+- The author is a f
+      [2] a lack of knowledge in the warloven. applied to, we the power of the soldiers’s life. and the as it is unlikely that the
+  [E1 O8,100] loss=16.1102 avg=19.0749 lr=2.42e-04 2.0 opt/s 32,224 tok/s VRAM=6.4GB
+  [E1 O8,200] loss=14.7825 avg=19.0589 lr=2.40e-04 2.0 opt/s 32,232 tok/s VRAM=6.4GB
+  [E1 O8,300] loss=22.5153 avg=19.0452 lr=2.39e-04 2.0 opt/s 32,253 tok/s VRAM=6.4GB
+  [E1 O8,400] loss=16.5187 avg=19.0307 lr=2.37e-04 2.0 opt/s 32,258 tok/s VRAM=6.4GB
+  [E1 O8,500] loss=16.6314 avg=19.0084 lr=2.36e-04 2.0 opt/s 32,283 tok/s VRAM=6.4GB
+    → eval_loss=18.7276 PPL=3269017.4
+  [E1 O8,600] loss=15.6350 avg=18.9916 lr=2.34e-04 2.0 opt/s 32,280 tok/s VRAM=6.4GB
+  [E1 O8,700] loss=21.0609 avg=18.9771 lr=2.32e-04 2.0 opt/s 32,302 tok/s VRAM=6.4GB
+  [E1 O8,800] loss=19.8547 avg=18.9594 lr=2.31e-04 2.0 opt/s 32,321 tok/s VRAM=6.4GB
+  [E1 O8,900] loss=16.6736 avg=18.9448 lr=2.29e-04 2.0 opt/s 32,330 tok/s VRAM=6.4GB
+  [E1 O9,000] loss=20.2654 avg=18.9332 lr=2.27e-04 2.0 opt/s 32,349 tok/s VRAM=6.4GB
+    → eval_loss=17.6499 PPL=3269017.4
+  [E1 O9,100] loss=18.6876 avg=18.9221 lr=2.25e-04 2.0 opt/s 32,351 tok/s VRAM=6.4GB
+  [E1 O9,200] loss=17.9890 avg=18.9085 lr=2.24e-04 2.0 opt/s 32,373 tok/s VRAM=6.4GB
+  [E1 O9,300] loss=15.7846 avg=18.8910 lr=2.22e-04 2.0 opt/s 32,379 tok/s VRAM=6.4GB
+  [E1 O9,400] loss=17.3470 avg=18.8786 lr=2.20e-04 2.0 opt/s 32,392 tok/s VRAM=6.4GB
+  [E1 O9,500] loss=17.8948 avg=18.8685 lr=2.18e-04 2.0 opt/s 32,407 tok/s VRAM=6.4GB
+    → eval_loss=19.6583 PPL=3269017.4
+  [E1 O9,600] loss=16.6049 avg=18.8562 lr=2.17e-04 2.0 opt/s 32,420 tok/s VRAM=6.4GB
+  [E1 O9,700] loss=14.4894 avg=18.8436 lr=2.15e-04 2.0 opt/s 32,437 tok/s VRAM=6.4GB
+  [E1 O9,800] loss=17.0030 avg=18.8316 lr=2.13e-04 2.0 opt/s 32,447 tok/s VRAM=6.4GB
+  [E1 O9,900] loss=17.0552 avg=18.8183 lr=2.11e-04 2.0 opt/s 32,462 tok/s VRAM=6.4GB
+  [E1 O10,000] loss=15.9750 avg=18.8041 lr=2.09e-04 2.0 opt/s 32,471 tok/s VRAM=6.4GB
+    → eval_loss=17.2528 PPL=3269017.4
+  [E1 O10,100] loss=15.7083 avg=18.7907 lr=2.08e-04 2.0 opt/s 32,482 tok/s VRAM=6.4GB
+  [E1 O10,200] loss=14.1029 avg=18.7754 lr=2.06e-04 2.0 opt/s 32,490 tok/s VRAM=6.4GB
+  [E1 O10,300] loss=16.1161 avg=18.7617 lr=2.04e-04 2.0 opt/s 32,487 tok/s VRAM=6.4GB
+  [E1 O10,400] loss=15.5986 avg=18.7473 lr=2.02e-04 2.0 opt/s 32,495 tok/s VRAM=6.4GB
+  [E1 O10,500] loss=16.0555 avg=18.7338 lr=2.00e-04 2.0 opt/s 32,510 tok/s VRAM=6.4GB
+    → eval_loss=17.3111 PPL=3269017.4
+  [E1 O10,600] loss=14.1642 avg=18.7220 lr=1.98e-04 2.0 opt/s 32,511 tok/s VRAM=6.4GB
+  [E1 O10,700] loss=17.2678 avg=18.7065 lr=1.96e-04 2.0 opt/s 32,528 tok/s VRAM=6.4GB
+  [E1 O10,800] loss=15.9450 avg=18.6959 lr=1.94e-04 2.0 opt/s 32,534 tok/s VRAM=6.4GB
+  [E1 O10,900] loss=17.9140 avg=18.6820 lr=1.93e-04 2.0 opt/s 32,550 tok/s VRAM=6.4GB
+  [E1 O11,000] loss=15.6683 avg=18.6711 lr=1.91e-04 2.0 opt/s 32,563 tok/s VRAM=6.4GB
+    → eval_loss=17.7445 PPL=3269017.4
+  [E1 O11,100] loss=14.1351 avg=18.6628 lr=1.89e-04 2.0 opt/s 32,566 tok/s VRAM=6.4GB
+  [E1 O11,200] loss=15.4310 avg=18.6493 lr=1.87e-04 2.0 opt/s 32,576 tok/s VRAM=6.4GB
+  [E1 O11,300] loss=15.5537 avg=18.6408 lr=1.85e-04 2.0 opt/s 32,583 tok/s VRAM=6.4GB
+  [E1 O11,400] loss=18.4562 avg=18.6299 lr=1.83e-04 2.0 opt/s 32,596 tok/s VRAM=6.4GB
+  [E1 O11,500] loss=17.6127 avg=18.6215 lr=1.81e-04 2.0 opt/s 32,602 tok/s VRAM=6.4GB
+    → eval_loss=17.5581 PPL=3269017.4
+  [E1 O11,600] loss=16.4437 avg=18.6083 lr=1.79e-04 2.0 opt/s 32,609 tok/s VRAM=6.4GB
+  [E1 O11,700] loss=18.1175 avg=18.5983 lr=1.77e-04 2.0 opt/s 32,612 tok/s VRAM=6.4GB
+  [E1 O11,800] loss=17.8692 avg=18.5857 lr=1.75e-04 2.0 opt/s 32,626 tok/s VRAM=6.4GB
+  [E1 O11,900] loss=21.9672 avg=18.5759 lr=1.73e-04 2.0 opt/s 32,631 tok/s VRAM=6.4GB
+  [E1 O12,000] loss=16.1056 avg=18.5661 lr=1.71e-04 2.0 opt/s 32,644 tok/s VRAM=6.4GB
+    → eval_loss=16.3607 PPL=3269017.4
+    → Best samples (full-parallel):
+      [0] the person.
+- The DB says:
+- The X is: the size of the person of isivated, the a person in combination with't. He has
+- 
+      [1] strong enough for?
+ the reader know that, we is going it out to explain, and why we think.
+I think weIn all there are no
+      [2] us as an are-friendly, but that plaintext are attributes,, values, and values the character of the..
+- We have that our 
+  [E1 O12,100] loss=16.1739 avg=18.5513 lr=1.69e-04 2.0 opt/s 32,603 tok/s VRAM=6.4GB
+  [E1 O12,200] loss=16.3766 avg=18.5413 lr=1.67e-04 2.0 opt/s 32,609 tok/s VRAM=6.4GB
+  [E1 O12,300] loss=14.3747 avg=18.5351 lr=1.65e-04 2.0 opt/s 32,608 tok/s VRAM=6.4GB
+  [E1 O12,400] loss=19.4866 avg=18.5273 lr=1.63e-04 2.0 opt/s 32,616 tok/s VRAM=6.4GB
+  [E1 O12,500] loss=18.8325 avg=18.5186 lr=1.61e-04 2.0 opt/s 32,613 tok/s VRAM=6.4GB
+    → eval_loss=16.6779 PPL=3269017.4
+  [E1 O12,600] loss=22.5583 avg=18.5085 lr=1.59e-04 2.0 opt/s 32,616 tok/s VRAM=6.4GB
+  [E1 O12,700] loss=16.4775 avg=18.5007 lr=1.57e-04 2.0 opt/s 32,617 tok/s VRAM=6.4GB
+  [E1 O12,800] loss=15.2029 avg=18.4910 lr=1.55e-04 2.0 opt/s 32,623 tok/s VRAM=6.4GB
+  [E1 O12,900] loss=18.4339 avg=18.4810 lr=1.53e-04 2.0 opt/s 32,624 tok/s VRAM=6.4GB
+  [E1 O13,000] loss=14.8626 avg=18.4684 lr=1.51e-04 2.0 opt/s 32,626 tok/s VRAM=6.4GB
+    → eval_loss=17.8632 PPL=3269017.4
+  [E1 O13,100] loss=18.9983 avg=18.4575 lr=1.49e-04 2.0 opt/s 32,618 tok/s VRAM=6.4GB
+  [E1 O13,200] loss=18.5155 avg=18.4486 lr=1.47e-04 2.0 opt/s 32,622 tok/s VRAM=6.4GB
+  [E1 O13,300] loss=15.9383 avg=18.4388 lr=1.45e-04 2.0 opt/s 32,617 tok/s VRAM=6.4GB
+  [E1 O13,400] loss=22.5603 avg=18.4283 lr=1.43e-04 2.0 opt/s 32,620 tok/s VRAM=6.4GB
+  [E1 O13,500] loss=16.2670 avg=18.4167 lr=1.41e-04 2.0 opt/s 32,617 tok/s VRAM=6.4GB
+    → eval_loss=17.7721 PPL=3269017.4
+  [E1 O13,600] loss=13.7701 avg=18.4060 lr=1.39e-04 2.0 opt/s 32,617 tok/s VRAM=6.4GB
+  [E1 O13,700] loss=16.0328 avg=18.3951 lr=1.37e-04 2.0 opt/s 32,617 tok/s VRAM=6.4GB
+  [E1 O13,800] loss=14.8574 avg=18.3868 lr=1.35e-04 2.0 opt/s 32,620 tok/s VRAM=6.4GB
+  [E1 O13,900] loss=20.1226 avg=18.3777 lr=1.33e-04 2.0 opt/s 32,623 tok/s VRAM=6.4GB
+  [E1 O14,000] loss=18.5001 avg=18.3686 lr=1.31e-04 2.0 opt/s 32,628 tok/s VRAM=6.4GB
+    → eval_loss=15.5486 PPL=3269017.4
+    → Best samples (full-parallel):
+      [0] -ribe the interpretiveence of the history of life on the 14th century of the ancientis.
+- Desc how the archaeological ma
+      [1] electricity, and electricity, and energy energyate,.
+Most of the, many this energy can store energy such as energy energ
+      [2] one (ingle vector) is a specific number of elements to the elements. of the,, in the, the aA,A,'sA,A, ofA, B,,, will). a
+  [E1 O14,100] loss=16.8240 avg=18.3590 lr=1.29e-04 2.0 opt/s 32,606 tok/s VRAM=6.4GB
+  [E1 O14,200] loss=18.9565 avg=18.3480 lr=1.27e-04 2.0 opt/s 32,616 tok/s VRAM=6.4GB
+  [E1 O14,300] loss=16.3358 avg=18.3392 lr=1.26e-04 2.0 opt/s 32,622 tok/s VRAM=6.4GB
+  [E1 O14,400] loss=13.5474 avg=18.3301 lr=1.24e-04 2.0 opt/s 32,633 tok/s VRAM=6.4GB
+  [E1 O14,500] loss=14.8657 avg=18.3206 lr=1.22e-04 2.0 opt/s 32,638 tok/s VRAM=6.4GB
+    → eval_loss=16.1509 PPL=3269017.4
+  [E1 O14,600] loss=14.2468 avg=18.3094 lr=1.20e-04 2.0 opt/s 32,645 tok/s VRAM=6.4GB
+  [E1 O14,700] loss=16.8868 avg=18.3007 lr=1.18e-04 2.0 opt/s 32,640 tok/s VRAM=6.4GB
+  [E1 O14,800] loss=14.6111 avg=18.2919 lr=1.16e-04 2.0 opt/s 32,644 tok/s VRAM=6.4GB
+  [E1 O14,900] loss=14.0869 avg=18.2829 lr=1.14e-04 2.0 opt/s 32,648 tok/s VRAM=6.4GB
+  [E1 O15,000] loss=21.1111 avg=18.2755 lr=1.12e-04 2.0 opt/s 32,659 tok/s VRAM=6.4GB
+    → eval_loss=16.4293 PPL=3269017.4
+  [E1 O15,100] loss=19.0250 avg=18.2657 lr=1.10e-04 2.0 opt/s 32,657 tok/s VRAM=6.4GB
+  [E1 O15,200] loss=16.3786 avg=18.2552 lr=1.08e-04 2.0 opt/s 32,668 tok/s VRAM=6.4GB
+  [E1 O15,300] loss=15.1661 avg=18.2479 lr=1.06e-04 2.0 opt/s 32,676 tok/s VRAM=6.4GB
+  [E1 O15,400] loss=19.0657 avg=18.2403 lr=1.04e-04 2.0 opt/s 32,679 tok/s VRAM=6.4GB
+  [E1 O15,500] loss=13.1648 avg=18.2344 lr=1.02e-04 2.0 opt/s 32,688 tok/s VRAM=6.4GB
+    → eval_loss=17.1612 PPL=3269017.4
+  [E1 O15,600] loss=19.2311 avg=18.2248 lr=1.00e-04 2.0 opt/s 32,688 tok/s VRAM=6.4GB
+  [E1 O15,700] loss=15.6875 avg=18.2158 lr=9.86e-05 2.0 opt/s 32,698 tok/s VRAM=6.4GB
+  [E1 O15,800] loss=18.9618 avg=18.2089 lr=9.67e-05 2.0 opt/s 32,704 tok/s VRAM=6.4GB
+  [E1 O15,900] loss=14.8768 avg=18.1993 lr=9.48e-05 2.0 opt/s 32,708 tok/s VRAM=6.4GB
+  [E1 O16,000] loss=15.2821 avg=18.1907 lr=9.30e-05 2.0 opt/s 32,718 tok/s VRAM=6.4GB
+    → eval_loss=16.4111 PPL=3269017.4
+  [E1 O16,100] loss=16.7855 avg=18.1822 lr=9.12e-05 2.0 opt/s 32,718 tok/s VRAM=6.4GB
+  [E1 O16,200] loss=18.6855 avg=18.1742 lr=8.93e-05 2.0 opt/s 32,728 tok/s VRAM=6.4GB
+  [E1 O16,300] loss=13.6694 avg=18.1637 lr=8.75e-05 2.0 opt/s 32,730 tok/s VRAM=6.4GB
+  [E1 O16,400] loss=14.2726 avg=18.1554 lr=8.57e-05 2.0 opt/s 32,731 tok/s VRAM=6.4GB
+  [E1 O16,500] loss=13.8669 avg=18.1483 lr=8.39e-05 2.0 opt/s 32,732 tok/s VRAM=6.4GB
+    → eval_loss=16.9063 PPL=3269017.4
+  [E1 O16,600] loss=15.9548 avg=18.1438 lr=8.21e-05 2.0 opt/s 32,724 tok/s VRAM=6.4GB
+  [E1 O16,700] loss=14.2914 avg=18.1373 lr=8.04e-05 2.0 opt/s 32,721 tok/s VRAM=6.4GB
+  [E1 O16,800] loss=14.9586 avg=18.1311 lr=7.86e-05 2.0 opt/s 32,721 tok/s VRAM=6.4GB
+  [E1 O16,900] loss=16.3648 avg=18.1240 lr=7.68e-05 2.0 opt/s 32,717 tok/s VRAM=6.4GB
+  [E1 O17,000] loss=17.2445 avg=18.1168 lr=7.51e-05 2.0 opt/s 32,719 tok/s VRAM=6.4GB
+    → eval_loss=17.8976 PPL=3269017.4
+  [E1 O17,100] loss=16.6101 avg=18.1087 lr=7.34e-05 2.0 opt/s 32,712 tok/s VRAM=6.4GB
+  [E1 O17,200] loss=20.7739 avg=18.1016 lr=7.17e-05 2.0 opt/s 32,713 tok/s VRAM=6.4GB
+  [E1 O17,300] loss=14.8619 avg=18.0933 lr=7.00e-05 2.0 opt/s 32,713 tok/s VRAM=6.4GB
+  [E1 O17,400] loss=14.7644 avg=18.0855 lr=6.83e-05 2.0 opt/s 32,711 tok/s VRAM=6.4GB
+  [E1 O17,500] loss=20.2303 avg=18.0797 lr=6.67e-05 2.0 opt/s 32,708 tok/s VRAM=6.4GB
+    → eval_loss=16.8226 PPL=3269017.4
+  [E1 O17,600] loss=17.2874 avg=18.0713 lr=6.50e-05 2.0 opt/s 32,706 tok/s VRAM=6.4GB
+  [E1 O17,700] loss=20.3803 avg=18.0653 lr=6.34e-05 2.0 opt/s 32,699 tok/s VRAM=6.4GB
+  [E1 O17,800] loss=19.2611 avg=18.0586 lr=6.17e-05 2.0 opt/s 32,703 tok/s VRAM=6.4GB
+  [E1 O17,900] loss=14.7538 avg=18.0529 lr=6.01e-05 2.0 opt/s 32,701 tok/s VRAM=6.4GB
+  [E1 O18,000] loss=16.8149 avg=18.0465 lr=5.86e-05 2.0 opt/s 32,706 tok/s VRAM=6.4GB
+    → eval_loss=16.8037 PPL=3269017.4
+  [E1 O18,100] loss=14.4774 avg=18.0402 lr=5.70e-05 2.0 opt/s 32,702 tok/s VRAM=6.4GB
+  [E1 O18,200] loss=15.9001 avg=18.0338 lr=5.54e-05 2.0 opt/s 32,707 tok/s VRAM=6.4GB
+  [E1 O18,300] loss=15.4917 avg=18.0257 lr=5.39e-05 2.0 opt/s 32,705 tok/s VRAM=6.4GB
+  [E1 O18,400] loss=18.2803 avg=18.0215 lr=5.24e-05 2.0 opt/s 32,707 tok/s VRAM=6.4GB
+  [E1 O18,500] loss=15.5904 avg=18.0157 lr=5.09e-05 2.0 opt/s 32,705 tok/s VRAM=6.4GB
+    → eval_loss=16.8978 PPL=3269017.4
+  [E1 O18,600] loss=15.5063 avg=18.0090 lr=4.94e-05 2.0 opt/s 32,705 tok/s VRAM=6.4GB
+  [E1 O18,700] loss=14.4238 avg=18.0029 lr=4.79e-05 2.0 opt/s 32,703 tok/s VRAM=6.4GB
+  [E1 O18,800] loss=13.8818 avg=17.9976 lr=4.65e-05 2.0 opt/s 32,705 tok/s VRAM=6.4GB
+  [E1 O18,900] loss=15.7903 avg=17.9917 lr=4.50e-05 2.0 opt/s 32,705 tok/s VRAM=6.4GB
+  [E1 O19,000] loss=16.3424 avg=17.9856 lr=4.36e-05 2.0 opt/s 32,709 tok/s VRAM=6.4GB
+    → eval_loss=16.5643 PPL=3269017.4
+  [E1 O19,100] loss=15.0252 avg=17.9792 lr=4.22e-05 2.0 opt/s 32,706 tok/s VRAM=6.4GB
+  [E1 O19,200] loss=17.8942 avg=17.9716 lr=4.08e-05 2.0 opt/s 32,709 tok/s VRAM=6.4GB
+  [E1 O19,300] loss=17.0259 avg=17.9643 lr=3.95e-05 2.0 opt/s 32,707 tok/s VRAM=6.4GB
+  [E1 O19,400] loss=15.6386 avg=17.9579 lr=3.81e-05 2.0 opt/s 32,710 tok/s VRAM=6.4GB
+  [E1 O19,500] loss=19.4022 avg=17.9519 lr=3.68e-05 2.0 opt/s 32,707 tok/s VRAM=6.4GB
+    → eval_loss=17.3843 PPL=3269017.4
+  [E1 O19,600] loss=14.1056 avg=17.9423 lr=3.55e-05 2.0 opt/s 32,706 tok/s VRAM=6.4GB
+  [E1 O19,700] loss=17.8180 avg=17.9367 lr=3.42e-05 2.0 opt/s 32,703 tok/s VRAM=6.4GB
+  [E1 O19,800] loss=14.0899 avg=17.9294 lr=3.30e-05 2.0 opt/s 32,702 tok/s VRAM=6.4GB
+  [E1 O19,900] loss=16.7997 avg=17.9224 lr=3.18e-05 2.0 opt/s 32,701 tok/s VRAM=6.4GB
+  [E1 O20,000] loss=16.1051 avg=17.9155 lr=3.05e-05 2.0 opt/s 32,704 tok/s VRAM=6.4GB
+    → eval_loss=16.1539 PPL=3269017.4
+  [E1 O20,100] loss=16.3901 avg=17.9089 lr=2.93e-05 2.0 opt/s 32,700 tok/s VRAM=6.4GB
+  [E1 O20,200] loss=21.0429 avg=17.9029 lr=2.82e-05 2.0 opt/s 32,695 tok/s VRAM=6.4GB
+  [E1 O20,300] loss=13.6576 avg=17.8961 lr=2.70e-05 2.0 opt/s 32,693 tok/s VRAM=6.4GB
+  [E1 O20,400] loss=13.1092 avg=17.8883 lr=2.59e-05 2.0 opt/s 32,689 tok/s VRAM=6.4GB
+  [E1 O20,500] loss=16.5791 avg=17.8826 lr=2.48e-05 2.0 opt/s 32,682 tok/s VRAM=6.4GB
+    → eval_loss=16.0820 PPL=3269017.4
+  [E1 O20,600] loss=12.7481 avg=17.8756 lr=2.37e-05 2.0 opt/s 32,679 tok/s VRAM=6.4GB
+  [E1 O20,700] loss=14.3636 avg=17.8705 lr=2.26e-05 2.0 opt/s 32,677 tok/s VRAM=6.4GB
+  [E1 O20,800] loss=15.9694 avg=17.8655 lr=2.16e-05 2.0 opt/s 32,679 tok/s VRAM=6.4GB
+  [E1 O20,900] loss=19.5575 avg=17.8608 lr=2.06e-05 2.0 opt/s 32,672 tok/s VRAM=6.4GB
+  [E1 O21,000] loss=15.4728 avg=17.8560 lr=1.96e-05 2.0 opt/s 32,673 tok/s VRAM=6.4GB
+    → eval_loss=17.3625 PPL=3269017.4
+  [E1 O21,100] loss=15.3888 avg=17.8503 lr=1.86e-05 2.0 opt/s 32,661 tok/s VRAM=6.4GB
+  [E1 O21,200] loss=15.3001 avg=17.8448 lr=1.77e-05 2.0 opt/s 32,660 tok/s VRAM=6.4GB
+  [E1 O21,300] loss=18.0814 avg=17.8369 lr=1.67e-05 2.0 opt/s 32,660 tok/s VRAM=6.4GB
+  [E1 O21,400] loss=18.7077 avg=17.8320 lr=1.58e-05 2.0 opt/s 32,665 tok/s VRAM=6.4GB
+  [E1 O21,500] loss=23.2641 avg=17.8259 lr=1.49e-05 2.0 opt/s 32,665 tok/s VRAM=6.4GB
+    → eval_loss=16.5280 PPL=3269017.4
+  [E1 O21,600] loss=17.2081 avg=17.8199 lr=1.41e-05 2.0 opt/s 32,669 tok/s VRAM=6.4GB
+  [E1 O21,700] loss=13.7771 avg=17.8132 lr=1.33e-05 2.0 opt/s 32,670 tok/s VRAM=6.4GB
+  [E1 O21,800] loss=15.9783 avg=17.8080 lr=1.25e-05 2.0 opt/s 32,676 tok/s VRAM=6.4GB
+  [E1 O21,900] loss=17.3826 avg=17.8028 lr=1.17e-05 2.0 opt/s 32,675 tok/s VRAM=6.4GB
+  [E1 O22,000] loss=17.0058 avg=17.7964 lr=1.09e-05 2.0 opt/s 32,664 tok/s VRAM=6.4GB
+    → eval_loss=16.8054 PPL=3269017.4
+  [E1 O22,100] loss=21.0157 avg=17.7924 lr=1.02e-05 2.0 opt/s 32,654 tok/s VRAM=6.4GB
+  [E1 O22,200] loss=16.4387 avg=17.7873 lr=9.47e-06 2.0 opt/s 32,652 tok/s VRAM=6.4GB
+  [E1 O22,300] loss=17.1462 avg=17.7814 lr=8.78e-06 2.0 opt/s 32,647 tok/s VRAM=6.4GB
+  [E1 O22,400] loss=13.9985 avg=17.7761 lr=8.12e-06 2.0 opt/s 32,639 tok/s VRAM=6.4GB
+  [E1 O22,500] loss=15.5256 avg=17.7708 lr=7.49e-06 2.0 opt/s 32,635 tok/s VRAM=6.4GB
+    → eval_loss=15.2459 PPL=3269017.4
+    → Best samples (full-parallel):
+      [0] ation principles in teaching. learning is encouraged to teach students with critical thinking and creative teaching to s
+      [1] g., over-,000 people living in India United States, 2,,,000 people,,, who are a heolitary 1,,000,000 people, and 2 peopl
+      [2] -tooth's God.
+Encop: self:: a: ofl
+- self:: taken from self: h
+- self::: self
+-- self::: self-
+- e-:: self: self: self
+-
+  [E1 O22,600] loss=13.0371 avg=17.7657 lr=6.88e-06 2.0 opt/s 32,609 tok/s VRAM=6.4GB
+  [E1 O22,700] loss=15.0777 avg=17.7615 lr=6.30e-06 2.0 opt/s 32,608 tok/s VRAM=6.4GB
+  [E1 O22,800] loss=14.3499 avg=17.7556 lr=5.74e-06 2.0 opt/s 32,601 tok/s VRAM=6.4GB
+  [E1 O22,900] loss=16.5253 avg=17.7500 lr=5.20e-06 2.0 opt/s 32,602 tok/s VRAM=6.4GB
+  [E1 O23,000] loss=15.0935 avg=17.7434 lr=4.70e-06 2.0 opt/s 32,598 tok/s VRAM=6.4GB
+    → eval_loss=17.6799 PPL=3269017.4
+  [E1 O23,100] loss=19.8713 avg=17.7401 lr=4.21e-06 2.0 opt/s 32,587 tok/s VRAM=6.4GB
+  [E1 O23,200] loss=18.8613 avg=17.7350 lr=3.76e-06 2.0 opt/s 32,593 tok/s VRAM=6.4GB
+  [E1 O23,300] loss=15.0463 avg=17.7299 lr=3.33e-06 2.0 opt/s 32,598 tok/s VRAM=6.4GB
+  [E1 O23,400] loss=13.5005 avg=17.7237 lr=2.92e-06 2.0 opt/s 32,597 tok/s VRAM=6.4GB
+  [E1 O23,500] loss=18.7921 avg=17.7188 lr=2.54e-06 2.0 opt/s 32,601 tok/s VRAM=6.4GB
+    → eval_loss=17.4245 PPL=3269017.4
+  [E1 O23,600] loss=17.5355 avg=17.7134 lr=2.19e-06 2.0 opt/s 32,600 tok/s VRAM=6.4GB
+  [E1 O23,700] loss=16.0552 avg=17.7084 lr=1.87e-06 2.0 opt/s 32,604 tok/s VRAM=6.4GB
+  [E1 O23,800] loss=15.8939 avg=17.7026 lr=1.57e-06 2.0 opt/s 32,605 tok/s VRAM=6.4GB
+  [E1 O23,900] loss=15.2071 avg=17.6985 lr=1.29e-06 2.0 opt/s 32,605 tok/s VRAM=6.4GB
+  [E1 O24,000] loss=23.5375 avg=17.6965 lr=1.04e-06 2.0 opt/s 32,603 tok/s VRAM=6.4GB
+    → eval_loss=16.3145 PPL=3269017.4
+  [E1 O24,100] loss=20.8992 avg=17.6917 lr=8.23e-07 2.0 opt/s 32,598 tok/s VRAM=6.4GB
+  [E1 O24,200] loss=16.7298 avg=17.6878 lr=6.27e-07 2.0 opt/s 32,594 tok/s VRAM=6.4GB
+  [E1 O24,300] loss=16.8277 avg=17.6851 lr=4.59e-07 2.0 opt/s 32,587 tok/s VRAM=6.4GB
+  [E1 O24,400] loss=17.0833 avg=17.6798 lr=3.16e-07 2.0 opt/s 32,586 tok/s VRAM=6.4GB
+  [E1 O24,500] loss=17.6790 avg=17.6756 lr=2.00e-07 2.0 opt/s 32,571 tok/s VRAM=6.4GB
+    → eval_loss=15.8993 PPL=3269017.4
+  [E1 O24,600] loss=17.5809 avg=17.6720 lr=1.11e-07 2.0 opt/s 32,567 tok/s VRAM=6.4GB
+  [E1 O24,700] loss=20.4038 avg=17.6672 lr=4.80e-08 2.0 opt/s 32,562 tok/s VRAM=6.4GB
+  [E1 O24,800] loss=17.1937 avg=17.6614 lr=1.15e-08 2.0 opt/s 32,560 tok/s VRAM=6.4GB
+  [E1 O24,900] loss=21.1353 avg=17.6553 lr=1.20e-09 2.0 opt/s 32,556 tok/s VRAM=6.4GB
+  [E1 O25,000] loss=12.5974 avg=17.6520 lr=1.20e-09 2.0 opt/s 32,555 tok/s VRAM=6.4GB
+    → eval_loss=14.9421 PPL=3085143.6
+    → Best samples (full-parallel):
+      [0] and learn the about treatment strategies such as possible.
+To help how this can be to you, consider it for- tips on
+ on 
+      [1] These are over the eventelling of.ing vs. lot.
+Some examples when using the above two most places
+1. The price is:
+1. Th
+      [2] , they can help.
+ are certain foods that will eat and eat foods.
+1. body needs.
+2. i.e. eat the right diet.
+3. don't eat
+  [E1 O25,100] loss=14.4796 avg=17.6481 lr=1.20e-09 2.0 opt/s 32,535 tok/s VRAM=6.4GB
+  [E1 O25,200] loss=16.0340 avg=17.6449 lr=1.20e-09 2.0 opt/s 32,530 tok/s VRAM=6.4GB
+  [E1 O25,300] loss=17.2947 avg=17.6409 lr=1.20e-09 2.0 opt/s 32,528 tok/s VRAM=6.4GB
+  [E1 O25,400] loss=15.8770 avg=17.6361 lr=1.20e-09 2.0 opt/s 32,526 tok/s VRAM=6.4GB
+  [E1 O25,500] loss=16.0328 avg=17.6315 lr=1.20e-09 2.0 opt/s 32,528 tok/s VRAM=6.4GB
+    → eval_loss=17.1528 PPL=3269017.4
+  [E1 O25,600] loss=15.6828 avg=17.6260 lr=1.20e-09 2.0 opt/s 32,524 tok/s VRAM=6.4GB
+  [E1 O25,700] loss=15.0200 avg=17.6215 lr=1.20e-09 2.0 opt/s 32,526 tok/s VRAM=6.4GB
+  [E1 O25,800] loss=14.8368 avg=17.6186 lr=1.20e-09 2.0 opt/s 32,523 tok/s VRAM=6.4GB
