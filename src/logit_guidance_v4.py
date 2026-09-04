@@ -40,7 +40,10 @@ def apply_frequency_penalty(logits, tokens, penalty=0.4, special_mask=None):
 def apply_repetition_penalty(logits, tokens, penalty=1.3, special_mask=None):
     """Keskar et al. repetition penalty — fully vectorized.
     
-    Divides logits of already-used tokens by `penalty`.
+    For tokens already used: subtract (penalty - 1) from the logit.
+    A uniform subtraction always lowers the used-token probability,
+    regardless of the logit's sign. (The previous divide-by-penalty
+    form RAISED negative logits: -3/1.3 = -2.31 → more likely.)
     """
     if penalty == 1.0:
         return logits
@@ -49,11 +52,8 @@ def apply_repetition_penalty(logits, tokens, penalty=1.3, special_mask=None):
     used.scatter_(1, tokens, True)
     if special_mask is not None:
         used[:, special_mask] = False
-    factor = torch.where(
-        used, torch.tensor(1.0 / penalty, device=logits.device),
-        torch.tensor(1.0, device=logits.device),
-    )
-    return logits * factor.unsqueeze(1)
+    pen = torch.abs(torch.tensor(penalty - 1.0, device=logits.device))
+    return logits - pen * used.unsqueeze(1)
 
 
 def apply_no_repeat_ngram(logits, tokens, n=2, special_mask=None):

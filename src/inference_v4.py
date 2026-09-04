@@ -46,7 +46,13 @@ def apply_frequency_penalty_batch(logits, tokens, penalty=0.4, special_mask=None
 
 
 def apply_repetition_penalty_batch(logits, tokens, penalty=1.3, special_mask=None):
-    """Keskar et al. repetition penalty — fully vectorized."""
+    """Keskar et al. repetition penalty — fully vectorized.
+
+    For tokens already used: subtract (penalty - 1) from the logit.
+    A uniform subtraction always lowers the used-token probability,
+    regardless of the logit's sign. (The previous divide-by-penalty
+    form RAISED negative logits.)
+    """
     if penalty == 1.0:
         return logits
     b, s, v = logits.shape
@@ -54,9 +60,8 @@ def apply_repetition_penalty_batch(logits, tokens, penalty=1.3, special_mask=Non
     used.scatter_(1, tokens, True)
     if special_mask is not None:
         used[:, special_mask] = False
-    factor = torch.where(used, torch.tensor(1.0 / penalty, device=logits.device),
-                         torch.tensor(1.0, device=logits.device))
-    return logits * factor.unsqueeze(1)
+    pen = torch.abs(torch.tensor(penalty - 1.0, device=logits.device))
+    return logits - pen * used.unsqueeze(1)
 
 
 def apply_no_repeat_bigram_batch(logits, tokens, special_mask=None):

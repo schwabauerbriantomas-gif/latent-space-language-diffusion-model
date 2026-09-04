@@ -80,7 +80,10 @@ def apply_repetition_penalty(logits: torch.Tensor, tokens: torch.Tensor,
                               special_ids: set = None) -> torch.Tensor:
     """Keskar et al. repetition penalty — VECTORIZED.
 
-    Divide logits of already-used tokens by `penalty`.
+    For tokens already used: subtract (penalty - 1) from the logit.
+    A uniform subtraction always lowers the used-token probability,
+    regardless of the logit's sign. (The previous divide-by-penalty
+    form RAISED negative logits — sign inversion, sev 6.)
     """
     if penalty == 1.0:
         return logits
@@ -98,14 +101,9 @@ def apply_repetition_penalty(logits: torch.Tensor, tokens: torch.Tensor,
         if sid < vocab:
             used_mask[:, sid] = False
 
-    # Apply penalty: divide by `penalty` where used
-    # [batch, 1, vocab] broadcast over seq dimension
-    penalty_factor = torch.where(
-        used_mask, torch.tensor(1.0 / penalty, device=logits.device),
-        torch.tensor(1.0, device=logits.device),
-    )  # [batch, vocab]
-    logits = logits * penalty_factor.unsqueeze(1)
-    return logits
+    # Apply penalty: uniform subtraction on used-token logits.
+    pen = abs(penalty - 1.0)
+    return logits - pen * used_mask.unsqueeze(1)
 
 
 def apply_no_repeat_ngram(logits: torch.Tensor, tokens: torch.Tensor,
