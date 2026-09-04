@@ -17,6 +17,7 @@ import sys
 import time
 import math
 import argparse
+import random
 import numpy as np
 from pathlib import Path
 
@@ -251,6 +252,12 @@ def train_v4(epochs=3, batch_size=32, lr=3e-4, seq_len=128,
                 losses.append(accum_loss)
                 accum_loss = 0.0
 
+                if opt_step == 1:
+                    # Seed smoke check: first opt-step loss depends only on
+                    # init weights + dropout masks (both seeded) — must be
+                    # identical across runs with the same --seed.
+                    print(f"  [seed-check] first opt-step loss = {losses[0]:.6f}")
+
                 if opt_step % 100 == 0:
                     elapsed = time.time() - start
                     tps = micro_step * batch_size * seq_len / elapsed
@@ -392,7 +399,18 @@ if __name__ == "__main__":
                         help="held-out fraction for deterministic val PPL")
     parser.add_argument("--eval-t", type=float, default=0.5,
                         help="fixed mask fraction t for deterministic eval")
+    parser.add_argument("--seed", type=int, default=42,
+                        help="RNG seed for torch/random/numpy (reproducibility)")
     args = parser.parse_args()
+
+    # Reproducibility: seed all RNGs before any data/model init
+    random.seed(args.seed)
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(args.seed)
+    print(f"  Seed: {args.seed} (torch/random/numpy)")
+
     train_v4(epochs=args.epochs, batch_size=args.batch_size,
              lr=args.lr, seq_len=args.seq_len, gradient_accumulation=args.accum,
              use_compile=not args.no_compile, use_checkpointing=args.checkpointing,

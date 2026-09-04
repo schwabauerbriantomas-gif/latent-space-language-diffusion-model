@@ -9,6 +9,8 @@ Measures:
   5. Model quality (oracle LP, repetition score)
 """
 import sys, json, time, math, gc
+import random
+import argparse
 import numpy as np
 from pathlib import Path
 
@@ -195,5 +197,18 @@ def benchmark_v3_vs_v4():
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--seed", type=int, default=42,
+                        help="RNG seed for torch/random/numpy (reproducibility)")
+    args = parser.parse_args()
+
+    # Reproducibility: seed all RNGs before any model/input init
+    random.seed(args.seed)
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(args.seed)
+    print(f"  Seed: {args.seed} (torch/random/numpy)")
+
     benchmark_v4()
     benchmark_v3_vs_v4()

@@ -10,6 +10,7 @@ import sys
 import time
 import math
 import argparse
+import random
 import numpy as np
 from pathlib import Path
 
@@ -307,6 +308,17 @@ if __name__ == "__main__":
     parser.add_argument("--lr", type=float, default=3e-4)
     parser.add_argument("--seq-len", type=int, default=128)
     parser.add_argument("--accum", type=int, default=4)
+    parser.add_argument("--seed", type=int, default=42,
+                        help="RNG seed for torch/random/numpy (reproducibility)")
     args = parser.parse_args()
+
+    # Reproducibility: seed all RNGs before any data/model init
+    random.seed(args.seed)
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(args.seed)
+    print(f"  Seed: {args.seed} (torch/random/numpy)")
+
     train_v3(epochs=args.epochs, batch_size=args.batch_size,
              lr=args.lr, seq_len=args.seq_len, gradient_accumulation=args.accum)
