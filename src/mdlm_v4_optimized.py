@@ -404,7 +404,9 @@ class MDLMBPEV4(nn.Module):
         )
         args = t[:, None].float() * freqs[None, :]
         emb = torch.cat([torch.sin(args), torch.cos(args)], dim=-1)
-        return self.time_embed(emb)
+        # emb stays fp32 (sin/cos precision); cast to model dtype for the Linear below
+        tgt_dtype = next(self.time_embed.parameters()).dtype
+        return self.time_embed(emb.to(tgt_dtype))
 
     # --- Block forward with optional checkpointing ---
 
