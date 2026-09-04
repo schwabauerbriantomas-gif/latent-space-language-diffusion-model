@@ -45,7 +45,7 @@ import json
 import sys
 import time
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -590,7 +590,7 @@ def sample_full_parallel_v4(
     n_samples: int = 1,
     n_steps: int = 64,
     temperature: float = 0.7,
-    device: str = DEVICE,
+    device: Optional[Union[str, torch.device]] = None,
 ) -> List[str]:
     """Fully parallel MDLM sampling with cosine unmasking schedule.
 
@@ -634,11 +634,18 @@ def sample_full_parallel_v4(
         n_samples: number of independent samples to generate.
         n_steps: number of diffusion denoising steps.
         temperature: sampling temperature.
-        device: torch device.
+        device: torch device. If None (default), inferred from the model's
+            parameters, so a CPU-resident model works even when CUDA is
+            available (r7: the old `device=DEVICE` module default crashed
+            with 'Expected all tensors to be on the same device').
 
     Returns:
         List of n_samples decoded strings.
     """
+    # Device-agnostic (r7): infer from the model's parameters when not given,
+    # instead of defaulting to the module-level DEVICE ("cuda" if available).
+    if device is None:
+        device = next(model.parameters()).device
     model.eval()
     mask_id = tokenizer.mask_id
     pad_id = tokenizer.pad_id
