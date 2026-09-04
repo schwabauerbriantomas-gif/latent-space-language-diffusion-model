@@ -5,6 +5,8 @@ Measures generation speed, quality (oracle LP), and repetition score.
 Runs after training completes.
 """
 import sys, json, time, math
+import random
+import argparse
 import numpy as np
 from pathlib import Path
 
@@ -48,6 +50,16 @@ def rep_score(text, tokenizer):
         total += 1
     return len(bigrams) / max(total, 1)
 
+def count_generated_tokens(text, prompt_ids, tokenizer):
+    """Count ONLY the tokens generated (exclude the prompt prefix).
+
+    Both benchmark branches (no-guidance and guided) must use this so their
+    t/s are comparable. Previously the no-guidance branch counted the prompt
+    as generated, inflating its t/s (96.5 vs a comparable ~84.6).
+    """
+    n_total = len(tokenizer.encode(text, add_special=False))
+    return max(n_total - len(prompt_ids), 1)
+
 def benchmark_generation():
     model, tokenizer = load_model()
     
@@ -78,7 +90,7 @@ def benchmark_generation():
         )
         dt = time.time() - t0
         text = texts[0]
-        gen_tokens = max(len(tokenizer.encode(text, add_special=False)), 1)
+        gen_tokens = count_generated_tokens(text, ids, tokenizer)
         tps = gen_tokens / dt
         rep = rep_score(text, tokenizer)
         all_results.append({
@@ -100,7 +112,7 @@ def benchmark_generation():
         )
         dt = time.time() - t0
         text = texts[0]
-        gen_tokens = max(len(tokenizer.encode(text, add_special=False)) - len(ids), 1)
+        gen_tokens = count_generated_tokens(text, ids, tokenizer)
         tps = gen_tokens / dt
         rep = rep_score(text, tokenizer)
         all_results.append({
@@ -131,4 +143,17 @@ def benchmark_generation():
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--seed", type=int, default=42,
+                        help="RNG seed for torch/random/numpy (reproducibility)")
+    args = parser.parse_args()
+
+    # Reproducibility: seed all RNGs before any model/sampling init
+    random.seed(args.seed)
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(args.seed)
+    print(f"  Seed: {args.seed} (torch/random/numpy)")
+
     benchmark_generation()

@@ -17,6 +17,7 @@ import sys
 import time
 import math
 import argparse
+import random
 import numpy as np
 from pathlib import Path
 
@@ -135,7 +136,8 @@ def prepare_data(seq_len=128):
 
 def train_v4(epochs=3, batch_size=32, lr=3e-4, seq_len=128,
              warmup_ratio=0.05, eval_every=500, gradient_accumulation=4,
-             use_compile=True, use_checkpointing=False):
+             use_compile=True, use_checkpointing=False, val_frac=0.05,
+             eval_t=0.5):
     """Train MDLM v4 with all optimizations."""
     
     from mdlm_v4_optimized import (
@@ -155,10 +157,18 @@ def train_v4(epochs=3, batch_size=32, lr=3e-4, seq_len=128,
     tokens_int16 = np.array(tokens, dtype=np.int16)
     del tokens
     tokens_tensor = torch.from_numpy(tokens_int16).long()
-    dataset = TensorDataset(tokens_tensor)
+
+    # ── Held-out split (5%) — separated BEFORE the train shuffle ──
+    n_val = max(1, int(len(tokens_tensor) * val_frac))
+    val_tensor = tokens_tensor[:n_val]                     # fixed indices, no shuffle
+    train_tensor = tokens_tensor[n_val:]
+    dataset = TensorDataset(train_tensor)
     loader = DataLoader(dataset, batch_size=batch_size, shuffle=True,
                         drop_last=True, num_workers=4, pin_memory=True,
                         persistent_workers=True)
+    val_loader = DataLoader(TensorDataset(val_tensor), batch_size=batch_size,
+                            shuffle=False, drop_last=False)
+    print(f"  Held-out: {len(val_tensor):,} seqs ({val_frac:.0%}, deterministic eval)")
 
     # ── Model ──
     tokenizer = BPETokenizer()
@@ -207,6 +217,7 @@ def train_v4(epochs=3, batch_size=32, lr=3e-4, seq_len=128,
     micro_step = 0
     opt_step = 0
     best_eval = float('inf')
+    did_eval = False
     losses = []
     start = time.time()
     accum_loss = 0.0
@@ -242,6 +253,12 @@ def train_v4(epochs=3, batch_size=32, lr=3e-4, seq_len=128,
                 losses.append(accum_loss)
                 accum_loss = 0.0
 
+                if opt_step == 1:
+                    # Seed smoke check: first opt-step loss depends only on
+                    # init weights + dropout masks (both seeded) — must be
+                    # identical across runs with the same --seed.
+                    print(f"  [seed-check] first opt-step loss = {losses[0]:.6f}")
+
                 if opt_step % 100 == 0:
                     elapsed = time.time() - start
                     tps = micro_step * batch_size * seq_len / elapsed
@@ -253,12 +270,15 @@ def train_v4(epochs=3, batch_size=32, lr=3e-4, seq_len=128,
                           f"VRAM={peak_vram:.1f}GB")
 
                 if opt_step % eval_every == 0:
+                    did_eval = True
                     model.eval()
-                    eval_loss = quick_eval(model, loader, tokenizer.mask_id)
+                    eval_loss = quick_eval(model, val_loader, tokenizer.mask_id,
+                                           eval_t=eval_t)
                     model.train()
 
-                    ppl = math.exp(min(eval_loss, 15))
-                    print(f"    → eval_loss={eval_loss:.4f} PPL={ppl:.1f}")
+                    # val_ppl = exp(plain CE, deterministic) — no clamp, no ELBO weight
+                    ppl = math.exp(eval_loss)
+                    print(f"    → val_ppl={ppl:.1f} (CE={eval_loss:.4f}, held-out, t={eval_t})")
 
                     if eval_loss < best_eval:
                         best_eval = eval_loss
@@ -283,10 +303,32 @@ def train_v4(epochs=3, batch_size=32, lr=3e-4, seq_len=128,
 
     elapsed = time.time() - start
     peak_vram = torch.cuda.max_memory_allocated() / 1e9
+
+    # Final eval: guarantee at least one val_ppl measurement even when the run
+    # is shorter than eval_every (short/1-epoch runs previously left best_eval
+    # at inf and never wrote mdlm_v4_best.pt).
+    if did_eval is False or best_eval == float('inf'):
+        model.eval()
+        eval_loss = quick_eval(model, val_loader, tokenizer.mask_id, eval_t=eval_t)
+        model.train()
+        ppl = math.exp(eval_loss)
+        print(f"  → final eval: val_ppl={ppl:.1f} (CE={eval_loss:.4f}, held-out, t={eval_t})")
+        if eval_loss < best_eval:
+            best_eval = eval_loss
+            raw_model = model._orig_mod if hasattr(model, '_orig_mod') else model
+            torch.save({
+                "model_state": raw_model.state_dict(),
+                "config": config.to_dict(),
+                "step": opt_step,
+                "eval_loss": eval_loss,
+                "ppl": ppl,
+                "version": "v4",
+            }, CHECKPOINT_DIR / "mdlm_v4_best.pt")
+
     print(f"\n{'='*70}")
     print(f"TRAINING COMPLETE — {elapsed:.1f}s ({elapsed/60:.1f} min)")
     print(f"  Optimizer steps: {opt_step}")
-    print(f"  Best eval loss: {best_eval:.4f} (PPL={math.exp(min(best_eval,15)):.1f})")
+    print(f"  Best val CE: {best_eval:.4f} (val_ppl={math.exp(best_eval):.1f}, held-out, no clamp)")
     print(f"  Peak VRAM: {peak_vram:.1f} GB")
 
     raw_model = model._orig_mod if hasattr(model, '_orig_mod') else model
@@ -303,8 +345,8 @@ def train_v4(epochs=3, batch_size=32, lr=3e-4, seq_len=128,
         "optimizer_steps": opt_step,
         "time_s": elapsed,
         "time_min": elapsed / 60,
-        "best_eval_loss": best_eval,
-        "best_ppl": math.exp(min(best_eval, 15)),
+        "best_val_ce": best_eval,
+        "best_val_ppl": math.exp(best_eval),
         "final_loss": losses[-1],
         "tokens_trained": micro_step * batch_size * seq_len,
         "params": n_params,
@@ -317,6 +359,8 @@ def train_v4(epochs=3, batch_size=32, lr=3e-4, seq_len=128,
             "seq_len": seq_len,
             "use_compile": use_compile,
             "use_checkpointing": use_checkpointing,
+            "val_frac": val_frac,
+            "eval_t": eval_t,
         },
     }
     with open(RESULTS_DIR / "mdlm_v4_training.json", "w") as f:
@@ -325,19 +369,45 @@ def train_v4(epochs=3, batch_size=32, lr=3e-4, seq_len=128,
     return model
 
 
-def quick_eval(model, loader, mask_id, n_batches=20):
+def quick_eval(model, val_loader, mask_id, n_batches=20, eval_t=0.5):
+    """Deterministic held-out eval: plain CE on masked positions.
+
+    Unlike training loss (stochastic ELBO-weighted, mean weight E[1/(1-t)]
+    ~= 2.65), this fixes t=eval_t (default 0.5) and the mask via a local RNG
+    generator, so val_ppl is reproducible run-to-run and directly comparable
+    across checkpoints. Returns mean CE in nats.
+    """
     model.eval()
     losses = []
+    gen = torch.Generator(device="cpu")
+    gen.manual_seed(1234)
     with torch.no_grad():
-        for i, batch in enumerate(loader):
+        for i, batch in enumerate(val_loader):
             if i >= n_batches:
                 break
             tokens = batch[0].to(DEVICE)
+            batch_size = tokens.shape[0]
+            # Fixed t (no logit-normal sampling, no ELBO weighting)
+            t = torch.full((batch_size,), float(eval_t), device=tokens.device)
+            # Deterministic mask with local generator (protect specials as in train)
+            rand = torch.rand(tokens.shape, generator=gen).to(tokens.device)
+            mask_positions = rand < t[:, None]
+            is_special = (tokens == 0) | (tokens == 2) | (tokens == 3)
+            mask_positions = mask_positions & (~is_special)
+            if mask_positions.sum() == 0:
+                continue
+            masked = torch.where(mask_positions, mask_id, tokens)
             with torch.amp.autocast('cuda', dtype=torch.bfloat16):
-                from mdlm_v4_optimized import mdlm_loss_v4
-                loss = mdlm_loss_v4(model, tokens, mask_id)
-            losses.append(loss.item())
-    return np.mean(losses)
+                hidden = model(masked, t, return_pre_proj=True)
+                hidden_flat = hidden.reshape(-1, hidden.shape[-1])
+                mask_flat = mask_positions.reshape(-1)
+                hidden_masked = hidden_flat[mask_flat]
+                tokens_masked = tokens.reshape(-1)[mask_flat]
+                logits = F.linear(hidden_masked.float(),
+                                  model.token_emb.weight.float())
+                ce = F.cross_entropy(logits, tokens_masked)
+            losses.append(ce.item())
+    return np.mean(losses) if losses else float("nan")
 
 
 if __name__ == "__main__":
@@ -349,7 +419,23 @@ if __name__ == "__main__":
     parser.add_argument("--accum", type=int, default=4)
     parser.add_argument("--no-compile", action="store_true")
     parser.add_argument("--checkpointing", action="store_true")
+    parser.add_argument("--val-frac", type=float, default=0.05,
+                        help="held-out fraction for deterministic val PPL")
+    parser.add_argument("--eval-t", type=float, default=0.5,
+                        help="fixed mask fraction t for deterministic eval")
+    parser.add_argument("--seed", type=int, default=42,
+                        help="RNG seed for torch/random/numpy (reproducibility)")
     args = parser.parse_args()
+
+    # Reproducibility: seed all RNGs before any data/model init
+    random.seed(args.seed)
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(args.seed)
+    print(f"  Seed: {args.seed} (torch/random/numpy)")
+
     train_v4(epochs=args.epochs, batch_size=args.batch_size,
              lr=args.lr, seq_len=args.seq_len, gradient_accumulation=args.accum,
-             use_compile=not args.no_compile, use_checkpointing=args.checkpointing)
+             use_compile=not args.no_compile, use_checkpointing=args.checkpointing,
+             val_frac=args.val_frac, eval_t=args.eval_t)
