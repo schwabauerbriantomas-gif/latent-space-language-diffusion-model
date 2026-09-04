@@ -63,9 +63,11 @@ sys.path.insert(0, str(REPO / "src"))
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
-# Tokenizers: MDLM BPE and Qwen3
-from transformers import AutoModelForCausalLM, AutoTokenizer as HFTokenizer
-
+# Tokenizers: MDLM BPE and Qwen3.
+# NOTE (r7, lazy import): transformers is imported INSIDE load_oracle().
+# Importing it at module level pulled in the whole HF stack (~seconds, plus
+# network checks) for every `import ar_oracle_hrm` even when the oracle is
+# never loaded (e.g. metrics-only / offline runs).
 # Lazy-loaded global instances
 _oracle_model = None
 _oracle_tokenizer = None
@@ -76,6 +78,8 @@ def load_oracle(model_name: str = "Qwen/Qwen3-0.6B"):
     global _oracle_model, _oracle_tokenizer
     if _oracle_model is not None:
         return _oracle_model, _oracle_tokenizer
+
+    from transformers import AutoModelForCausalLM, AutoTokenizer as HFTokenizer
 
     print(f"  Loading AR oracle: {model_name}...", end=" ", flush=True)
     t0 = time.time()
