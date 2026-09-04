@@ -110,10 +110,15 @@ class HybridSpeculative:
         logits = self.oracle(oracle_input).logits
         log_probs = F.log_softmax(logits.float(), dim=-1)
 
-        # Per-token log-prob
+        # Per-token log-prob, with the off-by-one fixed (sev 4):
+        # raw gather gives shifted[i] = log-prob of oracle token i+1, but the
+        # offset-mapping lookup below treats index j as token j's score.
+        # Align: token_lps[j] = shifted[j-1], one entry per oracle token
+        # (token 0 reuses shifted[0] as neutral fill).
         actual_next = oracle_input[0, 1:]
         predicted = log_probs[0, :-1]
-        token_lps = predicted.gather(1, actual_next.unsqueeze(1)).squeeze(1)
+        shifted = predicted.gather(1, actual_next.unsqueeze(1)).squeeze(1)
+        token_lps = torch.cat([shifted[:1], shifted])
 
         # 3. Map oracle positions to character ranges
         enc = self.oracle_tok(full_text, return_offsets_mapping=True,

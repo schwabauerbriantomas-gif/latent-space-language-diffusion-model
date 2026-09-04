@@ -144,6 +144,28 @@ def _split_sentences(text: str) -> List[str]:
     return sentences
 
 
+def _strip_prompt_prefix(text: str, prompt: str) -> Tuple[str, bool]:
+    """Remove a verbatim prompt echo from the start of ``text``.
+
+    MDLM semi-AR generation is conditioned by prepending the prompt, and the
+    sampled text normally starts with a verbatim echo of it.  Coherence
+    signals that compare sentences against prompt keywords (topic
+    persistence, first-sentence link) are dominated by that echo, so we
+    compute an explicit "no-prompt" variant with the echo stripped.
+
+    Returns (stripped_text, was_stripped). Only a *leading, verbatim* echo is
+    removed — the strip never touches text that merely continues the prompt
+    mid-sentence beyond the shared prefix.
+    """
+    p = prompt.strip()
+    if not p:
+        return text, False
+    t = text.lstrip()
+    if t.startswith(p):
+        return t[len(p):].lstrip(), True
+    return text, False
+
+
 def _ngrams(words: Sequence[str], n: int) -> List[Tuple[str, ...]]:
     """Return all word-level n-grams of order ``n``."""
     if len(words) < n:
@@ -297,6 +319,20 @@ class QualityAnalyzer:
         distinct = self._distinct_n(words)
         self_bleu = self._self_bleu(sent_words)
         coherence, topic_persist = self._semantic_coherence(sent_words, prompt)
+
+        # Explicit with/without-prompt accounting: MDLM output echoes the
+        # prompt verbatim, which dominates topic-persistence. Measured on the
+        # reference samples (m2b, g2_quality.json): the coherent reference
+        # drops from coh=0.259 (echo included) to coh=0.000 once the echo is
+        # stripped — the continuation is semantically on-topic but lexically
+        # disjoint (the documented TF-IDF ceiling). We therefore report BOTH
+        # and calibrate the gate on the with-echo value.
+        stripped_text, did_strip = _strip_prompt_prefix(text, prompt)
+        coherence_np, _tp_np = self._semantic_coherence(
+            [_tokenize_words(s) for s in _split_sentences(stripped_text)],
+            prompt,
+        ) if did_strip else (coherence, topic_persist)
+
         completion = self._sentence_completion_rate(sentences)
         ns_rate, ns_count = self._non_sequitur_rate(sent_words, prompt)
         circular = self._detect_circular_phrases(text, prompt, sentences)
@@ -311,6 +347,8 @@ class QualityAnalyzer:
             "distinct_3": distinct[3],
             "self_bleu": self_bleu,
             "semantic_coherence": coherence,
+            "semantic_coherence_no_prompt": coherence_np,
+            "prompt_stripped": did_strip,
             "sentence_completion_rate": completion,
             "non_sequitur_rate": ns_rate,
             "non_sequitur_count": ns_count,
@@ -739,7 +777,7 @@ class QualityAnalyzer:
 # ---------------------------------------------------------------------------
 
 def quality_gate(text: str, prompt: str = "",
-                 min_coherence: float = 0.3,
+                 min_coherence: float = 0.2,
                  min_distinct2: float = 0.4) -> bool:
     """Return True if ``text`` passes a minimum quality bar.
 
@@ -753,7 +791,13 @@ def quality_gate(text: str, prompt: str = "",
     text, prompt : str
         Generated text and its conditioning prompt.
     min_coherence : float
-        Minimum semantic coherence (default 0.3).
+        Minimum semantic coherence (default 0.2). Calibrated on real
+        measurements (m2b, reports/g2_quality.json): reference *coherent*
+        text scores coh=0.259 (echo included) while the MDLM generation-mode
+        means land at 0.258-0.285; the previous default 0.3 rejected the
+        coherent reference itself (its own demo failed 4/4). The coherent /
+        non-sequitur separation at this threshold comes from the circular
+        hard-fail and non-sequitur signals, not from coherence alone.
     min_distinct2 : float
         Minimum distinct-2 diversity (default 0.4).
 
@@ -830,6 +874,18 @@ def _demo() -> None:
         qa.print_report(t, p)
         passed = quality_gate(t, p)
         print(f"  quality_gate → {'PASS' if passed else 'FAIL'}")
+        # Post-fix expectation (min_coherence recalibrated 0.3→0.2 on the m2b
+        # measurements: coherent ref coh=0.259, MDLM mode means 0.258-0.285):
+        expected_pass = label == "Coherent (good)"
+        assert passed == expected_pass, (
+            f"demo sample '{label}': quality_gate returned "
+            f"{'PASS' if passed else 'FAIL'}, expected "
+            f"{'PASS' if expected_pass else 'FAIL'}"
+        )
+        m = qa.analyze(t, p)
+        print(f"  coh={m['semantic_coherence']:.3f} "
+              f"(no-prompt: {m['semantic_coherence_no_prompt']:.3f}, "
+              f"stripped={m['prompt_stripped']})")
         print()
 
 
