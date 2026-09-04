@@ -217,6 +217,7 @@ def train_v4(epochs=3, batch_size=32, lr=3e-4, seq_len=128,
     micro_step = 0
     opt_step = 0
     best_eval = float('inf')
+    did_eval = False
     losses = []
     start = time.time()
     accum_loss = 0.0
@@ -269,6 +270,7 @@ def train_v4(epochs=3, batch_size=32, lr=3e-4, seq_len=128,
                           f"VRAM={peak_vram:.1f}GB")
 
                 if opt_step % eval_every == 0:
+                    did_eval = True
                     model.eval()
                     eval_loss = quick_eval(model, val_loader, tokenizer.mask_id,
                                            eval_t=eval_t)
@@ -301,6 +303,28 @@ def train_v4(epochs=3, batch_size=32, lr=3e-4, seq_len=128,
 
     elapsed = time.time() - start
     peak_vram = torch.cuda.max_memory_allocated() / 1e9
+
+    # Final eval: guarantee at least one val_ppl measurement even when the run
+    # is shorter than eval_every (short/1-epoch runs previously left best_eval
+    # at inf and never wrote mdlm_v4_best.pt).
+    if did_eval is False or best_eval == float('inf'):
+        model.eval()
+        eval_loss = quick_eval(model, val_loader, tokenizer.mask_id, eval_t=eval_t)
+        model.train()
+        ppl = math.exp(eval_loss)
+        print(f"  → final eval: val_ppl={ppl:.1f} (CE={eval_loss:.4f}, held-out, t={eval_t})")
+        if eval_loss < best_eval:
+            best_eval = eval_loss
+            raw_model = model._orig_mod if hasattr(model, '_orig_mod') else model
+            torch.save({
+                "model_state": raw_model.state_dict(),
+                "config": config.to_dict(),
+                "step": opt_step,
+                "eval_loss": eval_loss,
+                "ppl": ppl,
+                "version": "v4",
+            }, CHECKPOINT_DIR / "mdlm_v4_best.pt")
+
     print(f"\n{'='*70}")
     print(f"TRAINING COMPLETE — {elapsed:.1f}s ({elapsed/60:.1f} min)")
     print(f"  Optimizer steps: {opt_step}")
