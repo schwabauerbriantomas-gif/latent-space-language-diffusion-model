@@ -229,11 +229,34 @@ class AROracleHRM:
         logits = self.oracle(oracle_input).logits  # [1, seq, vocab]
         log_probs = F.log_softmax(logits.float(), dim=-1)  # [1, seq, vocab]
 
-        # Per-token log-prob of the ACTUAL next token
-        # log_probs[0, i] predicts oracle_ids[i+1]
+        # Per-token log-prob of the ACTUAL token at each position.
+        #
+        # log_probs[0, i] is the distribution over oracle_ids[i+1] (standard
+        # teacher-forcing shift), so the log-prob OF oracle token j is
+        # log_probs[0, j-1, oracle_ids[j]].  The mapping back to character
+        # ranges below iterates oracle tokens in order and needs the score of
+        # token j at index j (NOT the score of token j+1).  Without the +1
+        # shift every token was attributed the log-prob of the NEXT token
+        # (off-by-one, sev 4): a perfectly-predicted token could look
+        # "surprising" and vice versa.
+        #
+        # gather at index i gives the log-prob of oracle token i+1:
+        #   shifted[i] = log_probs[0, i, oracle_ids[i+1]]
+        # The char-range mapping below needs score[j] = lp of token j, so the
+        # correct alignment is token_log_probs[j] = shifted[j-1] (shift the
+        # gathered values one slot LATER, not earlier). Token 0 has no left
+        # context (its lp is undefined under teacher forcing); we reuse the
+        # nearest defined score (shifted[0]) as a neutral fill. The last
+        # oracle token keeps its own score via the padding below.
         actual_next = oracle_input[0, 1:]  # [seq-1]
-        predicted = log_probs[0, :-1]  # [seq-1, vocab]
-        token_log_probs = predicted.gather(1, actual_next.unsqueeze(1)).squeeze(1)  # [seq-1]
+        predicted = log_probs[0, :-1]      # [seq-1, vocab]
+        shifted = predicted.gather(1, actual_next.unsqueeze(1)).squeeze(1)  # [seq-1]
+        # token_log_probs has one entry per oracle token (len == seq):
+        # index j holds the log-prob of oracle token j. Token 0 has no left
+        # context under teacher forcing, so it reuses shifted[0] as a neutral
+        # fill; the last token keeps its own score because ALL of shifted is
+        # retained (the old code dropped the final entry).
+        token_log_probs = torch.cat([shifted[:1], shifted])
 
         # 5. Map Oracle token log-probs back to MDLM token positions
         # Rebuild alignment with actual oracle tokens
@@ -565,9 +588,18 @@ class AROracleHRM:
         logits = self.oracle(oracle_input).logits
         log_probs = F.log_softmax(logits.float(), dim=-1)
 
+        # Off-by-one fix (sev 4, same as score_sequence): the char-range
+        # mapping below indexes token_log_probs[j] expecting the log-prob of
+        # oracle token j, but the raw teacher-forcing gather gives the score
+        # of token j+1 at index j. Align with token_log_probs[j] =
+        # shifted[j-1] (one entry per oracle token; token 0 reuses shifted[0]
+        # as neutral fill).
         actual_next = oracle_input[0, 1:]
         predicted = log_probs[0, :-1]
-        token_log_probs = predicted.gather(1, actual_next.unsqueeze(1)).squeeze(1)
+        shifted = predicted.gather(1, actual_next.unsqueeze(1)).squeeze(1)
+        # index j holds the log-prob of oracle token j (token 0 has no left
+        # context under teacher forcing; it reuses shifted[0] as neutral fill).
+        token_log_probs = torch.cat([shifted[:1], shifted])
 
         # Map back to MDLM positions (same as score_sequence)
         enc = self.oracle_tok(full_text, return_offsets_mapping=True,
