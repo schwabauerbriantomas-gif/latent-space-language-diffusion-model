@@ -150,6 +150,7 @@ def sample_with_guidance(
     model.eval()
     mask_id = tokenizer.mask_id
     pad_id = tokenizer.pad_id
+    device = torch.device(device)  # accept 'cuda'/'cpu' strings
 
     # Build special token mask
     special_ids = {pad_id, mask_id, tokenizer.bos_id, tokenizer.eos_id}
@@ -176,7 +177,13 @@ def sample_with_guidance(
         t_val = max(1.0 - step / n_steps, 0.01)
         t = torch.full((n_samples,), t_val, device=device)
 
-        logits = model(full, t)
+        # dtype-safe: when the model weights are bf16 (real cast, not autocast),
+        # inputs must match; autocast keeps fp32 weights working unchanged.
+        model_dtype = next(model.parameters()).dtype
+        with torch.autocast(device_type=device.type,
+                            dtype=torch.bfloat16,
+                            enabled=(model_dtype == torch.bfloat16 and device.type == 'cuda')):
+            logits = model(full, t)
 
         mask_positions = (full == mask_id)
         if not mask_positions.any():
