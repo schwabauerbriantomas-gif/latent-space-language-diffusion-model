@@ -32,7 +32,8 @@ LOSS (mdlm_loss_v4)
      then F.linear is applied ONLY on masked positions.
 
 SAMPLING (sample_full_parallel_v4)
- 11. Cosine unmasking schedule: more tokens early, fewer late.
+ 11. Cosine unmasking schedule: fewer tokens early/late, more in the middle
+     (delta_s = 0.5*(cos(pi*(s-1)/S) - cos(pi*s/S))).
  12. Fully vectorized — no Python loops over batch.
  13. Single multinomial call for the whole (n_samples * n_positions) set.
 
@@ -44,7 +45,7 @@ import json
 import sys
 import time
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -131,7 +132,12 @@ def precompute_rope(head_dim: int, max_seq_len: int, base: float = 10000.0):
     inv_freq = 1.0 / (base ** (torch.arange(0, head_dim, 2).float() / head_dim))
     positions = torch.arange(max_seq_len).float()
     angles = positions[:, None] * inv_freq[None, :]          # [seq, head_dim/2]
-    angles = angles.repeat_interleave(2, dim=-1)             # [seq, head_dim]
+    # Tile (not repeat_interleave): rotate_half pairs dim i with dim i+d/2,
+    # so cos/sin must be [θ_0..θ_{d/2-1}, θ_0..θ_{d/2-1}] for each position
+    # to form a proper 2D rotation. With repeat_interleave the frequencies
+    # are assigned to the wrong dimensions (norm not preserved, relative-
+    # position property violated — see reports/r1_arch.json).
+    angles = torch.cat([angles, angles], dim=-1)             # [seq, head_dim]
     return angles.cos(), angles.sin()
 
 
@@ -321,8 +327,11 @@ class MDLMBPEV4(nn.Module):
       - return_pre_proj support for efficient loss computation.
       - torch.compile friendly (no data-dependent control flow in forward).
 
-    For d_model=1024, 10 layers, 16 heads, vocab=16K:
-      ~201M params (SwiGLU reduces FFN param count vs 4*d_model GELU).
+    For d_model=1024, 10 layers, 16 heads:
+      - vocab=10K (the trained model — tokenizer vocab): 182,795,264
+        params ≈ 182.8M (measured with sum(p.numel())).
+      - vocab=16K (this config's default): 188,939,264 ≈ 188.9M.
+      (SwiGLU reduces FFN param count vs 4*d_model GELU.)
     """
 
     def __init__(self, config: MDLMConfig, pad_id: int = 0, mask_id: int = 1):
@@ -395,7 +404,9 @@ class MDLMBPEV4(nn.Module):
         )
         args = t[:, None].float() * freqs[None, :]
         emb = torch.cat([torch.sin(args), torch.cos(args)], dim=-1)
-        return self.time_embed(emb)
+        # emb stays fp32 (sin/cos precision); cast to model dtype for the Linear below
+        tgt_dtype = next(self.time_embed.parameters()).dtype
+        return self.time_embed(emb.to(tgt_dtype))
 
     # --- Block forward with optional checkpointing ---
 
@@ -581,7 +592,7 @@ def sample_full_parallel_v4(
     n_samples: int = 1,
     n_steps: int = 64,
     temperature: float = 0.7,
-    device: str = DEVICE,
+    device: Optional[Union[str, torch.device]] = None,
 ) -> List[str]:
     """Fully parallel MDLM sampling with cosine unmasking schedule.
 
@@ -589,9 +600,13 @@ def sample_full_parallel_v4(
 
     11. Cosine unmasking schedule (optimization #11):
         The number of tokens unmasked at each step follows a cosine curve:
-        more tokens unmasked early (when uncertainty is high), fewer late
-        (refinement). This produces better quality than linear unmasking
-        because the model spends more steps refining details.
+        FEW tokens unmasked early and late, MORE in the middle steps.
+        (cumfrac = 0.5*(1-cos(pi*s/S)) is S-shaped, so its deltas peak
+        at s ≈ S/2 — e.g. for S=8 the per-step fractions are
+        0.038, 0.108, 0.162, 0.191, 0.191, 0.162, 0.108, 0.038.)
+        This produces better quality than linear unmasking because the
+        model commits few tokens when uncertainty is highest (early)
+        and spends the refinement steps on fewer candidates.
 
         The cumulative number of unmasked tokens at step s (of S total) is:
             cumfrac = 0.5 * (1 - cos(pi * s / S))
@@ -621,11 +636,18 @@ def sample_full_parallel_v4(
         n_samples: number of independent samples to generate.
         n_steps: number of diffusion denoising steps.
         temperature: sampling temperature.
-        device: torch device.
+        device: torch device. If None (default), inferred from the model's
+            parameters, so a CPU-resident model works even when CUDA is
+            available (r7: the old `device=DEVICE` module default crashed
+            with 'Expected all tensors to be on the same device').
 
     Returns:
         List of n_samples decoded strings.
     """
+    # Device-agnostic (r7): infer from the model's parameters when not given,
+    # instead of defaulting to the module-level DEVICE ("cuda" if available).
+    if device is None:
+        device = next(model.parameters()).device
     model.eval()
     mask_id = tokenizer.mask_id
     pad_id = tokenizer.pad_id

@@ -46,7 +46,13 @@ def apply_frequency_penalty_batch(logits, tokens, penalty=0.4, special_mask=None
 
 
 def apply_repetition_penalty_batch(logits, tokens, penalty=1.3, special_mask=None):
-    """Keskar et al. repetition penalty — fully vectorized."""
+    """Keskar et al. repetition penalty — fully vectorized.
+
+    For tokens already used: subtract (penalty - 1) from the logit.
+    A uniform subtraction always lowers the used-token probability,
+    regardless of the logit's sign. (The previous divide-by-penalty
+    form RAISED negative logits.)
+    """
     if penalty == 1.0:
         return logits
     b, s, v = logits.shape
@@ -54,9 +60,8 @@ def apply_repetition_penalty_batch(logits, tokens, penalty=1.3, special_mask=Non
     used.scatter_(1, tokens, True)
     if special_mask is not None:
         used[:, special_mask] = False
-    factor = torch.where(used, torch.tensor(1.0 / penalty, device=logits.device),
-                         torch.tensor(1.0, device=logits.device))
-    return logits * factor.unsqueeze(1)
+    pen = torch.abs(torch.tensor(penalty - 1.0, device=logits.device))
+    return logits - pen * used.unsqueeze(1)
 
 
 def apply_no_repeat_bigram_batch(logits, tokens, special_mask=None):
@@ -75,12 +80,24 @@ def apply_no_repeat_bigram_batch(logits, tokens, special_mask=None):
     # prefixes[b, i] = tokens[b, i], nexts[b, i] = tokens[b, i+1]
     prefixes = tokens[:, :-1]  # [b, seq-1]
     nexts = tokens[:, 1:]      # [b, seq-1]
+    # Only consider bigrams where BOTH tokens are real (unmasked) content:
+    # a bigram computed against a still-masked predecessor never existed in
+    # the text and must not feed the ban set.
+    mask_pad_ids = [0, 1, 2, 3]  # pad/mask/eos/unk — never real content
+    real = ~torch.isin(tokens, torch.tensor(
+        mask_pad_ids, device=tokens.device))
+    real_prefix = real[:, :-1]
+    real_next = real[:, 1:]
 
     for bi in range(b):
         seq_t = tokens[bi]  # [seq]
         for pos in range(1, seq_len):
             cur_prefix = seq_t[pos - 1]
-            match = (prefixes[bi] == cur_prefix)
+            if cur_prefix.item() in mask_pad_ids:
+                # Current predecessor is still masked (or special): there is
+                # no real previous token at this position — nothing to ban.
+                continue
+            match = (prefixes[bi] == cur_prefix) & real_prefix[bi] & real_next[bi]
             if special_mask is not None:
                 match = match & (~special_mask[nexts[bi]])
             if match.any():
@@ -177,6 +194,11 @@ def generate_full_parallel(
 
         # Apply temperature and sample
         temp_logits = logits / max(temperature, 0.01)
+        # NaN guard (port of v3 clamp): if the n-gram ban sets EVERY logit of a
+        # row to -inf, softmax returns NaN. Cap -inf at -1e9 so a fully-banned
+        # row degrades to (near-)uniform instead of NaN.
+        temp_logits = torch.where(
+            torch.isinf(temp_logits) & (temp_logits < 0), -1e9, temp_logits)
         probs = F.softmax(temp_logits, dim=-1)
         
         if top_p < 1.0:
