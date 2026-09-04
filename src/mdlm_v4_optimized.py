@@ -131,7 +131,12 @@ def precompute_rope(head_dim: int, max_seq_len: int, base: float = 10000.0):
     inv_freq = 1.0 / (base ** (torch.arange(0, head_dim, 2).float() / head_dim))
     positions = torch.arange(max_seq_len).float()
     angles = positions[:, None] * inv_freq[None, :]          # [seq, head_dim/2]
-    angles = angles.repeat_interleave(2, dim=-1)             # [seq, head_dim]
+    # Tile (not repeat_interleave): rotate_half pairs dim i with dim i+d/2,
+    # so cos/sin must be [θ_0..θ_{d/2-1}, θ_0..θ_{d/2-1}] for each position
+    # to form a proper 2D rotation. With repeat_interleave the frequencies
+    # are assigned to the wrong dimensions (norm not preserved, relative-
+    # position property violated — see reports/r1_arch.json).
+    angles = torch.cat([angles, angles], dim=-1)             # [seq, head_dim]
     return angles.cos(), angles.sin()
 
 
