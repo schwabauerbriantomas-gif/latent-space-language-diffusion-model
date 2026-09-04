@@ -730,8 +730,15 @@ class AROracleHRM:
                     mdlm_ids = self.mdlm_tok.encode(oracle_text, add_special=False)
                     for mid in mdlm_ids:
                         if 0 <= mid < vocab_size:
-                            # Boost proportional to oracle's log-prob
-                            boost = self.correction_strength * max(oracle_lp, -5) / (-5)
+                            # Boost proportional to oracle's log-prob rank.
+                            # boost = strength * (1 + max(lp, -5) / 5):
+                            #   lp = 0   (best candidate)  -> +strength
+                            #   lp = -5  (floor, worst)    -> 0
+                            # (Previously: strength * max(lp,-5)/(-5) gave the
+                            #  MAXIMUM boost to the WORST candidate — inverted.)
+                            boost = self.correction_strength * (
+                                1.0 + max(oracle_lp, -5.0) / 5.0
+                            )
                             bias[seq_idx, mid] += boost
                 except Exception:
                     pass
