@@ -71,12 +71,24 @@ def apply_no_repeat_ngram(logits, tokens, n=2, special_mask=None):
         # Vectorized bigram extraction
         prefixes = tokens[:, :-1]  # [b, seq-1]
         nexts = tokens[:, 1:]      # [b, seq-1]
-        
+        # Only consider bigrams where BOTH tokens are real (unmasked) content:
+        # a bigram computed against a still-masked predecessor never existed
+        # in the text and must not feed the ban set.
+        mask_pad_ids = [0, 1, 2, 3]  # pad/mask/eos/unk — never real content
+        real = ~torch.isin(tokens, torch.tensor(
+            mask_pad_ids, device=tokens.device))
+        real_prefix = real[:, :-1]
+        real_next = real[:, 1:]
+
         for bi in range(b):
             seq_t = tokens[bi]
             for pos in range(1, seq_len):
                 cur_prefix = seq_t[pos - 1]
-                match = (prefixes[bi] == cur_prefix)
+                if cur_prefix.item() in mask_pad_ids:
+                    # Current predecessor is still masked (or special): there is
+                    # no real previous token at this position — nothing to ban.
+                    continue
+                match = (prefixes[bi] == cur_prefix) & real_prefix[bi] & real_next[bi]
                 if special_mask is not None:
                     match = match & (~special_mask[nexts[bi]])
                 if match.any():
