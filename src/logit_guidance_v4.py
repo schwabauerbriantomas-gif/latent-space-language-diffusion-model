@@ -195,6 +195,11 @@ def sample_with_guidance(
 
         # Sample
         temp_logits = logits / max(temperature, 0.01)
+        # NaN guard (port of v3 clamp): if the n-gram ban sets EVERY logit of a
+        # row to -inf, softmax returns NaN. Cap -inf at -1e9 so a fully-banned
+        # row degrades to (near-)uniform instead of NaN.
+        temp_logits = torch.where(
+            torch.isinf(temp_logits) & (temp_logits < 0), -1e9, temp_logits)
         probs = F.softmax(temp_logits, dim=-1)
         if top_p_val < 1.0:
             probs = apply_top_p(probs, p=top_p_val)
