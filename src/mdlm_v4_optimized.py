@@ -32,7 +32,8 @@ LOSS (mdlm_loss_v4)
      then F.linear is applied ONLY on masked positions.
 
 SAMPLING (sample_full_parallel_v4)
- 11. Cosine unmasking schedule: more tokens early, fewer late.
+ 11. Cosine unmasking schedule: fewer tokens early/late, more in the middle
+     (delta_s = 0.5*(cos(pi*(s-1)/S) - cos(pi*s/S))).
  12. Fully vectorized — no Python loops over batch.
  13. Single multinomial call for the whole (n_samples * n_positions) set.
 
@@ -326,8 +327,11 @@ class MDLMBPEV4(nn.Module):
       - return_pre_proj support for efficient loss computation.
       - torch.compile friendly (no data-dependent control flow in forward).
 
-    For d_model=1024, 10 layers, 16 heads, vocab=16K:
-      ~201M params (SwiGLU reduces FFN param count vs 4*d_model GELU).
+    For d_model=1024, 10 layers, 16 heads:
+      - vocab=10K (the trained model — tokenizer vocab): 182,795,264
+        params ≈ 182.8M (measured with sum(p.numel())).
+      - vocab=16K (this config's default): 188,939,264 ≈ 188.9M.
+      (SwiGLU reduces FFN param count vs 4*d_model GELU.)
     """
 
     def __init__(self, config: MDLMConfig, pad_id: int = 0, mask_id: int = 1):
@@ -594,9 +598,13 @@ def sample_full_parallel_v4(
 
     11. Cosine unmasking schedule (optimization #11):
         The number of tokens unmasked at each step follows a cosine curve:
-        more tokens unmasked early (when uncertainty is high), fewer late
-        (refinement). This produces better quality than linear unmasking
-        because the model spends more steps refining details.
+        FEW tokens unmasked early and late, MORE in the middle steps.
+        (cumfrac = 0.5*(1-cos(pi*s/S)) is S-shaped, so its deltas peak
+        at s ≈ S/2 — e.g. for S=8 the per-step fractions are
+        0.038, 0.108, 0.162, 0.191, 0.191, 0.162, 0.108, 0.038.)
+        This produces better quality than linear unmasking because the
+        model commits few tokens when uncertainty is highest (early)
+        and spends the refinement steps on fewer candidates.
 
         The cumulative number of unmasked tokens at step s (of S total) is:
             cumfrac = 0.5 * (1 - cos(pi * s / S))
