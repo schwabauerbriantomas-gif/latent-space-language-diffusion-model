@@ -75,9 +75,17 @@ def train_ar(epochs=3, batch_size=32, lr=3e-4, seq_len=128,
     tokens_int16 = np.array(tokens, dtype=np.int16)
     del tokens
     tokens_tensor = torch.from_numpy(tokens_int16).long()
-    dataset = TensorDataset(tokens_tensor)
+
+    # Hold out sequences for perplexity eval — EXCLUDED from training.
+    # Split by index BEFORE building the train dataset/loader (sev-5 leak:
+    # the holdout used to stay inside the shuffled training TensorDataset).
+    n_holdout = min(1000, max(1, len(tokens_tensor) // 100))
+    holdout = tokens_tensor[:n_holdout].clone()
+    train_tensor = tokens_tensor[n_holdout:]
+    dataset = TensorDataset(train_tensor)
     loader = DataLoader(dataset, batch_size=batch_size, shuffle=True,
                         drop_last=True, num_workers=2, pin_memory=True)
+    print(f"  Held-out for eval: {n_holdout:,} seqs (excluded from training)")
 
     # Model
     tokenizer = BPETokenizer()
@@ -118,10 +126,6 @@ def train_ar(epochs=3, batch_size=32, lr=3e-4, seq_len=128,
     losses = []
     start = time.time()
     accum_loss = 0.0
-
-    # Hold out 1000 sequences for perplexity eval
-    n_holdout = 1000
-    holdout = tokens_tensor[:n_holdout].clone()
 
     for epoch in range(epochs):
         ep_loss = 0
