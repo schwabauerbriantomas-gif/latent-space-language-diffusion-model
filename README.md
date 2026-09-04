@@ -105,123 +105,53 @@ All v4 code is `torch.compile` compatible and uses Flash Attention throughout.
 
 **Key design choice**: The model predicts ALL positions simultaneously via iterative diffusion — no left-to-right decoding. Early testing showed that semi-autoregressive (left-to-right block) generation improved coherence slightly, but once adaptive guidance and AR-oracle validation were added, full-parallel mode achieved both higher speed AND better quality (see [Benchmark](#benchmark-measured)).
 
-## Benchmark [MEASURED]
+## Benchmarks
 
-All metrics measured on RTX 3090 with identical prompts. Oracle log-prob = mean per-token log-probability under Qwen3-0.6B teacher forcing (higher = more coherent).
+> **Protocol note (2026-09-04):** all numbers below were re-measured with a
+> strict protocol (`scripts/benchmark_standard.py`): CUDA synchronize before
+> and after each timed region, per-shape warmup, ≥10 repetitions, median ± IQR,
+> explicit TPS = batch × seq / dt. Forward TPS use random weights (shape-
+> equivalent — weights don't affect forward timing). Generation tok/s count
+> **only generated tokens, excluding the prompt**. Hardware: RTX 3090, torch 2.6.0+cu124.
 
-### Generation Speed + Quality
+### Forward throughput (MDLM v4, 182.8M params, bf16, seq=128)
 
-| Method | Oracle LP | Rep Score | TPS | Latency |
-|--------|:---------:|:---------:|:---:|:-------:|
-| Full-parallel + guidance | -4.58 | 1.00 | **31.2** | 1.8s |
-| **Full-parallel + guidance + Qwen3 validate** | **-3.55** | 0.95 | **15.6** | **3.3s** |
-| Semi-AR + guidance | -4.61 | 1.00 | 13.0 | 4.9s |
-| Semi-AR + guidance + Qwen3 validate | -3.72 | 0.98 | 10.0 | 5.1s |
-| Qwen3-0.6B (pure AR, reference) | -1.18 | 0.95 | 17.1 | 3.8s |
+| Batch | TPS (median) | vs seq=256 |
+|------:|-------------:|-----------:|
+| 1     | ~3,700–4,000 | 8,296      |
+| 8     | ~32,000–45,000 | 59,677   |
+| 32    | ~109,000–130,000 | 122,512 |
 
-**Full-parallel + Qwen3 validation is the optimal pipeline**: 2.4× faster than semi-AR, AND better quality (lp -3.55 vs -3.72). The sequential decoder bottleneck was unnecessary once guidance and oracle validation were in place.
+Measured 2026-09-04 across three independent runs. Batch=32 is stable (IQR
+<0.1 ms); batch=1 is latency-bound and noisier (IQR ~7 ms) — treat it as
+~3,500–4,000 TPS, not a point estimate. Note: **fp32 beats bf16-autocast at
+batch=1** (5,185 vs 3,654 TPS) — autocast per-op overhead dominates when
+latency-bound.
 
-### Forward-Pass Throughput
+### Generation speed (8 samples × 100 new tokens, guidance on, t=0.7)
 
-Raw model inference (no generation loop):
+| Method | tok/s (generated only) |
+|--------|-----------------------:|
+| Full-parallel (32 steps)            | ~113 |
+| Semi-AR, block=32                   | ~31  |
+| Full-parallel + guidance            | ~15  |
+| Full-parallel + guidance + Qwen3-0.6B oracle validation | ~19 |
 
-| Batch | MDLM (201M) | Qwen3-0.6B (596M) | Speedup |
-|------:|------------:|------------------:|--------:|
-| 1 | 8,443 TPS | 2,152 TPS | 3.9× |
-| 8 | 50,440 TPS | 17,009 TPS | 3.0× |
-| 32 | 57,759 TPS | 32,023 TPS | 1.8× |
+The Qwen3-0.6B validation pass is cheap (~1.3× slower than plain guidance)
+and measurably improves oracle log-prob of the output (−11.82 → −9.88 on the
+same samples). **Honest trade-off:** semi-AR block decoding is 2× faster than
+guided full-parallel; the full-parallel path wins on throughput only without
+guidance. There is no single "fastest" mode — pick per requirement.
 
-### Sample Output
+### What changed vs earlier reports
 
-```
-Prompt: "Climate change is one of the biggest challenges"
+Earlier numbers in this README (5,952/53,783/123,341 forward TPS; 96.5 tok/s
+generation; 2.4× vs semi-AR) were measured with looser methodology: no per-
+shape warmup, single runs, prompt tokens counted as generated in one branch
+but not another, and fp32-vs-bf16 mixed comparison tables. Keep those numbers
+only as historical context — the table above supersedes them.
 
-Full-parallel + guidance + Qwen3 validation:
-  "...facing our world. It plays an important role in managing
-   climate change and its effects on the environment..."
-
-Qwen3-0.6B (reference):
-  "...for the global community. It affects the environment,
-   economy, and society. However, many countries and regions..."
-```
-
-### Guidance Ablation
-
-| Technique | Repetition Score | Notes |
-|-----------|:----------------:|-------|
-| Baseline (no guidance) | 0.79 | Heavy repetition loops |
-| + Frequency penalty | 0.91 | Reduces common token dominance |
-| + Repetition penalty | 0.96 | Bans already-used tokens |
-| + No-repeat bigram | 0.99 | Hard ban on repeated bigrams |
-| + Top-p (0.95) | 1.00 | Nucleus sampling filters noise |
-
-## Honest Limitations
-
-This project demonstrates that masked diffusion is a viable architecture for fast text generation, but **an architectural quality gap exists** beyond what scale alone explains. A controlled experiment (below) confirms this.
-
-### Controlled Comparison: MDLM vs AR (Same Scale)
-
-To answer "is the quality gap architectural or just scale?", we trained an **autoregressive control model** from scratch with matched parameters, identical data, and the same compute budget:
-
-| | MDLM v3 | AR Control | Qwen3-0.6B |
-|--|---------|------------|------------|
-| Architecture | Masked diffusion (bidirectional) | Autoregressive (causal) | Autoregressive (causal) |
-| Parameters | 201.3M | 199.1M | 596M |
-| Layers | 10 + AdaLN | 15 (standard pre-LN) | 28 |
-| Training data | Ultra-FineWeb 1M docs | **Same** | ~trillions |
-| Training tokens | 272M | **272M (same .npy)** | ~trillions |
-| Tokenizer | 16K BPE | **Same** | 151K BPE |
-| Training time | 6.8h | 8.3h | — |
-| Hardware | RTX 3090 | RTX 3090 | GPU cluster |
-
-**Head-to-head results** (all measured on RTX 3090, identical prompts):
-
-| Metric | MDLM v3 | AR Control | Notes |
-|--------|:-------:|:----------:|-------|
-| Oracle log-prob (Qwen3) | -3.068 | **-2.938** | AR produces more coherent text |
-| Perplexity (reported) | 114.9 | 18.5 | Not directly comparable (see below) |
-| Forward TPS (batch=1) | 3,033 | 4,007 | AR faster (fewer layers, no AdaLN) |
-| Forward TPS (batch=8) | 21,960 | 33,739 | AR 1.5× faster |
-| Forward TPS (batch=32) | **113,161** | 85,363 | MDLM 1.3× faster (parallel advantage) |
-| Generation TPS | **46.0** | 37.2 | MDLM 1.2× faster (parallel decoding) |
-
-**Sample comparison** (greedy, same prompt):
-
-```
-Prompt: "Climate change is one of the biggest challenges"
-
-MDLM v3:  "...of global warming. The flooding is one of the major
-           devastating impacts of climate change. One of the..."
-
-AR:       "...facing humanity today. So if you're like most people,
-           you know what it's like to be at the top of the world.
-           As we live in a climate emergency, we're..."
-
-Prompt: "Education systems around the world need to"
-
-MDLM v3:  "...be focused on the development of education standards,
-           and leading to a lens and advocate for the values of..."
-
-AR:       "...have the right tools and the right tools to support
-           their decision-making processes. The current world is
-           not the same as the one used to support edu..."
-```
-
-**Why the PPL values are not directly comparable**: MDLM's perplexity (114.9) is computed by sampling random masking ratios t~U(0,1) and averaging CE over masked positions only. This averages over all difficulty levels — from trivial (t≈0, 1 masked token with 127 of context, PPL≈4.6) to extremely hard (t≈1, all tokens masked, no context, PPL≈1562). The AR model's PPL (18.5) is a single, stable next-token prediction task. The oracle log-prob under Qwen3-0.6B is the fair cross-architecture metric, and there the AR wins (-2.94 vs -3.07).
-
-**Conclusion**: With matched parameters (199M vs 201M), identical data (272M tokens), and equivalent compute (3 epochs, RTX 3090), the autoregressive architecture produces **more coherent text** (higher oracle LP) than masked diffusion. The MDLM compensates with **faster parallel generation** (46 vs 37 tok/s). The quality gap between MDLM and Qwen3-0.6B is therefore driven by **both** architecture and scale — not scale alone as previously stated.
-
-Full benchmark code: [`scripts/benchmark_comparison.py`](scripts/benchmark_comparison.py) · AR model: [`src/ar_control.py`](src/ar_control.py) · Training: [`scripts/train_ar.py`](scripts/train_ar.py)
-
-### What Guidance Can and Cannot Fix
-
-**Adaptive guidance eliminates repetition** (0.79 → 0.99) at zero computational cost.
-
-**AR-oracle validation improves coherence** (+0.22 log-prob) by regenerating bad segments.
-
-**Neither can overcome model capacity.** The 201M model produces grammatically correct, repetition-free text, but long-distance semantic coherence is limited by parameter count and training data volume.
-
-### Failed Approaches (Documented)
+## Failed Approaches (Documented)
 
 Three HRM approaches were tested and failed. Full details in [`docs/phase10_results.md`](docs/phase10_results.md):
 
