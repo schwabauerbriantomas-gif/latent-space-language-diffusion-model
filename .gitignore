@@ -39,3 +39,9 @@ Thumbs.db
 # Model checkpoints (large, not tracked)
 checkpoints/*.pt
 hf_model/
+
+# weights and train artifacts travel via HF release, not git
+hf_model_v4/model.safetensors
+results/sudoku/*.pt
+results/sudoku/*.npz
+checkpoints/*.pt

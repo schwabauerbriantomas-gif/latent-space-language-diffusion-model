@@ -1,0 +1,45 @@
+{
+ "checkpoint": "v4.1 plain-CE retrain",
+ "gpu": "NVIDIA GeForce RTX 3090",
+ "n_steps": 32,
+ "seq_len": 128,
+ "mean_tps": 113.0,
+ "results": [
+  {
+   "prompt": "The future of artificial intelligence",
+   "tps": 14.3,
+   "time_s": 8.94,
+   "text": " The future of artificial intelligence and AI research. blendedep and machine learning have shown the potential of the most andtics models for the future of and future generations. artificial and machine intelligence lea"
+  },
+  {
+   "prompt": "Climate change is one of the biggest challenges",
+   "tps": 128.3,
+   "time_s": 0.97,
+   "text": " Climate change is one of the biggest challenges on the planet. The temperature is rising.S. earth\u2019s oceans, to to the the sea and\n\u201clev rise and\nto the.S.4 ande.S.\nment\n world wides.S. average temperatures rise\n2.5 milli"
+  },
+  {
+   "prompt": "To build a reliable system, you need",
+   "tps": 138.4,
+   "time_s": 0.93,
+   "text": " To build a reliable system, you need to increase the efficiency of the system of the and.\nThe Most of the the most system used systems are:\n are the most systems\n- a system\n- a system system\n- system system\n- a system s"
+  },
+  {
+   "prompt": "The history of science shows that",
+   "tps": 130.3,
+   "time_s": 0.98,
+   "text": " The history of science shows that the history of the universe will be of place, the history of the universe and the islands, and the history of of the U.S. that was the past five years ago, the history of the has been k"
+  },
+  {
+   "prompt": "In a small town at the edge of the mountains",
+   "tps": 127.7,
+   "time_s": 0.99,
+   "text": " In a small town at the edge of the mountains, the top of the sub 3.comed, and the top open the the middle. a the top is at the top of the bridge. In the the middle section,,. At the top, the top of the the top, the the "
+  },
+  {
+   "prompt": "Economists have long debated whether",
+   "tps": 139.1,
+   "time_s": 0.92,
+   "text": " Economists have long debated whether the quality of the photography can be produced in the context of phot phot of and, the the effects of the processes, however. However, the image, of the the, the, and the, is often t"
+  }
+ ]
+}

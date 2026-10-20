@@ -1,0 +1,93 @@
+{
+ "steps": 800,
+ "batch": 64,
+ "final_plain_ce": 6.315191984176636,
+ "final_ppl": 552.9082000282331,
+ "history": [
+  {
+   "step": 0,
+   "plain_ce": 9.394,
+   "elbo_weighted": 32.827
+  },
+  {
+   "step": 50,
+   "plain_ce": 7.401,
+   "elbo_weighted": 26.71
+  },
+  {
+   "step": 100,
+   "plain_ce": 7.514,
+   "elbo_weighted": 24.091
+  },
+  {
+   "step": 150,
+   "plain_ce": 7.367,
+   "elbo_weighted": 27.366
+  },
+  {
+   "step": 200,
+   "plain_ce": 7.223,
+   "elbo_weighted": 24.338
+  },
+  {
+   "step": 250,
+   "plain_ce": 7.025,
+   "elbo_weighted": 20.873
+  },
+  {
+   "step": 300,
+   "plain_ce": 6.984,
+   "elbo_weighted": 24.196
+  },
+  {
+   "step": 350,
+   "plain_ce": 6.725,
+   "elbo_weighted": 19.774
+  },
+  {
+   "step": 400,
+   "plain_ce": 6.6,
+   "elbo_weighted": 22.715
+  },
+  {
+   "step": 450,
+   "plain_ce": 6.503,
+   "elbo_weighted": 21.373
+  },
+  {
+   "step": 500,
+   "plain_ce": 6.53,
+   "elbo_weighted": 17.953
+  },
+  {
+   "step": 550,
+   "plain_ce": 6.407,
+   "elbo_weighted": 21.693
+  },
+  {
+   "step": 600,
+   "plain_ce": 6.405,
+   "elbo_weighted": 19.055
+  },
+  {
+   "step": 650,
+   "plain_ce": 6.385,
+   "elbo_weighted": 19.504
+  },
+  {
+   "step": 700,
+   "plain_ce": 6.176,
+   "elbo_weighted": 24.275
+  },
+  {
+   "step": 750,
+   "plain_ce": 6.32,
+   "elbo_weighted": 18.598
+  },
+  {
+   "step": 799,
+   "plain_ce": 6.33,
+   "elbo_weighted": 19.455
+  }
+ ]
+}

@@ -723,6 +723,12 @@ def sample_full_parallel_v4(
 
         probs = F.softmax(masked_logits, dim=-1)       # [n_samples, max_rem, vocab]
 
+        # NaN/Inf guard: early-training models under bf16 autocast can emit
+        # non-finite logits; they would poison multinomial and trigger a
+        # device-side assert. Replace them with uniform-safe values.
+        if not torch.isfinite(probs).all():
+            probs = torch.nan_to_num(probs, nan=1.0 / probs.shape[-1], posinf=1.0, neginf=0.0)
+
         # Sample — single multinomial for the whole batch.
         # Flatten to [n_samples * max_rem, vocab], sample 1, reshape.
         flat_probs = probs.reshape(-1, probs.shape[-1])
@@ -780,9 +786,13 @@ def sample_full_parallel_v4(
     results = []
     for b in range(n_samples):
         ids = full[b].cpu().tolist()
-        if tokenizer.eos_id in ids:
-            ids = ids[:ids.index(tokenizer.eos_id)]
-        text = tokenizer.decode(ids)
+        # Truncate at the first EOS *after* the prompt. The prompt's own EOS
+        # (if encode() added one) is part of the conditioning and must not
+        # end the sample.
+        tail = ids[prompt_len:]
+        if tokenizer.eos_id in tail:
+            tail = tail[: tail.index(tokenizer.eos_id)]
+        text = tokenizer.decode(ids[:prompt_len] + tail)
         results.append(text)
     return results
 

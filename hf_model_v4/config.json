@@ -1,0 +1,31 @@
+{
+  "architectures": [
+    "MDLMBPEV4"
+  ],
+  "model_type": "mdlm",
+  "version": "v4",
+  "d_model": 1024,
+  "n_heads": 16,
+  "n_layers": 10,
+  "vocab_size": 10000,
+  "max_seq_len": 256,
+  "d_ff": 2816,
+  "dropout": 0.1,
+  "use_checkpointing": false,
+  "torch_dtype": "float32",
+  "optimizations": [
+    "RMSNorm (no bias, no mean-centering)",
+    "SwiGLU FFN (better than GELU, fewer params)",
+    "Simplified AdaLN (4\u00d7d_model instead of 6\u00d7d_model)",
+    "Logit-normal timestep sampling",
+    "Plain CE on masked positions (ELBO 1/(1-t) weighting removed: heavy-tailed weights diverged two runs \u2014 see results/diag_v4_loss.json)",
+    "Weight tying (no output bias)",
+    "torch.compile compatible"
+  ],
+  "training": {
+    "params": 182795264,
+    "ppl": 62.405095410681284,
+    "step": 20000,
+    "loss": 4.133646929264069
+  }
+}

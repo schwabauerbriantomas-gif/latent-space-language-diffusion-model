@@ -1,0 +1,40 @@
+{
+ "ar": {
+  "exact_solve": 0.0,
+  "cell_acc": 0.4397283950617284,
+  "clue_integrity": 1.0,
+  "n": 500,
+  "time_s": 8.6
+ },
+ "mdlm": {
+  "exact_solve": 0.0,
+  "cell_acc": 0.44051851851851853,
+  "clue_integrity": 1.0,
+  "n": 500,
+  "time_s": 5.6
+ },
+ "mdlm_constraint": {
+  "exact_solve": 0.0,
+  "cell_acc": 0.44051851851851853,
+  "clue_integrity": 1.0,
+  "n": 500,
+  "time_s": 8.8
+ },
+ "mdlm_ar_refine": {
+  "exact_solve": 0.0,
+  "cell_acc": 0.44051851851851853,
+  "clue_integrity": 1.0,
+  "n": 500,
+  "time_s": 9.3
+ },
+ "_meta": {
+  "protocol": "propio; 30 clues sin unicidad garantizada; augmentation x18 (perm digitos x transposicion); mismo presupuesto para AR y MDLM; greedy decoding",
+  "params_per_model": 18962432,
+  "epochs": 10,
+  "batch": 256,
+  "gen_steps": 32,
+  "seed": 42,
+  "device": "cuda"
+ },
+ "_conclusion": "FALSIFICACION BARATA - RESULTADO NEGATIVO: con ~2.8K steps de entrenamiento (10 epochs x 72K ejemplos augmentados), NINGUN modelo (AR, MDLM, +constraint-refine, +AR-oracle-refine) resuelve ni un puzzle de 30 clues (0% exact, 44% cell_acc vs 11% azar). El gap reportado por NCM (diffusion 81% / NCM 86% / AR 1%) NO es replicable a este presupuesto: requiere orden de magnitud(s) mas computo. Los refines no mueven nada cuando el modelo base no tiene senal (consistente con los Failed Approaches ya documentados del repo). Veredicto: validar el fenomeno cuesta ~1-2 dias de GPU (~100K steps por modelo), no una tarde."
+}

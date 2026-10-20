@@ -72,7 +72,7 @@ def prepare_data(seq_len=128):
     current = []
     processed = 0
 
-    print(f"  Streaming tokenize → memmap (chunk={CHUNK})...")
+    print(f"  Streaming tokenize -> memmap (chunk={CHUNK})...")
 
     with open(input_file) as f:
         chunk_texts = []
@@ -137,12 +137,12 @@ def prepare_data(seq_len=128):
 def train_v4(epochs=3, batch_size=32, lr=3e-4, seq_len=128,
              warmup_ratio=0.05, eval_every=500, gradient_accumulation=4,
              use_compile=True, use_checkpointing=False, val_frac=0.05,
-             eval_t=0.5):
+             eval_t=0.5, loss_type='plain'):
     """Train MDLM v4 with all optimizations."""
     
     from mdlm_v4_optimized import (
         MDLMConfig as MDLMConfigV4, MDLMBPEV4, BPETokenizer,
-        mdlm_loss_v4, sample_full_parallel_v4,
+        mdlm_loss_v4, sample_full_parallel_v4, forward_mask_bpe,
     )
 
     print("=" * 70)
@@ -234,7 +234,10 @@ def train_v4(epochs=3, batch_size=32, lr=3e-4, seq_len=128,
             batch_tokens = batch[0].to(DEVICE, non_blocking=True)
 
             with torch.amp.autocast('cuda', dtype=torch.bfloat16):
-                loss = mdlm_loss_v4(model, batch_tokens, tokenizer.mask_id)
+                if loss_type == 'plain':
+                    loss = plain_ce_v4(model, batch_tokens, tokenizer.mask_id)
+                else:
+                    loss = mdlm_loss_v4(model, batch_tokens, tokenizer.mask_id)
                 loss = loss / gradient_accumulation
 
             loss.backward()
@@ -278,7 +281,7 @@ def train_v4(epochs=3, batch_size=32, lr=3e-4, seq_len=128,
 
                     # val_ppl = exp(plain CE, deterministic) — no clamp, no ELBO weight
                     ppl = math.exp(eval_loss)
-                    print(f"    → val_ppl={ppl:.1f} (CE={eval_loss:.4f}, held-out, t={eval_t})")
+                    print(f"    -> val_ppl={ppl:.1f} (CE={eval_loss:.4f}, held-out, t={eval_t})")
 
                     if eval_loss < best_eval:
                         best_eval = eval_loss
@@ -297,7 +300,7 @@ def train_v4(epochs=3, batch_size=32, lr=3e-4, seq_len=128,
                             raw_model, tokenizer, seq_len=seq_len,
                             n_samples=3, n_steps=32, temperature=0.7,
                         )
-                        print(f"    → Best samples (full-parallel):")
+                        print(f"    -> Best samples (full-parallel):")
                         for i, s in enumerate(samples):
                             print(f"      [{i}] {s.strip()[:120]}")
 
@@ -369,11 +372,33 @@ def train_v4(epochs=3, batch_size=32, lr=3e-4, seq_len=128,
     return model
 
 
+def plain_ce_v4(model, tokens, mask_id=1):
+    """Plain CE on masked positions — NO 1/(1-t) ELBO weighting.
+
+    Why: with logit-normal t, the weight 1/(1-t) is heavy-tailed. Rare huge
+    weights (up to x100,000 after clamping) dominate gradients and two long
+    runs diverged (results/v4_train_final.log, results/v4_train_500k.log).
+    The ablation in scripts/diag_v4_loss.py isolates the weighting as the
+    cause: plain CE reaches loss ~7.4 within 100 steps (v3-healthy range)
+    while the ELBO-weighted metric stays at 24-33 on the same model.
+    """
+    from mdlm_v4_optimized import forward_mask_bpe  # src/ path set by caller
+    t = torch.sigmoid(torch.randn(tokens.shape[0], device=tokens.device))
+    masked, mask_pos = forward_mask_bpe(tokens, t, mask_id)
+    with torch.amp.autocast('cuda', dtype=torch.bfloat16):
+        hidden = model(masked, t, return_pre_proj=True)
+    mask_flat = mask_pos.reshape(-1)
+    hidden_masked = hidden.reshape(-1, hidden.shape[-1])[mask_flat]
+    tokens_masked = tokens.reshape(-1)[mask_flat]
+    logits = F.linear(hidden_masked.float(), model.token_emb.weight.float())
+    return F.cross_entropy(logits, tokens_masked)
+
+
 def quick_eval(model, val_loader, mask_id, n_batches=20, eval_t=0.5):
     """Deterministic held-out eval: plain CE on masked positions.
 
-    Unlike training loss (stochastic ELBO-weighted, mean weight E[1/(1-t)]
-    ~= 2.65), this fixes t=eval_t (default 0.5) and the mask via a local RNG
+    Unlike training loss (stochastic, mean ELBO weight E[1/(1-t)] ~= 2.65),
+    this fixes t=eval_t (default 0.5) and the mask via a local RNG
     generator, so val_ppl is reproducible run-to-run and directly comparable
     across checkpoints. Returns mean CE in nats.
     """
@@ -411,6 +436,11 @@ def quick_eval(model, val_loader, mask_id, n_batches=20, eval_t=0.5):
 
 
 if __name__ == "__main__":
+    # Windows consoles (cp1252) choke on non-ASCII tokens the model generates.
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
     parser = argparse.ArgumentParser()
     parser.add_argument("--epochs", type=int, default=3)
     parser.add_argument("--batch-size", type=int, default=32)
@@ -425,6 +455,9 @@ if __name__ == "__main__":
                         help="fixed mask fraction t for deterministic eval")
     parser.add_argument("--seed", type=int, default=42,
                         help="RNG seed for torch/random/numpy (reproducibility)")
+    parser.add_argument("--loss-type", default="plain", choices=["plain", "elbo"],
+                        help="plain CE on masked positions (stable) or ELBO 1/(1-t) "
+                             "weighting (diverged historically; kept for ablation)")
     args = parser.parse_args()
 
     # Reproducibility: seed all RNGs before any data/model init
@@ -438,4 +471,5 @@ if __name__ == "__main__":
     train_v4(epochs=args.epochs, batch_size=args.batch_size,
              lr=args.lr, seq_len=args.seq_len, gradient_accumulation=args.accum,
              use_compile=not args.no_compile, use_checkpointing=args.checkpointing,
-             val_frac=args.val_frac, eval_t=args.eval_t)
+             val_frac=args.val_frac, eval_t=args.eval_t,
+             loss_type=args.loss_type)

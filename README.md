@@ -18,7 +18,17 @@ keywords: masked diffusion language model, MDLM, parallel text generation, diffu
 
 A **masked diffusion language model (MDLM)** that generates text by predicting all tokens in parallel, validated by an autoregressive oracle. Built on [SplatsDB](https://github.com/schwabauerbriantomas-gif/splatdb)'s vector infrastructure.
 
-**The core finding**: full-parallel masked diffusion with adaptive guidance + AR-oracle validation achieves **2.4× faster generation** than the equivalent autoregressive model while producing comparable text quality — no sequential decoding required.
+**The core finding**: full-parallel masked diffusion with adaptive guidance + AR-oracle validation achieves **2.4× faster generation** than its own semi-autoregressive decoding variant, and **~1.2× than an equal-size autoregressive control** (KV cache, greedy) — while the AR control produces more coherent text (measured, see [Controlled Comparison](#controlled-comparison-mdlm-vs-ar-same-scale)). No sequential decoding required.
+
+## Release v4.1 (2026-10-19) — divergence root-caused and fixed
+
+An audit of the Hugging Face release found that the published weights were an accidental mid-training checkpoint (perplexity in the millions) and that **every previous v4 run had silently diverged**. Root cause isolated with a controlled ablation ([`scripts/diag_v4_loss.py`](scripts/diag_v4_loss.py), receipt in `results/diag_v4_loss.json`):
+
+- The ELBO importance weighting `loss *= 1/(1-t)` with logit-normal `t` is heavy-tailed: rare weights up to ×100,000 (post-clamp) dominate gradients.
+- Same model, same masking, same schedule, plain CE instead: loss falls 9.4 → 6.3 in 800 steps (healthy, v3-like); the ELBO-weighted metric stays at 18–33.
+- v4.1 was retrained with `--loss-type plain` ([`scripts/train_v4.py`](scripts/train_v4.py)).
+
+The old broken checkpoint is preserved as `checkpoints/mdlm_v4_broken_500k_diverged.pt` for reference. Speed claims corrected too: the "2.4×" is vs our semi-AR variant; the equal-size AR control with KV cache runs at ~1.2× slower generation but with better coherence (oracle log-prob), as documented below.
 
 ## v4 Optimizations
 
@@ -46,7 +56,7 @@ All v4 code is `torch.compile` compatible and uses Flash Attention throughout.
 |--------|----|----|-------|
 | Model parameters | 201M | **183M** | d_model=1024, 10 layers, 16 heads |
 | Training data | 272M tokens | 27.2M tokens | 100K docs from Ultra-FineWeb |
-| Perplexity (plain CE, comparable) | 102.6 | 251.3 | v4 uses 10× less data + ELBO weighting |
+| Perplexity (plain CE, comparable) | 102.6 | **62.4** | v4.1 uses 10× less data; loss = plain CE on masked positions (see Release v4.1 below) |
 | Forward throughput (batch=1) | 5,595 TPS | **5,952 TPS** | **+6.4% faster** |
 | Forward throughput (batch=8) | 40,000 TPS | **53,783 TPS** | **+34.5% faster** |
 | Forward throughput (batch=32) | 127,187 TPS | 123,341 TPS | Comparable |
@@ -168,7 +178,7 @@ The successful approach: **segment-level regeneration** by the oracle (+0.22), n
 ```
 latent-space-language-diffusion-model/
 ├── src/                        # Core modules
-│   ├── mdlm_v4_optimized.py    #   ★ v4 model: RMSNorm, SwiGLU, ELBO loss
+│   ├── mdlm_v4_optimized.py    #   ★ v4 model: RMSNorm, SwiGLU, plain-CE MDLM loss
 │   ├── mdlm_bpe_v3.py          #   v3 model (legacy, for comparison)
 │   ├── inference_v4.py         #   ★ v4 inference: vectorized guidance, batch gen
 │   ├── logit_guidance_v4.py    #   ★ v4 guidance: torch.compile friendly

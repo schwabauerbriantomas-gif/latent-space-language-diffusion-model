@@ -16,7 +16,7 @@ DATA_DIR = REPO / "data"
 DATA_DIR.mkdir(exist_ok=True)
 
 # ── Config ──
-N_SAMPLES = 100_000       # 100K documents — enough for BPE + pretraining
+N_SAMPLES = 500_000       # 500K docs — scaled for coherent generation
 MIN_SCORE = 0.5           # Quality filter
 MIN_CHARS = 200           # Skip very short docs
 MAX_CHARS = 5000          # Skip very long docs (for manageable seq lens)

@@ -48,7 +48,7 @@ config_dict = {
         "SwiGLU FFN (better than GELU, fewer params)",
         "Simplified AdaLN (4×d_model instead of 6×d_model)",
         "Logit-normal timestep sampling",
-        "ELBO-weighted loss",
+        "Plain CE on masked positions (ELBO 1/(1-t) weighting removed: heavy-tailed weights diverged two runs — see results/diag_v4_loss.json)",
         "Weight tying (no output bias)",
         "torch.compile compatible",
     ],
