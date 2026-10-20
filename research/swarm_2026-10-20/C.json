@@ -1,0 +1,232 @@
+{
+  "agent": "C",
+  "domain": "post-hoc quality maximization (verifiers, reranking, self-correction loops, inference-time steering)",
+  "findings": [
+    {
+      "technique": "Best-of-N reranking con reward model chico (0.6B-1.7B) — verificador que sí corre en 3090",
+      "source": "Skywork-Reward-V2 (Skywork AI), arXiv:2507.01352, https://arxiv.org/abs/2507.01352 + repo GitHub SkyworkAI/Skywork-Reward-V2",
+      "date": "2025-07",
+      "evidence": "Suite de 8 RMs Bradley-Terry de 0.6B a 8B entrenados sobre 26M pares curados (SynPref-40M). Skywork-Reward-V2-Qwen3-0.6B casi iguala en promedio a su previo mejor RM de 27B; la variante 1.7B supera en promedio al mejor RM de 70B existente; en Best-of-N (RMB y PPE Correctness) los 8 RMs superan a GPT-4o como selector hasta por 20 puntos, con curvas BoN de scaling positivo (salvo 1.7B en GPQA). Cita textual del paper: 'All eight RMs outperform GPT-4o ... by a margin of up to 20 points'.",
+      "fit_3090_183m": "high — Qwen3-0.6B en fp16 ≈1.2GB VRAM; corre junto al MDLM 183M y al AR-oracle en la 3090 con margen. Scoring = 1 forward del RM por candidato completo (seq 128): ~1/64 del costo de generar un candidato con 64 pasos de denoising. Multiplicador de cómputo del RM vs un paso del generador ≈ 0.6B/183M ≈ 3.3× por forward, pero se paga N veces (una por candidato), no T×N.",
+      "expected_impact": "Mayor salto documentado por GPU-minuto en selección final: la calidad entregada pasa de 'una muestra arbitraria' a 'la mejor de N según un juez entrenado'. Ganancia depende del gap de calidad entre muestras del MDLM; con deriva temática y colapso de repetición como modos de fallo dominantes, un RM que penalice repetición/incoherencia eleva el piso de calidad perceptible de forma grande (OPINIÓN: salto cualitativo grande y barato; magnitud exacta sin números verificados para un generador 183M ppl 62).",
+      "implementation_cost": "2-4 días: cargar RM de HF, batch de N candidatos, score, argmax (o ranking ponderado con NLL del AR-oracle). Sin entrenamiento.",
+      "risk": "RM entrenado en preferencias de chat: puede preferir estilo sobre discurso sostenido (ver finding sobre PRMs como 'detectores de fluencia'). Mitigación: ensamble score = RM + NLL del AR-oracle (Qwen3-0.6B teacher-forcing, ya implementado), y calibrar correlación RM-vs-oracle en 100 muestras etiquetadas a mano antes de confiar."
+    },
+    {
+      "technique": "Evidencia general de verifier-driven test-time scaling (por qué priorizar verificación sobre más sampling)",
+      "source": "Snell, Lee, Xu, Kumar — 'Scaling LLM Test-Time Compute Optimally can be More Effective than Scaling Model Parameters', arXiv:2408.03314 (Google DeepMind/Berkeley)",
+      "date": "2024-08",
+      "evidence": "Con estrategia compute-optimal (búsqueda contra verificador de proceso + revisión adaptativa), la eficiencia del test-time compute mejora >4× vs best-of-N plano; en evaluación FLOPs-matched, test-time compute permite a un modelo chico superar a uno 14× más grande en prompts donde el modelo chico tiene tasa de éxito no trivial. HECHO citado del abstract.",
+      "fit_3090_183m": "high — es exactamente el régimen nuestro: modelo chico con éxito parcial (sintaxis local correcta, deriva global), presupuesto de cómputo en inferencia barato de mover.",
+      "expected_impact": "Justifica invertir el presupuesto 3090 en N candidatos + verificación selectiva por dificultad, no en un solo decode más largo. La asignación adaptativa (más N en prompts/segmentos con score bajo) es la parte con mayor retorno según el paper.",
+      "implementation_cost": "0 días extra de método (es el marco que ordena las técnicas 1-4 de recomendaciones); implementar gating adaptativo ≈ 1 día.",
+      "risk": "Los números son de GSM8K/MATH con verificador de respuesta exacta; transferencia a texto abierto es cualitativa (marcado como transferencia de principio, no de magnitud)."
+    },
+    {
+      "technique": "FK steering — resampling de partículas por potencial de reward DENTRO del denoising (SMC en el loop)",
+      "source": "Singhal, Horvitz, Teehan, Ren, Yu, McKeown, Ranganath (NYU/Columbia) — 'A General Framework for Inference-time Scaling and Steering of Diffusion Models', arXiv:2501.06848, ICML 2025 (pmlr v267 singhal25b), código: github.com/zacharyhorvitz/Fk-Diffusion-Steering",
+      "date": "2025-01",
+      "evidence": "FK steering con tan solo k=4 partículas da ganancias significativas en texto e imagen; un modelo de difusión de 0.8B con FK supera a un modelo de 2.6B fine-tuned en fidelidad al prompt, con sampling más rápido y cero entrenamiento; en difusión de texto genera menor perplexity y mayor aceptabilidad lingüística que el modelo base, y control sin gradientes de atributos (toxicidad). Citas del abstract/ICML: 'outperforms a 2.6B parameter fine-tuned model ... with as few as k=4 particles'.",
+      "fit_3090_183m": "high — k=4 partículas de seq 128 con el MDLM 183M es trivial en 3090; el potencial puede ser el AR-oracle (NLL teacher-forcing de segmentos decodificados) o el RM 0.6B sobre el texto parcial. Es la formalización exacta de extender nuestro AR-oracle 'regenera los peores' a loop completo: en cada checkpoint de denoising se matan las trayectorias malas y se clonan las buenas.",
+      "expected_impact": "Convierte el presupuesto de cómputo en calidad durante la generación, no solo al final: evita que una trayectoria mala consuma el resto de los pasos. Combinado con BoN final, es el patrón con mejor evidencia 2025 para dLLMs sin re-entrenar.",
+      "implementation_cost": "4-7 días: batched k partículas, checkpoint cada B pasos, decodificar segmentos visibles, score con oracle/RM, resampling por pesos Feynman-Kac (softmax de beta·score). Casi todo reusa el código del AR-oracle.",
+      "risk": "beta del potencial mal calibrado colapsa la diversidad de partículas (mode collapse del resampling); mitigar con beta chico + resampling sistemático. Evidencia original con SEDD/LLaDA-scale, no 183M (transferencia de mecanismo)."
+    },
+    {
+      "technique": "RWS — Reward-Weighted Sampling: escalar logits por score global del RM en cada paso de difusión",
+      "source": "Gwak, Jung, Park, Park, Park, Hyung, Choo (KAIST) — 'Reward-Weighted Sampling: Enhancing Non-Autoregressive Characteristics in Masked Diffusion LLMs', arXiv:2509.00707, EMNLP 2025 Main (Long)",
+      "date": "2025-08",
+      "evidence": "En cada paso, un reward model externo evalúa la secuencia intermedia completa y escala los logits de tokens: 'RWS significantly promotes non-autoregressive generation orders, leading to improvements across multiple evaluation metrics', con justificación teórica de rank-reversals beneficiosos y mejora del reward esperado. Sin números agregados únicos en el abstract — métricas múltiples mejoradas (sin número único verificado aquí).",
+      "fit_3090_183m": "high mecánico, medium por costo: requiere 1 forward del RM por paso de denoising → T×(0.6B) vs T×(0.183B) del generador ≈ +3.3× de FLOPs por muestra. Con T=64 y seq 128 sigue siendo barato en absolute (183M×128 tokens×64 pasos ≈ decenas de GFLOP por muestra; la 3090 hace esto en ~1-2 s/muestra, OPINIÓN/estimación).",
+      "expected_impact": "Señal global (coherencia) dentro del paso-a-paso local del MDLM — ataca directamente la deriva temática. Complementario a FK: FK poda trayectorias, RWS reorienta dentro de la trayectoria.",
+      "implementation_cost": "2-3 días si ya se tiene el RM cargado: score del parcial decodificado (tokens ya revelados), escalar logits de posiciones enmascaradas antes del threshold de commit.",
+      "risk": "El RM sobre texto parcialmente enmascarado está fuera de distribución (los RMs se entrenan con texto completo) — usar el texto decodificado de los tokens ya comprometidos, no la secuencia con [MASK]."
+    },
+    {
+      "technique": "T2M — 'Remask, Don't Replace': corrección en inferencia re-enmascarando tokens de baja confianza (extensión directa de nuestro AR-oracle)",
+      "source": "Lin Yao — 'Remask, Don't Replace: Token-to-Mask Refinement in Diffusion Language Models', arXiv:2604.18738 (2026-04, v3 2026-08); preprint (single-author, aún sin venue verificada)",
+      "date": "2026-04",
+      "evidence": "Training-free: detecta posiciones sospechosas por probabilidad del token actual y las RE-ENMASCARA para re-denoise posterior en vez de sobrescribirlas. 'Holding the detector fixed, remasking yields higher task metrics than replacement; current-token-probability detection paired with remasking performs best'; una única configuración de T2M transfiere entre tareas y modelos sin retuning, y 'converts additional inference compute into performance gains more effectively' que edición directa. Evaluado en LLaDA2.1-mini (preprint).",
+      "fit_3090_183m": "high — es literalmente el upgrade de nuestro loop 'AR-oracle regenera los peores segmentos': en vez de regenerar (replace), re-enmascarar el span castigado por el oracle y dejar que el MDLM lo re-denoise condicionado al resto. Cero entrenamiento; el costo es R rounds extra de denoising de spans cortos (≈10-20% del costo por round).",
+      "expected_impact": "Evidencia causal (experimento controlado detector×acción) de que remask > replace para dLLMs. Debería mejorar nuestra tasa de reparación por round y reducir la fragmentación que causa regenerar segmentos aislados.",
+      "implementation_cost": "1-2 días sobre el pipeline existente: cambiar 'regenerate segment' por 'mask segment + K pasos de denoising locales', con detección = min(prob MDLM, score oracle normalizado).",
+      "risk": "Paper preprint single-author de 2026 sin revisión de pares verificada — el mecanismo es sólito y consistente con RCR (finding siguiente), pero tratar los números como preliminares."
+    },
+    {
+      "technique": "RCR — Running Confidence Remasking (plug-in training-free del paper MDPO)",
+      "source": "'MDPO: Overcoming the Training-Inference Divide of Masked Diffusion Language Models', arXiv:2508.13148 (2025-08) — RCR es su componente training-free",
+      "date": "2025-08",
+      "evidence": "RCR trackea la confianza máxima histórica por posición y permite re-enmascarar tokens que quedaron 'congelados' con baja confianza: 'consistently enhances performance and provides further improvements when used with MDPO'. Sin número único en abstract (sin números verificados aquí más allá de la mejora consistente declarada).",
+      "fit_3090_183m": "high — cambio de ~50 líneas en el scheduler de unmasking del MDLM; costo de cómputo ≈ 0 (mismo número de forwards, mejor asignación).",
+      "expected_impact": "Corrige el 'token freezing': nuestros pasos tempranos del MDLM fijan tokens flojos que hoy ni el AR-oracle rescata porque ya están comprometidos. Sinergia directa con T2M y con remasking guiado por oracle.",
+      "implementation_cost": "0.5-1 día. Es el experimento más barato de toda la lista.",
+      "risk": "Bajo: si la confianza del MDLM 183M está mal calibrada (t logit-normal en entrenamiento propio), usar la probabilidad del oracle como confianza sustituta."
+    },
+    {
+      "technique": "HEX — test-time scaling por ensamble de schedules de bloque + majority vote (training-free)",
+      "source": "'Test-Time Scaling in Diffusion LLMs via Hidden Semi-Autoregressive Experts', arXiv:2510.05040 (2025-10)",
+      "date": "2025-10",
+      "evidence": "Los dLLMs aprenden implícitamente una mezcla de 'expertos semi-autoregresivos' accesibles variando el block size; ensembling por majority vote sobre schedules heterogéneos: GSM8K 24.72%→88.10% (3.56×), MATH 16.40%→40.00%, ARC-C 54.18%→87.80%, TruthfulQA 28.36%→57.46%, superando GRPO fine-tuned sin entrenamiento adicional (números sobre dLLMs ~7B).",
+      "fit_3090_183m": "medium-high — mecánicamente trivial con un MDLM chico (N passes con block sizes distintos + vote/merge), pero la magnitud 3.56× fue medida en modelos 7B con knowledge denso; en 183M el upside esperable es menor (OPINIÓN). El 'vote' para texto abierto se reemplaza por merge por segmentos con selection por RM/oracle (no hay 'respuesta' que votar).",
+      "expected_impact": "Barato y robusto: cada schedule expone modos de fallo distintos; para texto abierto sirve como generador de diversidad estructurada para el BoN del finding 1.",
+      "implementation_cost": "1-2 días (ya tenemos block decoding).",
+      "risk": "Majority vote no aplica a texto abierto — requiere el RM/oracle como función de merge; ganancia no verificada en escala 183M."
+    },
+    {
+      "technique": "Order-Token Search — búsqueda conjunta orden-de-generación × tokens en inferencia (training-free, iguala post-training RL)",
+      "source": "'Improving Diffusion Language Model Decoding through Joint Search in Generation Order and Token Space', arXiv:2601.20339 (2026-01)",
+      "date": "2026-01",
+      "evidence": "Sobre LLaDA-8B y LLaDA-1.5: +3.1/+3.8/+7.9/+6.8 puntos absolutos sobre low-confidence remasking en GSM8K/MATH500/Countdown/HumanEval; en seq 512 supera al d1-LLaDA post-entrenado con diffu-GRPO (GSM8K 83.3 vs 82.1; MATH500 42.4 vs 40.2; HumanEval 37.2 vs 34.8) SIN entrenamiento. 'matching or surpassing the gains of diffu-GRPO post-training'.",
+      "fit_3090_183m": "high como principio — demuestra que búsqueda en inferencia alcanza las ganancias del post-training por RL; los searches concretos del paper (beam sobre orden) son más caros: ~V× el costo de decoding por candidate expansion. En 183M/seq128 el margen de cómputo existe.",
+      "expected_impact": "Argumento cuantitativo 2026 más fuerte para 'no re-entrenar': search en el espacio (orden, token) recuperó el 100% de la ganancia de RL en 3/4 benchmarks del paper.",
+      "implementation_cost": "3-5 días para una versión reducida (beam de width 2-3 sobre block order con score oracle).",
+      "risk": "Evidence en 7-8B models; el gap search-vs-greedy suele crecer con la fuerza del prior del modelo — en un modelo débil de 183M el search puede sobre-guiarse hacia el oracle (riesgo de que el output colapse a paráfrasis del AR-oracle, perdiendo identidad del generador)."
+    },
+    {
+      "technique": "Contrastive decoding cross-family: expert AR (Qwen3-0.6B) vs amateur MDLM (183M)",
+      "source": "Li, Holtzman, Fried, Liang, Eisner, Hashimoto, Zettlemoyer, Lewis — 'Contrastive Decoding: Open-ended Text Generation as Optimization', arXiv:2210.15097, ACL 2023; variantes: MACD arXiv:2507.21086 (2025-06); CD para datos sintéticos arXiv:2510.08245 (2025-10, 'earlier checkpoints are a strong and simple choice' como amateur)",
+      "date": "2023-07 (ACL) / 2025 variantes",
+      "evidence": "CD (log p_expert − log p_amateur con plausibility constraint α=0.1 sobre el expert) supera a nucleus/top-k/typical/SimCTG en evaluación humana y automática en wikipedia/news/stories con OPT-13B/125M y GPT2-XL/small; cero entrenamiento; 'better performance is achieved when the scale difference between expert and amateur is larger'. MACD (2025): ensemble de amateurs captura más modos de fallo (repetición, alucinación, drift) y supera CD original. CD-synthetic (2025): un checkpoint más temprano de la MISMA arquitectura es el mejor amateur.",
+      "fit_3090_183m": "medium — el setting ideal de CD es expert≫amateur de la misma familia/vocabulario. Nosotros tenemos cross-family (Qwen BPE vs nuestro BPE 10K): contrastar a nivel de token requiere mapeo de vocabularios (errorso). HOJA DE RUTA: (a) a nivel de SECUENCIA/segmentO ya lo hacemos de facto con NLL_oracle−NLL_MDLN en el reranking (CD cualitativo); (b) a nivel de token, entrenar un amateur con el tokenizer de Qwen o contrastear sobre tokens compartidos vía round-trip. OPINIÓN: la vía (a) captura ~la mitad del beneficio con costo ~0.",
+      "expected_impact": "CD ataca exactamente repetición y deriva (los failure modes que el amateur sufre MÁS que el expert). Para nuestro MDLM como amateur, restar sus logits de los del Qwen-oracle durante el scoring de candidatos del remasking implementa CD-as-selection sin tocar vocabularios.",
+      "implementation_cost": "(a) 1 día: score = NLL_qwen − λ·NLL_mdlm por segmento, ya casi implementado en el oracle. (b) token-level: 1-2 semanas (vocab mapping frágil), no recomendado primero.",
+      "risk": "Cross-family CD no tiene evidencia publicada directa (gap); el paper recomienda misma familia. Si el amateur es demasiado débil (n-gram), CD se degrada — el MDLM con ppl 62 está en zona útil, pero validar."
+    },
+    {
+      "technique": "DoLa — Decoding by Contrasting Layers dentro del MDLM",
+      "source": "Chuang, Xie et al. (Microsoft) — 'DoLa: Decoding by Contrasting Layers Improves Factuality in Large Language Models', arXiv:2309.03883, ICLR 2024, código github.com/voidism/DoLa; mejora posterior ActLCD arXiv:2505.23657 (RL policy de cuándo contrastar, +19.81% TruthfulQA)",
+      "date": "2023-09 / ICLR 2024",
+      "evidence": "Contrastar logits de capa tardía vs temprana (selección dinámica por JSD) mejora TruthfulQA de LLaMA-1/2 7B-70B en 12-17 puntos absolutos, +GSM8K/StrategyQA, con 'only a small additional latency'. ActLCD (2025): +19.81% TruthfulQA vs baselines sobre 5 LLMs.",
+      "fit_3090_183m": "low-medium — la localización por capas de conocimiento factual se demostró en modelos 7B-65B; un transformer de 183M entrenado con CE plano puede no tener la separación sintaxis/semántica por capas que DoLa explota, y no hay evidencia de DoLa en dLLMs (gap). Costo: logits de capas intermedias ≈ 1.5-2× forward, sin modelo extra.",
+      "expected_impact": "Si funciona, mejora factualidad/consistencia local gratis; probabilidad de éxito en 183M: baja-media (OPINIÓN). Experimento de 1 tarde con hooks.",
+      "implementation_cost": "0.5-1 día (output_hidden_states, contrastar en las posiciones que se están des-enmascarando en el paso t).",
+      "risk": "Sin evidencia en modelos <1B ni en masked diffusion; posible degradación de fluidez si las capas tempranas del modelo chico aún codifican gramática útil (el propio paper muestra el riesgo en 'easy tokens')."
+    },
+    {
+      "technique": "FUDGE / PPLM-style steering (gradient/predictor steering en inferencia)",
+      "source": "PPLM: Dathathri et al., 'Plug and Play Language Models', arXiv:1912.02164, ICLR 2020. FUDGE: Yang & Klein, 'Controlled Text Generation With Future Discriminators', arXiv:2104.05218, NAACL 2021",
+      "date": "2020-01 / 2021-04",
+      "evidence": "PPLM: atributo-control por backward passes sobre activations (topic/sentiment), costo alto por token (varios steps de gradiente por token generado). FUDGE: discriminator del futuro que reescala logits cada paso — control de métricas (F1 de_KEYWORDS, tense, sentiment) sin tocar el LM; requiere ENTRENAR el discriminator. Ambos con demos reproducibles en modelos chicos (GPT-2).",
+      "fit_3090_183m": "low para calidad abierta — son técnicas de CONTROL de atributo, no de calidad general; PPLM es caro (backwards por paso) y degrada fluidez; FUDGE necesita datos+labeled training. Nuestro guidance logit anti-repetición ya es el descendiente barato y justificado de esta familia.",
+      "expected_impact": "Marginal para coherencia global; útil solo si quisiéramos fijar atributos (topic, registro). No priorizar.",
+      "implementation_cost": "PPLM: 1 semana + 2× costo por token. FUDGE: dataset de preferencias + 1-2 días de entrenamiento en 3090 para un discriminator 50-100M.",
+      "risk": "Fruited históricamente en degeneración/repetición al subir la fuerza; en un modelo ya propenso a repetición, contraproducente."
+    },
+    {
+      "technique": "Self-correction iterativa: la evidencia dice que SOLO funciona con feedback EXTERNO (valida el diseño AR-oracle)",
+      "source": "Huang et al. (Google DeepMind) — 'Large Language Models Cannot Self-Correct Reasoning Yet', arXiv:2310.01798, ICLR 2024. Complemento: Madaan et al., 'Self-Refine', arXiv:2303.17651, NAACL 2023",
+      "date": "2024-01 / 2023-05",
+      "evidence": "Huang: la self-correction INTRÍNSECA (sin feedback externo) no mejora y a veces DEGRADA el razonamiento; las mejoras reportadas en la literatura venían de oracle labels: 'the improvements vanish when oracle labels are not available'; self-correction ≯ self-consistency a igual número de respuestas. Self-Refine (con feedback autogenerado): ~20% absoluto promedio de mejora en tareas de preferencia (dialogue +49.2 prefs GPT-4), pero 0.0-0.2 puntos en math reasoning — 'gains ... much bigger (5%+) if an external source can identify if the current math answer is incorrect'.",
+      "fit_3090_183m": "high como regla de diseño — todo loop de corrección del MDLM 183M (que es un modelo débil) debe ser dirigido por una señal EXTERNA al generador: nuestro AR-oracle/RM es exactamente eso. No implementar 'el MDLM se autocorrige solo' (su feedback intrínseco sería peor que su generación).",
+      "expected_impact": "Evita gastar días en self-refine interno del generador; concentra el loop en: score externo → remask → re-denoise.",
+      "implementation_cost": "0 (principio).",
+      "risk": "La frontera 2024-2026 con verifiers chicos es difusa: si el verifier es mejor que el generador (Qwen3-0.6B vs MDLM 183M: sí, con seguridad), el loop 'verifier-in-the-loop' SÍ tiene evidencia positiva (RWS, FK, T2M, RSD)."
+    },
+    {
+      "technique": "d1-style SFT+RL para dLLMs (diffu-GRPO) — MARCADO COMO RE-ENTRENAMIENTO",
+      "source": "Zhao, Gupta, Zheng, Grover (UCLA/Meta) — 'd1: Scaling Reasoning in Diffusion Large Language Models via Reinforcement Learning', arXiv:2504.12216, NeurIPS 2025, código github.com/dllm-reasoning/d1 (Apache-2.0). Similar: RemeDi arXiv:2509.23653 (remasking entrenado, SFT+RL), MDPO arXiv:2508.13148",
+      "date": "2025-04",
+      "evidence": "Sobre LLaDA-8B-Instruct: d1 (masked SFT + diffu-GRPO) GSM8K 78.2→82.1, MATH500 36.2→40.2, Countdown 20.7→42.2 (casi duplica), Sudoku 11.7→22.1; diffu-GRPO solo supera a SFT solo en 12/12 setups. COSTO REAL: SFT sobre traces destiladas + RL con rollouts — en 8B requirió cluster (fuera de 3090).",
+      "fit_3090_183m": "low como está publicado (8B, cluster) — PERO para NUESTRO caso: diffu-GRPO sobre un MDLM de 183M en 3090 es plausible en 1-3 días de entrenamiento con rollouts cortos (OPINIÓN/estimación, no verificado en papers). Igual viola el objetivo 'sin re-entrenar el generador' del encargo; documentado como techo alcanzable si luego se habilita entrenamiento.",
+      "expected_impact": "Techo de la literatura para masked dLLMs: +4 a +26 puntos absolutos según tarea. Contrapunto: Order-Token Search (finding arriba) igualó/superó a diffu-GRPO SIN entrenamiento en 3/4 benchmarks — el re-entrenamiento no es el único camino.",
+      "implementation_cost": "Para 183M: preparar traces (destilar del Qwen-oracle), SFT 2-4 h 3090, GRPO 1-3 días. Total ~1-2 semanas de trabajo.",
+      "risk": "RL sobre un modelo débil puede colapsar el entropy/repetición; RemeDi muestra que remasking entrenado requiere arquitectura dual-stream (más cambios)."
+    },
+    {
+      "technique": "Speculative decoding AR↔diffusion (DiffuSpec, RSD, DistillSpec) — técnicas de VELOCIDAD, no de calidad",
+      "source": "DiffuSpec: Li et al., arXiv:2510.02358 (2025-09, también Findings ACL 2026), hasta 3× wall-clock con DLM como drafter de un AR verifier, training-free. RSD: Liao et al., ICML 2025 (github BaohaoLiao/RSD): PRM (Skywork-o1-Open-PRM-Qwen-2.5-1.5B) evalúa drafts y decide cuándo invocar el modelo grande: hasta 4.4× menos FLOPs con hasta +3.5 accuracy vs parallel decoding. DistillSpec: Zhou et al., arXiv:2310.08461, ICLR 2024: KD del draft da +10-45% speedup sobre SD estándar",
+      "date": "2025-09 / 2025-05 / 2023-10",
+      "evidence": "DiffuSpec: 'up to 3x wall-clock speedup' con DLM drafter multi-token en un solo forward + causal-consistency path search sobre el lattice de tokens. RSD: PRM gating de drafts — calidad igual o mejor a target-only con 4.4× menos FLOPs (usa PRM de 1.5B, corre en 3090).",
+      "fit_3090_183m": "medium como habilitador — para NUESTRO pipeline la dirección interesante es la inversa de la usual: el MDLM (bidireccional, propone bloques completos en 1 forward) puede drafitar para el AR-oracle, o el RSD-pattern (PRM decide qué segmentos merecen pass del oracle) reduce el costo del loop oracle por ~4×, permitiendo N y rounds mayores en el mismo presupuesto. Sin ganancia de calidad per se (excepto RSD: +3.5 por mejor selección).",
+      "expected_impact": "Multiplicador de presupuesto: hace que BoN(N=16) + loop remask con oracle cueste lo que hoy BoN(N=4).",
+      "implementation_cost": "RSD-pattern simple: 2-3 días (PRM/oracle score por segmento → skip/pass). DiffuSpec completo (lattice+CPS): 1-2 semanas, no priorizar.",
+      "risk": "Speculative verification está pensado para preservar la distribución del target — si el target (oracle) es quien da la calidad, la velocidad no cambia la calidad final; solo escala N."
+    },
+    {
+      "technique": "Riesgo transversal: PRMs/RMs chicos como 'detectores de fluencia' (reward hacking del steering)",
+      "source": "'Reward Under Attack: Analyzing the Robustness and Hackability of Process Reward Models', arXiv:2603.06621 (2026-03); + Qwen lessons arXiv:2501.07301 (2025-01: MC-based PRM data sesga BoN hacia outcome, no process)",
+      "date": "2026-03",
+      "evidence": "Sobre Skywork-o1-Open-PRM-1.5B/7B y Qwen2.5-Math-PRM-7B: políticas RL alcanzan reward >0.9 con accuracy <4% (AIME); '43% of the reward gain attributable to stylistic shortcuts'; 'current PRMs function as fluency detectors rather than reasoning verifiers'. Adversarios de 100 tokens elevan reward >0.9 sobre razonamiento inválido.",
+      "fit_3090_183m": "riesgo directo para finding 1/3/4: si el MDLM aprende (vía steering) a producir texto FLUENTE pero derivado, el RM lo premiará igual.",
+      "expected_impact": "Justifica: (a) ensamble de señales (RM + NLL oracle + probes de coherencia de largo alcance, p.ej. similitud embedding inicio-fin vía SplatsDB), (b) validar el ranking del RM contra juicio humano en 100-200 muestras ANTES de escalar N.",
+      "implementation_cost": "0.5 día de evaluación de correlación (Kendall τ RM vs oracle vs humano-proxy).",
+      "risk": "Es EL riesgo principal del dominio; no usar un RM solo como única señal de ranking."
+    }
+  ],
+  "top_recommendations": [
+    {
+      "rank": 1,
+      "technique": "Best-of-N con ranking por ensamble RM-chico + AR-oracle NLL (N=8-16), con gating adaptativo por score",
+      "why": "Es el salto de calidad final más barato y con mejor evidencia 2025-2026: Skywork-Reward-V2-Qwen3-0.6B corre sobrado en 3090, supera a GPT-4o como selector BoN (hasta +20 pts), y Snell 2024 muestra que la asignación adaptativa del presupuesto de N es >4× más eficiente que BoN plano. Reusa 100% la infraestructura existente (sampling del MDLM + teacher-forcing del Qwen3-0.6B).",
+      "how_concrete": "1) Cargar Skywork-Reward-V2-Qwen3-0.6B (o 1.7B si hay VRAM libre) con secuencia de chat mínima. 2) Para cada prompt: samplear N=8 candidatos del MDLM (diversificando schedule de bloques — finding HEX — para descorrelacionar modos de fallo). 3) Score por candidato: s = RM(y)·w1 − NLL_oracle(y)·w2 + probe_repeticion·w3. 4) Entregar argmax(s). 5) Gating: si max(s) < umbral, re-samplear con schedule distinto o subir N solo en esos casos.",
+      "effort": "3-4 días de integración; costo inferencia ≈ N× generación (dominante) + N×1 forward del RM (despreciable). Con N=8 y T=64: ~0.5 GPU-min/prompt en 3090 (estimación).",
+      "expected_gain": "Piso de calidad del texto entregado sustancialmente más alto (elimina las muestras colapsadas/derivadas del output final); ganancia exacta en texto abierto sin números verificados para 183M — medir con el experimento 1.",
+      "first_experiment": "200 prompts fijos, N=8, comparar en blind A/B (uno mismo + el Qwen3-0.6B como juez con rubric de coherencia global 1-5): (a) muestra aleatoria vs (b) argmax RM vs (c) argmax ensamble RM+oracle. Falsifica si (c) no gana a (a) en ≥60% de los pares. <1 día."
+    },
+    {
+      "rank": 2,
+      "technique": "Oracle-guided remasking loop completo: re-enmascarar (no reemplazar) los spans peor puntuados y re-denoisearlos in-situ, 2-3 rounds",
+      "why": "Es la extensión documentada de nuestro AR-oracle a loop completo: T2M (2604.18738) demuestra causalmente que remask > replace para dLLMs (misma detección, mejor acción) y que transfiere sin retuning; RCR (2508.13148) agrega el fix del token-freezing gratis. Order-Token Search (2601.20339) demuestra que este tipo de búsqueda en inferencia igualó al post-training RL de d1 en 3/4 benchmarks — el salto SIN re-entrenar es real.",
+      "how_concrete": "Reemplazar en el pipeline el paso 'regenerar segmento malo' por: 1) score por segmento con el AR-oracle (NLL teacher-forcing, ya existe) + probabilidad propia del MDLM; 2) los S spans bajo cuantil τ → reponer [MASK] en esas posiciones (mantener el resto del texto como contexto bidireccional); 3) correr K=8-16 pasos de denoising SOLO sobre las posiciones remascaradas; 4) repetir hasta que max improvement < δ o 3 rounds. Activar RCR en el scheduler base para evitar congelar tokens flojos desde el round 0.",
+      "effort": "2-3 días sobre el código existente del oracle; costo +10-25% por round extra de denoising local.",
+      "expected_gain": "Mayor tasa de reparación por round que el replace actual (evidencia directa T2M); discurso más sostenido porque el re-denoise es bidireccional (ve el futuro del texto, cosa que la regeneración AR aislada no).",
+      "first_experiment": "50 textos ya generados con spans castigados por el oracle: aplicar replace (actual) vs remask+re-denoise, medir Δ en NLL_oracle del documento completo y repetición de n-gramas. Falsifica si remask no reduce la NLL total vs replace en ≥30% de los casos. Medio día."
+    },
+    {
+      "rank": 3,
+      "technique": "FK steering con k=4 partículas: poda de trayectorias por potencial oracle/RM dentro del denoising",
+      "why": "FK steering (ICML 2025) con k=4 partículas superó a un modelo 3× más grande fine-tuned, sin entrenamiento — la relación calidad/cómputo más alta del dominio difusión-texto. En nuestro caso el potencial es la señal que ya calculamos (NLL del Qwen3-0.6B sobre los tokens ya revelados), así que es incremental sobre el rank 2.",
+      "how_concrete": "1) Migrar el sampler a batch de k=4 secuencias (el MDLM es chico: 4×128 tokens es un batch trivial). 2) Cada B=16 pasos de denoising: decodificar tokens ya comprometidos, score s_i con oracle (o RM cada 2 checkpoints), pesos ∝ exp(β·s_i), resampling sistemático (clonar buenas, matar malas). 3) β=0.1-0.5 inicial; mantener 1 partícula sin resampling como control de diversidad. 4) Terminar con el rank-1 BoN del paso 1 sobre las k finales.",
+      "effort": "4-7 días; costo inferencia 4× por muestra (pero reemplaza BoN ciego: k=4 steering + BoN final suele dominar a BoN N=16 plano por igual cómputo, según comparación SMC-vs-BoN en PG-DLM 2507.08390).",
+      "expected_gain": "Menos deriva temática: las trayectorias que se descarrilan se podan a mitad de generación en vez de gastar todos los pasos y perder el ranking final. PG-DLM (COLM 2026) muestra que el refinement iterativo de trayectorias sigue dando ganancia donde SMC/BoN saturan (GSM8K 90.07%→94.47% al escalar partículas/iteraciones).",
+      "first_experiment": "En 30 prompts: una muestra greedy/sampling puro vs mejor-de-4-partículas con poda oracle cada 16 pasos. Medir NLL_oracle del documento y rating 1-5 de coherencia (juez = Qwen3-0.6B con rubric). Falsifica si la poda no mejora el cuartil inferior de calidad (tail risk) — su objetivo principal. 1 día."
+    },
+    {
+      "rank": 4,
+      "technique": "CD cualitativo a nivel de segmento: restar la NLL del MDLM de la NLL del oracle en el ranking (contrast cross-family sin tocar vocabularios)",
+      "why": "CD (ACL 2023) demuestra que la diferencia expert−amateur separa texto bueno de repetición/deriva; la variante 2025 (MACD) muestra que el amateur debe capturar los modos de fallo a penalizar — nuestro MDLM ES el amateur perfecto (su NLL alta señala exactamente repetición/derivación). A nivel de secuencia no hay problema de vocabulario.",
+      "how_concrete": "En el score del rank 1, agregar término: s += λ·(NLL_mdlm(y) − NLL_oracle(y)) normalizado por token. Es 1 forward más del MDLM (gratis: ya está cargado). Con λ barrido {0, 0.25, 0.5, 1}.",
+      "effort": "0.5 día.",
+      "expected_gain": "Penaliza específicamente los candidatos que el MDLM 'espera' más que el oracle (modos degenerativos de baja entropía) — exactamente el colapso a repetición a baja temperatura que reporta el brief. Magnitud sin verificar para cross-family (gap declarado).",
+      "first_experiment": "Reusar los 200 prompts del rank 1: comparar ranking con y sin el término CD (Kendall τ entre rankings y win-rate A/B). Falsifica si el término CD no desempata mejor los casos donde RM y oracle discrepan. Medio día."
+    },
+    {
+      "rank": 5,
+      "technique": "DoLa en el MDLM + RSD-pattern para abaratar el oracle (dos micro-experimentos de 1 tarde)",
+      "why": "DoLa es la única técnica del listado con ganancia factuality documentada (+12-17 TruthfulQA) a costo casi nulo, pero sin evidencia en <1B ni en dLLMs — perfil de 'lotería barata'. El RSD-pattern (ICML 2025: PRM decide qué drafts merecen verification, 4.4× menos FLOPs) multiplica el presupuesto del loop oracle.",
+      "how_concrete": "DoLa: output_hidden_states=True en el MDLM, contrastar logits capa L−k vs final en las posiciones que se des-enmascaran en el paso t (k barrido). RSD: en el loop del rank 2, solo invocar el oracle completo en spans cuya prob MDLM caiga bajo cuantil — el resto se valida con heuristicas locales (repetición, formato).",
+      "effort": "DoLa: 0.5-1 día. RSD-gating: 1-2 días.",
+      "expected_gain": "DoLa: posible mejora de consistencia local (baja confianza, OPINIÓN). RSD-gating: 2-4× más rounds de corrección en el mismo wall-clock → segunda-order gain sobre rank 2/3.",
+      "first_experiment": "DoLa: 50 prompts A/B con/sin contraste de capas, win-rate por juez ciego; si ≤50% descartar (costo de descartar: 1 tarde)."
+    }
+  ],
+  "sources": [
+    {"title": "d1: Scaling Reasoning in Diffusion Large Language Models via Reinforcement Learning (Zhao et al., NeurIPS 2025)", "url": "https://arxiv.org/abs/2504.12216", "reliability": "alta", "date": "2025-04"},
+    {"title": "Contrastive Decoding: Open-ended Text Generation as Optimization (Li et al., ACL 2023)", "url": "https://arxiv.org/abs/2210.15097", "reliability": "alta", "date": "2023-07"},
+    {"title": "DoLa: Decoding by Contrasting Layers Improves Factuality in LLMs (Chuang et al., ICLR 2024)", "url": "https://arxiv.org/abs/2309.03883", "reliability": "alta", "date": "2023-09"},
+    {"title": "A General Framework for Inference-time Scaling and Steering of Diffusion Models — FK steering (Singhal et al., ICML 2025)", "url": "https://arxiv.org/abs/2501.06848", "reliability": "alta", "date": "2025-01"},
+    {"title": "Reward-Weighted Sampling: Enhancing Non-Autoregressive Characteristics in Masked Diffusion LLMs (Gwak et al., EMNLP 2025)", "url": "https://arxiv.org/abs/2509.00707", "reliability": "alta", "date": "2025-08"},
+    {"title": "Inference-Time Scaling of Diffusion Language Models via Trajectory Refinement — PG-DLM (Dang et al., COLM 2026)", "url": "https://arxiv.org/abs/2507.08390", "reliability": "alta", "date": "2025-07"},
+    {"title": "Skywork-Reward-V2: Scaling Preference Data Curation via Human-AI Synergy (Skywork AI)", "url": "https://arxiv.org/abs/2507.01352", "reliability": "alta", "date": "2025-07"},
+    {"title": "Scaling LLM Test-Time Compute Optimally can be More Effective than Scaling Model Parameters (Snell et al.)", "url": "https://arxiv.org/abs/2408.03314", "reliability": "alta", "date": "2024-08"},
+    {"title": "Remask, Don't Replace: Token-to-Mask Refinement in Masked Diffusion Language Models (Yao, preprint)", "url": "https://arxiv.org/abs/2604.18738", "reliability": "media (preprint single-author 2026, sin venue)", "date": "2026-04"},
+    {"title": "MDPO: Overcoming the Training-Inference Divide of Masked Diffusion LMs (incluye RCR training-free)", "url": "https://arxiv.org/abs/2508.13148", "reliability": "media-alta", "date": "2025-08"},
+    {"title": "Don't Settle Too Early: Self-Reflective Remasking for Diffusion LMs — RemeDi (Huang et al.)", "url": "https://arxiv.org/abs/2509.23653", "reliability": "media", "date": "2025-09"},
+    {"title": "Test-Time Scaling in Diffusion LLMs via Hidden Semi-Autoregressive Experts — HEX", "url": "https://arxiv.org/abs/2510.05040", "reliability": "media-alta", "date": "2025-10"},
+    {"title": "Improving Diffusion Language Model Decoding through Joint Search in Generation Order and Token Space (Order-Token Search)", "url": "https://arxiv.org/abs/2601.20339", "reliability": "media-alta (2026 preprint con tablas completas)", "date": "2026-01"},
+    {"title": "Multi-Amateur Contrastive Decoding for Text Generation — MACD (Sen et al.)", "url": "https://arxiv.org/abs/2507.21086", "reliability": "media", "date": "2025-06"},
+    {"title": "Contrastive Decoding for Synthetic Data Generation in Low-Resource Language Modeling", "url": "https://arxiv.org/abs/2510.08245", "reliability": "media", "date": "2025-10"},
+    {"title": "DiffuSpec: Unlocking Diffusion Language Models for Speculative Decoding (Li et al.)", "url": "https://arxiv.org/abs/2510.02358", "reliability": "alta (también Findings ACL 2026)", "date": "2025-09"},
+    {"title": "Reward-Guided Speculative Decoding — RSD (Liao et al., ICML 2025)", "url": "https://github.com/BaohaoLiao/RSD", "reliability": "alta (ICML 2025)", "date": "2025-05"},
+    {"title": "DistillSpec: Improving Speculative Decoding via Knowledge Distillation (Zhou et al., ICLR 2024)", "url": "https://arxiv.org/abs/2310.08461", "reliability": "alta", "date": "2023-10"},
+    {"title": "Large Language Models Cannot Self-Correct Reasoning Yet (Huang et al., ICLR 2024)", "url": "https://arxiv.org/abs/2310.01798", "reliability": "alta", "date": "2024-01"},
+    {"title": "Self-Refine: Iterative Refinement with Self-Feedback (Madaan et al., NAACL 2023)", "url": "https://arxiv.org/abs/2303.17651", "reliability": "alta", "date": "2023-05"},
+    {"title": "Plug and Play Language Models (Dathathri et al., ICLR 2020)", "url": "https://arxiv.org/abs/1912.02164", "reliability": "alta", "date": "2020-01"},
+    {"title": "FUDGE: Controlled Text Generation With Future Discriminators (Yang & Klein, NAACL 2021)", "url": "https://arxiv.org/abs/2104.05218", "reliability": "alta", "date": "2021-04"},
+    {"title": "Reward Under Attack: Analyzing the Robustness and Hackability of Process Reward Models", "url": "https://arxiv.org/abs/2603.06621", "reliability": "media (preprint 2026)", "date": "2026-03"},
+    {"title": "The Lessons of Developing Process Reward Models in Mathematical Reasoning (Qwen Team)", "url": "https://arxiv.org/abs/2501.07301", "reliability": "alta", "date": "2025-01"},
+    {"title": "Active Layer-Contrastive Decoding Reduces Hallucination — ActLCD", "url": "https://arxiv.org/abs/2505.23657", "reliability": "media-alta", "date": "2025-05"},
+    {"title": "Diffusion Language Models Know the Answer Before Decoding (early-answer emergence, remasking analysis)", "url": "https://arxiv.org/html/2508.19982", "reliability": "media-alta", "date": "2025-08"}
+  ],
+  "gaps": "No pude verificar: (1) ninguna evidencia publicada de contrastive decoding aplicado a masked diffusion LMs ni cross-family con vocabularios distintos — la recomendación 4 es transferencia de principio con adaptación a nivel de secuencia (marcada como OPINIÓN); (2) DoLa en modelos <1B o en dLLMs: sin papers, solo la lotería barata recomendada; (3) magnitudes de HEX/PG-DLM/Order-Token Search fueron medidas en dLLMs de 7-8B con rewards de math — extrapolación a un MDLM 183M de texto abierto no verificada, por eso cada recomendación tiene experimento falsificador barato; (4) el costo exacto en GPU-horas del entrenamiento d1 (el paper usa LLaDA-8B en cluster; mi estimación 1-3 días para 183M en 3090 es OPINIÓN); (5) rendimiento de Skywork-Reward-V2 sobre texto tipo Wikipedia/continuación de un base-LM con ppl 62 (sus benchmarks son chat/preferencia); (6) T2M (2604.18738) es preprint single-author de 2026 sin revisión — tratado como preliminar; (7) no verifiqué números de latency por token de DoLa/CD en hardware 3090 (los multiplicadores FLOPs por tamaño de modelo son aritmética mía, no mediciones)."
+}

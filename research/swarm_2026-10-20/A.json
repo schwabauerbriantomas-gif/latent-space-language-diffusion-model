@@ -1,0 +1,240 @@
+{
+  "agent": "A",
+  "domain": "Frontera 2024-2026 de diffusion LMs de texto: técnicas de calidad adaptables a MDLM 183M / RTX 3090",
+  "findings": [
+    {
+      "technique": "Semi-AR block decoding + estrategia de remasking en inferencia (sin reentrenar)",
+      "source": "LLaDA (arXiv 2502.09992v3, App. B.4) + Prophet (arXiv 2508.19982, Tab. 3b) + repo Dream (github.com/DreamLM/Dream)",
+      "date": "2025-02 / 2025-08",
+      "evidence": "LLaDA 8B Instruct, MISMOS pesos, sólo cambia el sampler: semi-AR por bloques da GSM8K 78.6 vs 69.4 y MATH 42.2 vs 31.9 con low-confidence remasking (la causa es padding con |EOS| que termina prematuramente). Prophet Tab. 3b (GSM8K, L=128): random 63.8 / low-confidence 71.3 / top-k margin 72.4. Dream expone 4 algoritmos (origin=random, maskgit_plus=top1 confianza, topk_margin=top1-top2, entropy) + alg_temp para aleatorizar el orden; demo usa temp 0.2, top_p 0.95, steps=max_new_tokens. Tab. 4 de Prophet: el baseline colapsa con bloques grandes (GSM8K 33.1 con bloque 128) — el largo de bloque es un hyperparámetro crítico.",
+      "fit_3090_183m": "high — es sólo código de muestreo sobre el checkpoint existente; cero GPU extra (más pasos = más latencia, trivial a 183M/seq 128)",
+      "expected_impact": "El mayor salto calidad/esfuerzo disponible: la coherencia global mejora porque los bloques tempranos condicionan los tardíos (estructura AR), y el orden de generación deja de ser arbitrario. En LLaDA el efecto fue +9.2 pts GSM8K sin tocar pesos.",
+      "implementation_cost": "Bajo: 1-2 días de código (loop de muestreo: fijar prompt, generar bloque de B tokens con N pasos de difusión interna + remasking por confianza, avanzar). Sweep de (B, alg, steps, temp, manejo de EOS) sobre ~100 prompts.",
+      "risk": "Bajo. Riesgo real: elegir B muy grande (colapso documentado) o EOS prematuro con low-confidence; mitigado probando margin/entropy y forzando longitud mínima."
+    },
+    {
+      "technique": "Block Diffusion entrenado (BD3-LM): AR entre bloques + difusión dentro del bloque",
+      "source": "Block Diffusion (arXiv 2503.09573, ICLR 2025 Oral, Arriola et al., Cornell; resultados en m-arriola.com/bd3lms, código kuleshov-group/bd3lms)",
+      "date": "2025-03",
+      "evidence": "OWT, 262B tokens de entrenamiento: ppl MDLM ≤22.98 vs BD3-LM L'=4 ≤20.73 (hasta 13% de mejora vs MDLM, PMC). Generative-PPL (juez GPT2-Large, 300 muestras L=1024): MDLM 46.8 vs BD3-LM 33.4 — 29% mejor calidad de TEXTO GENERADO con 40x menos NFEs que SSD-LM. Además: longitud variable (mediana 798, máx 9982 tokens) y KV-cache. Checkpoints públicos small (~400M) finetuned desde un checkpoint MDLM.",
+      "fit_3090_183m": "high — los modelos del paper son del orden de nuestro tamaño (config 'small' ~400M vs nuestro 183M); entrenaron 1M pasos pero nosotros podemos finetunear el MDLM existente hacia bloques (exactamente lo que hace su pipeline: BD3-LM se finetunea desde MDLM-850K)",
+      "expected_impact": "Ataca directamente 'deriva temática / sin discurso sostenido': la factorización semi-AR con bloques force coherencia de largo alcance (evidencia gen-PPL 46.8→33.4). Regala además longitud variable y KV-cache.",
+      "implementation_cost": "Medio-alto: nuevo objetivo de entrenamiento (likelihood condicionada por bloque, attention mask por bloque, data-driven noise schedule que proponen), finetuning ~1-3 días GPU 3090 sobre datos ya usados. El repo bd3lms es PyTorch puro, reusable.",
+      "risk": "Medio: elección de block size (probar 8/16/32), y el objetivo es más complejo que CE plano; si el finetuning diverge, volver a checkpoint."
+    },
+    {
+      "technique": "Conversión/inicialización desde un modelo AR (AR-init) — 'la lección transversal #1 de 2025-2026'",
+      "source": "Dream 7B (arXiv 2508.15487); TESS 2 (arXiv 2502.13917); SDAR (arXiv 2510.06303); LLaDA2.0 (arXiv 2512.15745); RND1 (citado en 2512.15745)",
+      "date": "2025-02 → 2025-12",
+      "evidence": "Dream 7B: init desde Qwen2.5-7B con 'Shift Operation' (preservar que h_i predice x_{i+1}) + 580B tokens → iguala Qwen2.5 7B en general y lo aplasta en planning (Countdown 16.0 vs 6.2, Sudoku 81.0 vs 21.0). TESS 2: continued pretraining de Mistral-7B con CE como loss de difusión → 'outperforms all other diffusion LMs across all evaluations'. SDAR: conversión AR→blockwise difusión con 'brief, data-efficient adaptation', preserva rendimiento AR; y concluye que AR sigue siendo más compute-eficiente que MDLM from-scratch. LLaDA2.0 (100B/16B MoE, Ant Group+RUC): convierte un AR grande con esquema WSD de 3 fases de block-size 'instead of costly training from scratch', y atribuye el gap de los MDLM from-scratch 'largely attributed to disparity in training data volume'.",
+      "fit_3090_183m": "medium-high — no podemos inicializar de un AR grande (vocab 10K propio y 183M), PERO la vía adaptable es: (a) entrenar un AR pequeño de 183M con NUESTRO vocab BPE 10K (barato, días en 3090) y convertirlo a MDLM con finetuning tipo SDAR/TESS-2; o (b) destilar Qwen3-0.6B (nuestro AR-oracle) con KL de logits. La conversión misma es 'data-efficient' según SDAR.",
+      "expected_impact": "Potencialmente el salto más grande de todos: todo model de difusión 2025-26 top arranca de pesos AR o destila de AR. Un AR de 183M tiene ppl mucho mejor que un MDLM de 183M a igualdad de tokens; convertirlo hereda esa coherencia.",
+      "implementation_cost": "Alto (ruta a): entrenar AR hermano (~2-4 días 3090) + finetuning de conversión (1-2 días). Medio (ruta b, distillación KL: ver finding separado).",
+      "risk": "Medio-alto: cambio de paradigma del repo; la ruta (a) duplica el código de entrenamiento (causal + bidireccional)."
+    },
+    {
+      "technique": "Destilación AR→diffusion (teacher = Qwen3-0.6B oracle ya en el repo)",
+      "source": "Seed Diffusion (arXiv 2508.02193, ByteDance; blog seed.bytedance.com) + Mercury (arXiv 2506.17298, Inception Labs)",
+      "date": "2025-06 / 2025-08",
+      "evidence": "Seed Diffusion 2B: destilado de modelos AR con curriculum en 2 etapas, 2146 tok/s en H20 (5.4x) manteniendo calidad competitiva (framework citado por LLaDA2.0 como referencia de destilación AR→difusión). Mercury Coder Mini (comercial, destilado de AR según describen): HumanEval 88.0, Fill-in-the-Middle 82.2 vs GPT-4o Mini 60.9, a 1109 tok/s. Ambos son speed-first, pero la transferencia de conocimiento AR es el mecanismo de calidad declarado del enfoque comercial.",
+      "fit_3090_183m": "high — reemplazar el CE plano por KL(teacher‖student) en tokens enmascarados durante continued-pretraining; el teacher (Qwen3-0.6B) ya está integrado en el pipeline del usuario; 0.6B corre trivial en 3090 junto al student 183M",
+      "expected_impact": "MI OPINIÓN (marcada): para coherencia de discurso a 183M con 136M tokens, transferir distribuciones suaves del teacher probablemente rinde más por token que CE duro sobre un token. Evidencia indirecta: todos los dLLM competitivos de 2025-26 (Dream, LLaDA2.0, SDAR, Mercury, Seed) usan pesos/señal AR; ninguno top es from-scratch salvo con 2.3-12T tokens.",
+      "implementation_cost": "Bajo-medio: cargar teacher en paralelo, congelar, cachear top-k logits por batch o computar on-the-fly; +~30% tiempo de step. 2-3 días de implementación, entrenamiento de días.",
+      "risk": "Medio-bajo: mismatch de vocab (mapear BPE 10K propio → vocab Qwen vía sub-alineación de tokens; o destilar a nivel de secuencia con logprob del teacher sobre N-best del student). Si el mapeo es malo, la señal se degrada."
+    },
+    {
+      "technique": "Entrenamiento self-correcting: SCOPE + sampler D3IM (revise, don't freeze)",
+      "source": "Revise, Don't Freeze: Sampler-Matched Training for Self-Correcting MDLMs (arXiv 2606.01026)",
+      "date": "2026-06",
+      "evidence": "Medido en LLaDA-8B-Instruct: en stress-test de commits erróneos, el modelo preserva su propio token incorrecto 70.1% de las veces y recupera el ground-truth sólo 9.2% ('preservation bias'). SCOPE = entrenar sobre estados con errores autogenerados (mask rate ~Beta(2,2), rama estándar MDLM con prob 0.5, commit rate ρ=0.3) + D3IM = sampler que re-predice TODAS las posiciones (visibles incluidas) y commitea por top-K confianza global. Resultado: HumanEval de 14.0% a 29.3% a 64 pasos (más del doble), las correcciones pasan de oscilar whitespace→newline a apuntar a errores semánticos (unidades, dígitos, operadores).",
+      "fit_3090_183m": "high — es un cambio de loss/sampler sobre el MDLM existente; el paper lo monta sobre LLaDA-8B pero no hay nada que escale con tamaño; a 183M el costo de re-predicción total por paso es despreciable",
+      "expected_impact": "Directamente diseñado para el síntoma del usuario: hoy el sampler congela tokens malos y la deriva se acumula. Permitir revisión global con confianza calibrada convierte pasos extra en depuración en vez de sobre-refinamiento (el paper muestra mejora sostenida con más steps, sin plateau).",
+      "implementation_cost": "Medio: sampler D3IM solo = 1 día (inference-only, probalo antes de entrenar). SCOPE finetune = ~3-5 días GPU sobre datos propios; código descrito con pseudocódigo en App. B del paper.",
+      "risk": "Medio: si la confianza del modelo está mal calibrada, el top-K global puede degradar tokens buenos; SCOPE existe justo para calibrarla. Arrancar por D3IM-only y medir."
+    },
+    {
+      "technique": "RL post-training de diffusion LMs (diffu-GRPO / VRPO / coupled-GRPO / TraceRL)",
+      "source": "d1 (arXiv 2504.12216, UCLA+Meta); LLaDA 1.5 VRPO (arXiv 2505.19223 / ACL 2026); DiffuCoder coupled-GRPO (arXiv 2506.20639, Apple); TraceRL/TraDo (arXiv 2509.06949, Princeton)",
+      "date": "2025-04 → 2025-09",
+      "evidence": "d1 sobre LLaDA-8B-Instruct: SFT+diffu-GRPO (estimación one-step de log-probs con prompt masking aleatorio) 'nearly doubled performance on planning tasks' y supera SFT-only y RL-only. LLaDA 1.5 (VRPO con antithetic sampling y budget allocation óptimos): vs SFT → GSM8K 78.6→83.3 (+4.7), HumanEval +3.0, MBPP +1.8, IFEval +4.0, Arena-Hard +4.3; naive DPO dio −1.2 en HumanEval (la reducción de varianza importa). DiffuCoder: coupled-GRPO +4.4% EvalPlus y reduce sesgo AR del decoding. TraDo (TraceRL, desde base SDAR): MATH500 78.5 (8B) vs Qwen2.5-7B-Instruct 74.0, +6.1% relativo; TraDo-4B ya supera a Qwen-7B en math.",
+      "fit_3090_183m": "medium — los rollouts de un 183M son baratísimos (a favor), PERO falta: recompensa verificable para 'texto coherente' y estabilidad (GRPO con grupos G=8-16 en seq 128 es viable en 24GB con bf16 + grad checkpointing). Opción concreta: reward = logprob del texto generado bajo Qwen3-0.6B (el AR-oracle ya está) — es RL con modelo de preferencia barato. MI OPINIÓN: hacer después de R1/R2/R3, no antes.",
+      "expected_impact": "En la frontera, el post-training RL dio los saltos más grandes de 2025 en dLLMs (+4-15 pts o 2x en planning). Para prosa general la evidencia es más débil (IFEval/Arena-Hard +4), así que esperaría ganancia moderada en formato/coherencia, alta en tareas con recompensa clara.",
+      "implementation_cost": "Alto: 1-2 semanas (rollout engine con sampling semi-AR, estimador de log-prob one-step, reward plumbing, trainer GRPO). Frameworks abiertos: dllm-reasoning (d1) y Gen-Verse/dLLM-RL (TraceRL) soportan Dream/LLaDA y sirven de referencia.",
+      "risk": "Alto: inestabilidad de RL a pequeña escala, reward hacking sobre el juez-Qwen (el student aprende a complacer al teacher), costo de oportunidad vs entrenar más tokens."
+    },
+    {
+      "technique": "Post-training offline de preferencias por pasos (SDPO)",
+      "source": "Discrete Diffusion Trajectory Alignment via Stepwise Decomposition (arXiv 2507.04832)",
+      "date": "2025-07",
+      "evidence": "SDPO descompone la alineación de trayectoria en objetivos por paso (matching del posterior por paso) en vez de backprop del reward final; en LLaDA-8B-Instruct GSM8K 78.6→81.2 (v3; 80.7 en v1), superando a baselines RL; +12% en diseño de DNA vs el mejor baseline RL. Offline (dataset de preferencias), sin rollouts online.",
+      "fit_3090_183m": "medium-high — offline y sin value model: pares ganador/perdedor generados por el propio modelo con 2 samplers distintos (p.ej. semi-AR vs random), preferencia etiquetada por AR-oracle; batches pequeños en 3090 OK",
+      "expected_impact": "Ganancia moderada (+2.6 GSM8K en LLaDA), pero es el camino más barato a 'alineación con coherencia' sin la maquinaria de RL online.",
+      "implementation_cost": "Medio: ~1 semana (generar pares, computar log-probs por paso, loss DPO-por-paso).",
+      "risk": "Medio-bajo: riesgo principal es calidad de las preferencias; con juez automático puede sesgar."
+    },
+    {
+      "technique": "CART: re-agendado de ruido a nivel de token según contexto (entrenamiento)",
+      "source": "Dream 7B (arXiv 2508.15487, §4.2)",
+      "date": "2025-08",
+      "evidence": "En difusión estándar un único t por secuencia asigna el mismo nivel de ruido a todos los masks; CART mide la informatividad contextual de cada token y le reasigna su nivel de ruido efectivo, dando guía fina por token. Dream 7B (AR-init + CART + 580B tokens) es 'el dLLM abierto más fuerte' a su fecha; el paper no aísla la contribución exacta de CART en los snippets que leí — sin número de ablaación aislada verificado.",
+      "fit_3090_183m": "high — cambio sólo en el muestreo de la máscara/loss durante entrenamiento, sin costo de inferencia; a 183M el overhead de computar informatividad por token (p.ej. re-pesando t por distancia a tokens visibles o por entropía local) es mínimo",
+      "expected_impact": "Entrenamiento más eficiente por token (Dream lo cita como uno de sus dos pilares); plausible +ppl y mejor calidad en tokens con contexto asimétrico (inicios de bloque/oración). Evidencia aislada no verificada.",
+      "implementation_cost": "Medio: modificar el schedule de t por posición en el loop de entrenamiento (2-4 días). Necesita una proxy de informatividad (Dream usa el contexto corrupto; implementable como t_i proporcional a distancia al contexto visible más cercano).",
+      "risk": "Medio: sin ablaación publicada accesible, podría ser segundo orden frente a R1-R5."
+    },
+    {
+      "technique": "Self-conditioning (alimentar la predicción x̂0 del paso anterior como input)",
+      "source": "TESS 2 (arXiv 2502.13917, sigue a TESS/SSD-LM); 'Simple Self-Conditioning Adaptation for Masked Diffusion Models' (mayo 2026, visto sólo como cita — no verificado)",
+      "date": "2025-02 / 2026-05",
+      "evidence": "TESS 2 usa self-conditioning con prob ρ=0.5 en entrenamiento y ρ=1.0 en inferencia (con el output difuso anterior como variable adicional), adaptando Mistral-7B; supera a todos los dLLMs contemporáneos en sus evals. En 2026 aparece trabajo dedicado a llevarlo a MDLMs enmascarados (cita no profundizada).",
+      "fit_3090_183m": "high — un branch extra de embedding (concatenar logits/one-hot del x̂0 previo en posiciones mask); 2x forward en la mitad de los steps de entrenamiento; a 183M es barato",
+      "expected_impact": "Mecanismo de refinamiento iterativo real: el modelo condiciona cada paso a su propia hipótesis, lo que estabiliza el denoising paralelo (en TESS fue parte clave de la calidad). Sin número aislado en MDLM verificado.",
+      "implementation_cost": "Medio: 3-5 días (cambiar forward del backbone + loop de sampling; compatible con D3IM).",
+      "risk": "Medio-bajo: si se implementa mal (ρ), puede ralentizar convergencia inicial."
+    },
+    {
+      "technique": "Escalado de datos/tokens (la palanca 'aburrida' con la evidencia más dura)",
+      "source": "iLLaDA (arXiv 2606.25331, RUC/GSAI); LLaDA 2.3T (2502.09992); Dream 580B (2508.15487); LLaDA2.0 (2512.15745) atribuye el gap de from-scratch a volumen de datos",
+      "date": "2025-08 → 2026-06",
+      "evidence": "iLLaDA 8B from-scratch: 2.3T→12T tokens + SFT 25B tokens ×12 épocas → +21.6 BBH y +14.9 ARC-C sobre LLaDA-Base; +14.5 MATH y +16.5 HumanEval en Instruct; competitivo con Qwen2.5-7B. Nuestro MDLM: 136M tokens = 4-5 órdenes de magnitud menos que la frontera; LLaDA2.0: los MDLM from-scratch quedan atrás 'largely attributed to disparity in training data volume'.",
+      "fit_3090_183m": "high — mismo modelo, más tokens: 136M→1-2B tokens es ~26-52x el 3.5h original ≈ 4-8 días de 3090 continuo (o 2-3 semanas con data curation); cabe",
+      "expected_impact": "MI OPINIÓN: a 136M tokens el modelo está brutalmente subentrenado; Chinchilla-óptimo para 183M es ~3.6B tokens. La coherencia de discurso es quizá la propiedad que más depende de ver más texto largo. Ningún truco de sampler compensa 26x menos datos.",
+      "implementation_cost": "Bajo en código (nada), alto en wallclock: recolectar/curar 1-2B tokens de texto largo de calidad (documentos completos, no fragmentos) y seguir entrenando con checkpoint actual.",
+      "risk": "Bajo técnico; el riesgo es la paciencia y la calidad del corpus (datos long-form > datos web cortos para discurso sostenido)."
+    },
+    {
+      "technique": "SFT con complementary masking (~100% de utilización de datos) + auxiliar de confianza",
+      "source": "LLaDA2.0 (arXiv 2512.15745, Ant Group+RUC); DiffuCoder coupled-GRPO usa la misma idea de máscaras complementarias",
+      "date": "2025-12",
+      "evidence": "LLaDA2.0: el objetivo de masking aleatorio 'provides only a partial learning signal' por muestra; complementary masking asegura near-100% de utilización de tokens y acelera convergencia; además agrega una confidence-prediction auxiliary loss que entrena al modelo a ser 'sharper', desbloqueando generación paralela agresiva sin degradar calidad (necesario para dynamic threshold sampling).",
+      "fit_3090_183m": "high — reorganizar el batching para que las máscaras de un mismo documento sean complementarias (cada token cae mask en exactamente una réplica); pérdida extra de un head pequeño de confianza",
+      "expected_impact": "Más señal por GPU-hora (crítico con presupuesto de 3090) y confianzas calibradas — prerequisito de que remasking/D3IM/dynamic decoding funcionen bien. Evidencia en 16B/100B MoE; el mecanismo es scale-free.",
+      "implementation_cost": "Bajo: 2-3 días (batch construction + head auxiliar + loss).",
+      "risk": "Bajo."
+    },
+    {
+      "technique": "MGDM: entrenamiento multi-granularidad priorizando sub-goales difíciles (order-agnostic priorizado)",
+      "source": "Beyond Autoregression (arXiv 2410.14157, ICLR 2025, HKU+Huawei)",
+      "date": "2024-10",
+      "evidence": "Subgoal imbalance: los modelos AR no aprenden sub-goales difíciles; MGDM prioriza vistas/sub-goales por dificultad durante el entrenamiento. Countdown 91.5% vs 45.8% AR; Sudoku 100% vs 20.7% AR; superior en SAT con más variables. Dream hereda esta línea (mismos autores) y conserva la ventaja en planning (Countdown 16.0 vs 6.2 sobre Qwen2.5).",
+      "fit_3090_183m": "medium — el mecanismo es scale-free y entrenable en 3090, pero está demostrado en tareas con estructura de sub-goales clara (Countdown/Sudoku/SAT), no en prosa abierta; para texto general la definición de 'sub-goal difícil' es difusa (aproximable: dar más peso de loss a posiciones de alta entropía o a inicios de oración/párrafo)",
+      "expected_impact": "Alto en tareas estructuradas/planificación; para coherencia de prosa, especulativo.",
+      "implementation_cost": "Medio (si se adapta a entropía-por-token como prioridad de enmascarado).",
+      "risk": "Medio-alto de transferencia de dominio."
+    },
+    {
+      "technique": "Decoding con confianza dinámica + KV-cache aproximado (Fast-dLLM, training-free)",
+      "source": "Fast-dLLM (arXiv 2505.22618, HKU+NVIDIA+MIT; aceptado ICLR 2026)",
+      "date": "2025-05",
+      "evidence": "Identifica la causa de la degradación por decodificar muchos tokens a la vez: violación de dependencias bajo independencia condicional; la solución (unmask sólo tokens con confianza > umbral, o regla factor (n+1)(1-c^(n))<f) mantiene calidad con hasta 13.3x speed-up; DualCache + block-wise KV cache da 27.6x throughput total con pérdida mínima en LLaDA y Dream.",
+      "fit_3090_183m": "high — training-free y trivial a 183M; no mejora calidad por sí, pero libera presupuesto de cómputo para MÁS pasos/bloques (que sí suben calidad), o para re-predicción total tipo D3IM",
+      "expected_impact": "Habilitador: con la misma latencia podés correr steps 2-5x más finos (steps≈len es el estándar de calidad de Dream).",
+      "implementation_cost": "Bajo-medio: 2-3 días (cache por bloques + threshold decode).",
+      "risk": "Bajo (el paper reporta pérdida de accuracy mínima; reversible)."
+    },
+    {
+      "technique": "Early-commit / answer-anchoring en inferencia (Prophet + answer-delay)",
+      "source": "Prophet (arXiv 2508.19982); Answer First, Reason Later (arXiv 2608.05687)",
+      "date": "2025-08 / 2026-08",
+      "evidence": "Prophet: en LLaDA-8B la respuesta correcta ya está internamente al 50% de los pasos en 97.2% de los casos de GSM8K (remasking random); commit temprano con gap top-2 como criterio da 1.6-3.4x menos pasos con calidad igual o mejor (TruthfulQA +11.7, Sudoku +3.0). Un prompt sufijo 'Answer:' (ancla semántica bidireccional) sube el % correcto al 25% de pasos de 7.9%→59.7%. Answer-delay (2608.05687): retrasar el commit del answer en Dream-7B cambia la opción en 24.7% de casos, con 18.0% incorrecto→correcto vs 3.6% correcto→incorrecto.",
+      "fit_3090_183m": "high — puro sampler/prompt: anchors tipo 'Conclusión:' al final del canvas (el modelo bidireccional lo usa como condición), commit por gap de confianza, delay de commitment de segmentos clave",
+      "expected_impact": "Para texto largo: usar 'esqueleto/outline como ancla' (técnica de infilling de Dream) puede forzar plan global — el modelo completa el medio condicionado a ambos extremos. Ganancias documentadas sobre todo en accuracy de respuesta; aplicado a coherencia es extrapolación razonada.",
+      "implementation_cost": "Bajo: 1-2 días de experiments de prompting/sampler.",
+      "risk": "Bajo."
+    },
+    {
+      "technique": "Guía con gradiente de reward en logits en inferencia (TESS 2 reward guidance)",
+      "source": "TESS 2 (arXiv 2502.13917)",
+      "date": "2025-02",
+      "evidence": "En cada paso de difusión aplican ascenso por gradiente de un reward predictor sobre los logits intermedios; alineación modular SIN reentrenar el modelo. TESS 2 (adaptación de Mistral-7B + self-conditioning + reward guidance) supera a todos los dLLMs contemporáneos en sus evaluaciones y matchea AR.",
+      "fit_3090_183m": "medium — requiere un reward model diferenciable sobre texto (p.ej. el AR-oracle no es directamente diferenciable por tokens discretos, pero sí su logprob sobre embeddings one-hot suavizados; o un reward de repetición/tema entrenado pequeño)",
+      "expected_impact": "Control de calidad en inferencia sin tocar pesos; en TESS 2 fue parte del paquete ganador (número aislado no reportado en lo extraído).",
+      "implementation_cost": "Medio: 3-5 días. Alternativa más simple ya la tiene el usuario (guidance logit propio).",
+      "risk": "Medio: inestabilidad del gradiente a través de pasos; reward hacking."
+    },
+    {
+      "technique": "MMaDA: receta unificada mixed-CoT SFT + UniGRPO para difusión",
+      "source": "MMaDA (arXiv 2505.15809, Peking/Shanghai AI Lab; NeurIPS 2025)",
+      "date": "2025-05",
+      "evidence": "Arquitectura de difusión unificada + SFT con formato largo de CoT (cold-start) + UniGRPO (policy gradient con rewards diversificados): MMaDA-8B supera a LLaMA3-8B/Qwen2-7B en razonamiento textual y a SDXL/Janus en generación. 'Surpasses powerful models like LLaMA-3-7B and Qwen2-7B in textual reasoning' (abstract).",
+      "fit_3090_183m": "low-medium — validado a 8B; el patrón (CoT-SFT de calidad → RL) es el mismo de d1/LLaDA1.5, ya cubierto; el aporte específico multimodal no aplica",
+      "expected_impact": "Confirmatorio del patrón SFT-CoT→RL más que técnica nueva para nosotros.",
+      "implementation_cost": "n/a (cubierto por findings de RL/SFT).",
+      "risk": "n/a"
+    }
+  ],
+  "top_recommendations": [
+    {
+      "rank": 1,
+      "technique": "Semi-AR block remasking + sweep de estrategia de remasking (inferencia pura)",
+      "why": "Es el único hallazgo con evidencia de salto grande (GSM8K +9.2, MATH +10.3) SIN reentrenar nada; ataca exactamente deriva temática/discurso sostenido al dar estructura causal entre bloques; riesgo casi nulo y falsificable en horas.",
+      "how_concrete": "En el sampler actual del repo: (1) generar por bloques de B∈{8,16,32,64} tokens de izquierda a derecha; dentro de cada bloque, N∈{B/2..2B} pasos de difusión con remasking por confianza (implementar las 4 variantes de Dream: random, maskgit_plus/top1, topk_margin=top1−top2, entropy) + regla de umbral de Fast-dLLM (unmask sólo si conf>τ, siempre ≥1 token); (2) manejo de EOS: prohibir EOS antes del bloque k para evitar terminación prematura (causa documentada del gap 69.4→78.6 en LLaDA); (3) temp 0.2, top_p 0.95 como default de Dream.",
+      "effort": "1-2 días de código + sweeps; 0 GPU-training horas",
+      "expected_gain": "Salto de coherencia global del texto esperado grande (análogo cualitativo al gen-PPL 46.8→33.4 que la estructura semi-AR dio en BD3-LM); en benchmarks instruccionales de la frontera: +5-10 pts",
+      "first_experiment": "<1 día: 100 prompts de held-out con condición temática; generar con sampler actual vs 6 configs (B×alg); evaluar con (a) logprob medio del texto bajo Qwen3-0.6B (AR-oracle ya en el repo, como gen-PPL), (b) repetición/deriva (distancia temática embedding inicio vs fin), (c) rating propio a ciegas. Si ninguna config supera al baseline en (a), falsado."
+    },
+    {
+      "rank": 2,
+      "technique": "D3IM sampler (re-predicción de TODAS las posiciones + commit global por confianza) y luego finetune SCOPE",
+      "why": "Convierte los pasos extra de difusión en capacidad de REVISIÓN (self-correction) en vez de sobre-refinamiento; el paper muestra 2x en HumanEval (14.0→29.3) y expone que hoy el modelo preserva errores 70.1% de las veces. Nuestro colapso a repetición a baja temperatura es exactamente un síntoma de congelar errores tempranos.",
+      "how_concrete": "Fase A (inferencia, <1 día): en cada paso, correr el modelo y computar distribución para TODAS las posiciones (no sólo masks); commitear el top-K global por confianza y RE-mascarar el resto (incluye re-mascarar tokens visibles que el modelo ya no sostiene); K decreciente. Fase B (entrenamiento SCOPE, ~1 semana): finetune del MDLM con máscaras sobre estados autogenerados: samplear x̂0 del propio modelo, inyectar errores (mask rate Beta(2,2), temperatura>1), entrenar corrección token→token con commit rate ρ=0.3 y rama estándar MDLM prob 0.5.",
+      "effort": "Fase A: 1 día. Fase B: 3-5 días código + 1-2 días GPU (datos propios, 183M)",
+      "expected_gain": "Eliminación de una gran fracción de errores tempranos congelados; el paper reporta >2x en code a igual número de pasos y mejoría sostenida al agregar pasos (sin plateau)",
+      "first_experiment": "Fase A sola: D3IM vs sampler actual con steps 2x en 100 prompts; medir gen-PPL bajo Qwen3-0.6B + tasa de repetición n-gram. Si D3IM degrada (confianza mal calibrada a 183M), quedará igual como diagnóstico para decidir SCOPE."
+    },
+    {
+      "rank": 3,
+      "technique": "Destilación continua del AR-oracle (KL por token) durante continued-pretraining",
+      "why": "Toda la frontera 2025-26 converge en que la señal AR es lo que hace competitivos a los dLLM (Dream init-AR, TESS 2 adapt-AR, SDAR conversión-AR, LLaDA2.0 100B conversión-AR, Mercury/Seed destilación AR); ya tenemos el teacher integrado (Qwen3-0.6B) y nuestro CE plano tira toda la distribución salvo 1 token por posición.",
+      "how_concrete": "En el loop de entrenamiento actual: para cada batch, correr el teacher en modo causal sobre la secuencia limpia, cachear top-K (K=50) logprobs por posición; loss del student = α·KL(topk teacher‖student en posiciones mask) + (1−α)·CE, α≈0.5-1.0. Mapeo de vocab: alinear tokens BPE-10K con subtokenización del vocab Qwen (suma de logprobs de subtokens) o re-tokenizar el corpus con el tokenizer Qwen y proyectar por spans. Variantes sin mapeo: destilación a nivel de secuencia (teacher logprob del sample del student) en el espíritu sequence-KD.",
+      "effort": "3-5 días de implementación + 2-4 días GPU (continued-pretraining de ~136-500M tokens nuevos)",
+      "expected_gain": "MI OPINIÓN: la mayor mejora de ppl/calidad por token entrenado disponible para un 183M; coherencia local→discurso mejor condicionado por distribuciones suaves del teacher. Riesgo del mapeo de vocab acotado y medible",
+      "first_experiment": "<1 día: correr teacher-forcing del Qwen3-0.6B sobre 1k seqs held-out y medir su ppl vs nuestro 62.4 (techo de referencia); luego 200M tokens de KD (α=1) vs 200M tokens de CE (control) y comparar ppl held-out + gen-PPL. Si KD no baja ppl tras 200M tokens, falsado y quedan las rutas AR-init puras."
+    },
+    {
+      "rank": 4,
+      "technique": "Conversión del MDLM a Block Diffusion (finetune BD3-LM desde el checkpoint actual)",
+      "why": "Es la única técnica con mejora DOCUMENTADA de calidad de texto libre (gen-PPL 46.8→33.4 vs MDLM puro) y ppl (−13%), con código abierto del mismo grupo que inventó el objetivo MDLM que ya usamos; además resuelve longitud variable y da KV-cache.",
+      "how_concrete": "Clonar kuleshov-group/bd3lms; portar nuestro checkpoint 183M a su backbone (o re-entrenar su config 'small' reducida a 183M con nuestro vocab/corpus — el repo trae pipeline completo con block_size∈{4,8,16}, data-driven noise schedule y finetune desde checkpoint MDLM, que es literalmente nuestro caso); entrenar 100-300K pasos (~1-3 días 3090) sobre el corpus actual; combinar con R1 (el sampling semi-AR nativo de BD3-LM).",
+      "effort": "4-7 días total (2-3 código/integración + 1-3 GPU)",
+      "expected_gain": "Por analogía directa del paper (mismos datos, tamaño comparable): ppl −10-13%, gen-PPL −25-30%, discurso sostenido por la factorización AR-entre-bloques",
+      "first_experiment": "<1 día: evaluar el checkpoint BD3-LM público (small, OWT) con 100 prompts de NUESTRO dominio vs nuestro MDLM en gen-PPL bajo Qwen3-0.6B — mide si la ventaja de bloque transfiere a nuestro dominio antes de invertir en conversión."
+    },
+    {
+      "rank": 5,
+      "technique": "Escalar datos 136M→1-2B tokens long-form + complementary masking (eficiencia de señal)",
+      "why": "iLLaDA obtuvo +21.6 BBH / +16.5 HumanEval básicamente con 5x tokens y datos mejores; LLaDA2.0 atribuye el gap from-scratch al volumen de datos; nuestro 136M está 4-5 órdenes debajo de la frontera. Ninguna técnica de sampler compensa subentrenamiento; el texto largo es requisito para discurso sostenido.",
+      "how_concrete": "(a) Armar corpus de 1-2B tokens de documentos LARGOS completos (libros, wiki long-form, tutoriales) en el dominio objetivo; (b) continuar pretraining del checkpoint actual con logit-normal t (ya está) + complementary masking por réplica de documento (cada token es mask exactamente una vez por grupo de réplicas: near-100% utilización, acelera convergencia ~según LLaDA2.0); (c) opcional: auxiliar de confidence head (calibra D3IM/remasking).",
+      "effort": "Recolectar/curar: 3-7 días de wallclock humano-scripting; entrenar 4-8 días GPU 3090 (26-52x las 3.5h originales)",
+      "expected_gain": "MI OPINIÓN: el salto de ppl 62.4→~40s y el sostener tema por >128 tokens dependerán más de esto que de cualquier truco; las curvas iLLaDA/LLaDA sugieren mejoras amplias en todo",
+      "first_experiment": "<1 día de decisión: entrenar 2x más tokens (272M) con el setup actual y extrapolar la pendiente de ppl; si la curva no está aplanándose (no lo estará a 136M tokens), el escalado de datos es la inversión de mayor EV."
+    }
+  ],
+  "sources": [
+    {"title": "Dream 7B: Diffusion Large Language Models (HKU + Huawei Noah's Ark Lab)", "url": "https://arxiv.org/abs/2508.15487", "reliability": "alta", "date": "2025-08"},
+    {"title": "Dream 7B blog + repositorio (remasking algs, hyperparámetros de generación)", "url": "https://hkunlp.github.io/blog/2025/dream/ y https://github.com/DreamLM/Dream", "reliability": "alta", "date": "2025-04"},
+    {"title": "LLaDA: Large Language Diffusion Models (RUC GSAI + Ant; v3 con App. B.4 semi-AR sampling)", "url": "https://arxiv.org/abs/2502.09992", "reliability": "alta", "date": "2025-02 (v3 2025-10)"},
+    {"title": "Block Diffusion / BD3-LM (ICLR 2025 Oral, Cornell) + página de resultados", "url": "https://arxiv.org/abs/2503.09573 y https://m-arriola.com/bd3lms/", "reliability": "alta", "date": "2025-03"},
+    {"title": "d1: Scaling Reasoning in Diffusion LLMs via RL (UCLA + Meta AI)", "url": "https://arxiv.org/abs/2504.12216", "reliability": "alta", "date": "2025-04"},
+    {"title": "LLaDA 1.5: Variance-Reduced Preference Optimization (ACL 2026 / arXiv 2505.19223)", "url": "https://aclanthology.org/2026.acl-long.524.pdf", "reliability": "alta", "date": "2025-05"},
+    {"title": "MMaDA: Multimodal Large Diffusion Language Models (UniGRPO)", "url": "https://arxiv.org/abs/2505.15809", "reliability": "alta", "date": "2025-05"},
+    {"title": "Fast-dLLM: Training-free Acceleration (KV cache + confidence-aware parallel decoding)", "url": "https://arxiv.org/abs/2505.22618", "reliability": "alta", "date": "2025-05"},
+    {"title": "DiffuCoder: Understanding and Improving Masked Diffusion for Code (Apple; coupled-GRPO)", "url": "https://arxiv.org/abs/2506.20639", "reliability": "alta", "date": "2025-06"},
+    {"title": "Mercury: Ultra-Fast Language Models Based on Diffusion (Inception Labs)", "url": "https://arxiv.org/abs/2506.17298 y https://www.inceptionlabs.ai/blog/introducing-mercury", "reliability": "media (comercial; sin detalles de entrenamiento)", "date": "2025-02/2025-06"},
+    {"title": "SDPO: Discrete Diffusion Trajectory Alignment via Stepwise Decomposition", "url": "https://arxiv.org/abs/2507.04832", "reliability": "alta", "date": "2025-07"},
+    {"title": "SDAR: Synergistic Diffusion-AutoRegression (conversión AR→blockwise difusión)", "url": "https://arxiv.org/abs/2510.06303", "reliability": "alta", "date": "2025-10"},
+    {"title": "Seed Diffusion Preview (ByteDance; destilación AR→difusión, 2146 tok/s)", "url": "https://arxiv.org/abs/2508.02193", "reliability": "alta (speed) / media (calidad vs AR no desglosada)", "date": "2025-08"},
+    {"title": "Prophet: DLMs Know the Answer Before Decoding (early commit; ablas de remasking y block-length)", "url": "https://arxiv.org/abs/2508.19982", "reliability": "alta", "date": "2025-08"},
+    {"title": "TraceRL / TraDo: RL framework para dLLMs (Princeton, Mengdi Wang group)", "url": "https://arxiv.org/abs/2509.06949", "reliability": "alta", "date": "2025-09"},
+    {"title": "MDLM: Simple and Effective Masked Diffusion Language Models (NeurIPS 2024; base de nuestro modelo)", "url": "https://arxiv.org/abs/2406.07524", "reliability": "alta", "date": "2024-06"},
+    {"title": "MGDM: Beyond Autoregression — Discrete Diffusion for Complex Reasoning and Planning (ICLR 2025)", "url": "https://arxiv.org/abs/2410.14157", "reliability": "alta", "date": "2024-10"},
+    {"title": "TESS 2: A Large-Scale Generalist Diffusion Language Model (adaptación AR + reward guidance)", "url": "https://arxiv.org/abs/2502.13917", "reliability": "alta", "date": "2025-02"},
+    {"title": "LLaDA2.0: Scaling Up Diffusion Language Models to 100B (Ant Group + RUC)", "url": "https://arxiv.org/abs/2512.15745", "reliability": "alta", "date": "2025-12"},
+    {"title": "SCOPE + D3IM: Revise, Don't Freeze — Sampler-Matched Training for Self-Correcting MDLMs", "url": "https://arxiv.org/abs/2606.01026", "reliability": "alta-media (preprint 2026; número HumanEval 14→29.3 corroborado también vía alphaxiv)", "date": "2026-06"},
+    {"title": "Answer First, Reason Later: When Commitment Order Costs Accuracy in DLMs", "url": "https://arxiv.org/abs/2608.05687", "reliability": "media (preprint 2026)", "date": "2026-08"},
+    {"title": "iLLaDA: Improved Large Language Diffusion Models (RUC GSAI; 12T tokens from scratch)", "url": "https://arxiv.org/abs/2606.25331", "reliability": "alta", "date": "2026-06"},
+    {"title": "A Survey on Diffusion Language Models", "url": "https://arxiv.org/abs/2508.10875", "reliability": "alta", "date": "2025-08"},
+    {"title": "Gemini Diffusion (Google DeepMind) — anuncio experimental, sin paper", "url": "https://deepmind.google/models/gemini-diffusion/", "reliability": "baja (sin método ni números revisados por pares)", "date": "2025-05"}
+  ],
+  "gaps": "No verificado: (1) ablaación aislada de CART en Dream (el número exacto de su contribución no apareció en lo extraído) y el número exacto de ablaación de CFG en Dream (CFG se menciona como parte del recipe; Dream entrena con drop de prompt pero no pude citar el delta); (2) detalles técnicos completos de Mercury y Gemini Diffusion (sin papers; sólo benchmarks de anuncio: 1109 tok/s, HumanEval 88.0; Gemini Diffusion ~1400+ tok/s citado de terceros); (3) 'TraDo': existe además un paper 2025 de speedup con nombre similar ('TraDo: noise transition of redundancy-aware diffusion') que NO logré localizar — lo verificado aquí es TraDo=TraceRL (2509.06949); no confundir; (4) papers 2026 vistos sólo como referencias en surveys/listas, sin lectura profunda: DiffusionGemma (2608.00146), LLaDA-MoE v2 (2608.03457), Multi-Block Diffusion (2606.29215), CADD (2510.01329), d3llm (2601.07568), SPG, RND1, Quakka/OpenMoE2, 'Simple Self-Conditioning Adaptation for MDLMs' (may-2026), 'Learn from Your Mistakes' (jun-2026) — nombrados como existentes, sin números extraídos; (5) el número HumanEval 14.0→29.3 de SCOPE proviene del paper vía resumen alphaxiv (fuente secundaria, consistente con el HTML del paper); (6) costos GPU exactos de la conversión SDAR (tokens de adaptación) no extraídos; (7) no pude verificar si MMaDA-8B se inicializa desde LLaDA (el abstract no lo dice); (8) el efecto específico del ELICIT loss de DiffuCoder v1 fue reemplazado por coupled-GRPO en v2 y cité éste último."
+}

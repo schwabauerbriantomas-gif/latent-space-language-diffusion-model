@@ -1,0 +1,218 @@
+{
+  "agent": "F",
+  "domain": "Métricas automáticas de calidad de texto generado SIN humanos para diffusion LM pequeño; protocolo de evaluación r10",
+  "findings": [
+    {
+      "technique": "Gen-PPL con juez AR congelado (gpt2-large / gpt2-xl) — métrica estándar de facto en diffusion LMs",
+      "source": "SEDD, Lou et al., ICML 2024, arXiv:2310.16834; MDLM, Sahoo et al., NeurIPS 2024, arXiv:2406.07524; protocolo replicado en Soft-Masked DLM (arXiv:2510.17206) y CaRE (arXiv:2607.24763)",
+      "date": "2024-05",
+      "evidence": "SEDD puntúa muestras incondicionales con gpt2-large: '6-8x better generative perplexity than un-annealed GPT-2' y iguala calidad con 32x menos NFE. Soft-Masked (169M params, OpenWebText — misma escala que nuestro 183M) usa exactamente: 5000 muestras L=1024, nucleus p=0.9, gen-PPL medido con gpt2-large + MAUVE con features gpt2-large (scaling 5). CaRE usa PPL con Llama-3-8B como juez.",
+      "fit_3090_183m": "high — gpt2-large (774M) fp16 ocupa ~1.6GB; 600 muestras de 128 tokens se puntúan en <5 min; gpt2-xl (1.5B) también cabe holgado",
+      "expected_impact": "Da la señal de fluencia comparable con toda la literatura 2024-2026 de MDLM; es el número que permite comparar contra SEDD/Dream/LLaDA",
+      "implementation_cost": "bajo: ~50 líneas (tokenizer del juez sobre texto decodificado, NLL media por token); 1-2 h",
+      "risk": "ALTO si se usa solo: mediblemente hackeable (ver finding siguiente). Además juez≠generador obligatorio: Qwen3-0.6B ya es el AR-oracle del pipeline propio → usarlo como juez es circular"
+    },
+    {
+      "technique": "Gen-PPL es hackeable: nunca usarla como métrica única (falla documentado)",
+      "source": "'Hacking Generative Perplexity: Why Unconditional Text Evaluation Needs Distributional Metrics', Franca & Tong, ICML 2026 workshop SPIGM, arXiv:2606.08417",
+      "date": "2026-06",
+      "evidence": "Abstract verificado: construyen 'samplers zero-parameter, deliberadamente naive' que alcanzan gen-PPL state-of-the-art en LM1B y OpenWebText a entropía no-degenerada, superando modelos publicados de diffusion/flow 'while producing text that is incoherent by construction'. Conclusión: gen-PPL mide solo previsibilidad bajo el juez AR, no gramaticalidad ni coherencia; recomiendan suites de divergencia distribucional (MAUVE et al.)",
+      "fit_3090_183m": "high — es una lección de diseño, costo cero",
+      "expected_impact": "Evita el falso positivo central del proyecto: premiar al generador que imita al juez o que colapsa a texto predecible",
+      "implementation_cost": "cero (regla de protocolo): gen-PPL siempre emparejada con guardrail de entropía + MAUVE + self-BLEU; reportar ratio contra PPL de refs humanas",
+      "risk": "ignorarlo invalida cualquier claim de 'salto cualitativo'; evidencia empírica adicional: ReMDM en Soft-Masked logra gen-PPL 11.40 (bajo) con MAUVE degradado — la firma exacta del hack"
+    },
+    {
+      "technique": "MAUVE: divergencia distribucional texto-modelo vs texto-humano (KL cuantizado en espacio de embeddings de un LM)",
+      "source": "Pillutla et al., NeurIPS 2021 (Outstanding Paper), arXiv:2102.01454; deep dive JMLR 2023 arXiv:2212.14578; librería oficial mauve-text (krishnap25.github.io/mauve)",
+      "date": "2021-10",
+      "evidence": "MAUVE correlaciona más fuerte con juicios humanos que métricas baseline para generación abierta; docs oficiales: usa features de gpt2-large por defecto, pip mauve-text, max_text_length=256, 'best practice needs at least a few thousand generations each (the paper uses 5000)'; demo con 100 funciona pero ruidoso. CaRE (2026) usa MAUVE con backbone GPT-2-XL y K=500 como 'el benchmark actual de evaluación MDLM'",
+      "fit_3090_183m": "high — solo featurización (1 forward por texto); 10 min por 5000 textos según docs; con 120-300 pares son minutos",
+      "expected_impact": "Detecta colapso de diversidad y mismatch distribucional que gen-PPL no ve (ej.: ReMDM low-PPL/low-MAUVE). Ancla cuantitativa: GPT-2-XL AR reference alcanza MAUVE 0.742 en OpenWebText (CaRE Tabla); LLaDA/Dream-Base en 0.92-0.95",
+      "implementation_cost": "bajo: pip install mauve-text; ~30 líneas; promediar 3-5 seed_id y reportar mean±std",
+      "risk": "Muy sensible a hiperparámetros de sampling: CaRE muestra que SOLO la temperatura mueve MAUVE de 0.66→0.98 (+0.32, más que la diferencia entre estrategias de remasking); sensible al featurizer y al tamaño de muestra; N=100 da CI ancha → usar ≥120 pares y promediar seeds; diversidad sin calidad también la sube (emparejar con self-BLEU)"
+    },
+    {
+      "technique": "Protocolo multi-métrica compute-aware (estado del arte 2026 para MDLM): PPL + MAUVE + Self-BLEU + Distinct-3 con NFE igualado",
+      "source": "'CaRE: Compute-aware Remasking Evaluation Protocol for Masked Diffusion Language Models', arXiv:2607.24763 (+ código y leaderboard en anonymous.4open.science/w/CaRE-846C)",
+      "date": "2026-07",
+      "evidence": "CaRE audita 7 estrategias de remasking × 4 niveles de estocasticidad × 3 presupuestos de pasos sobre LLaDA-8B y Dream-7B (OpenWebText, LM1B). Hallazgos: (i) la temperatura explica la mayoría de la varianza de MAUVE; (ii) comparaciones a NFE nominal REVIERTEN rankings publicados al igualar compute; (iii) 'stochastic unmasking' es la palanca dominante de diversidad (none@256: MAUVE 0.447→0.954 al pasar t=0.0→0.1). Usan 3 seeds + bootstrap (CI 95% [0.243,0.356] para un gap de 0.296)",
+      "fit_3090_183m": "high — el protocolo es modelo-agnóstico; en 183M es más barato todavía",
+      "expected_impact": "Define CÓMO reportar para que un salto cualitativo sea creíble: fijar y reportar NFE/steps/temperatura/guidance en cada tabla, comparar configs a compute igualado, multi-métrica obligatoria, 3 seeds + bootstrap",
+      "implementation_cost": "medio: disciplina de reporte + scripts; ~1 día",
+      "risk": "si no se iguala NFE, cualquier mejora observada puede ser solo más compute; si no se fija temperatura, la varianza de MAUVE domina la señal"
+    },
+    {
+      "technique": "Repetición + Zipf + entropía unigram como alarmas de degeneración (rep-n, longest-repeat-run, Zipf coefficient, H)",
+      "source": "'The Curious Case of Neural Text Degeneration', Holtzman et al., ICLR 2020, arXiv:1904.09751; Maestro & Cotterell, 'Language Model Evaluation Beyond Perplexity', ACL 2021 (tendencias estadísticas Zipf/type-token)",
+      "date": "2020-01",
+      "evidence": "Tabla 1 (WebText, GPT-2-large juez, 5000 continuaciones de 200 tok, prefijos 1-40 tok): Humano PPL 12.38 / Self-BLEU4 0.31 / Zipf 0.93 / Repetición 0.28%; Greedy 1.50 / 0.50 / 1.00 / 73.66%; Nucleus p=0.95: 13.13 / 0.32 / 0.95 / 0.36%. Beam b=16: PPL 1.48 (¡más 'probable' que humano!) con 28.94% repetición — prueba canónica de que maximizar probabilidad ≠ calidad",
+      "fit_3090_183m": "high — pura CPU, sin GPU, implementable en ~100 líneas con collections/nltk",
+      "expected_impact": "Detecta directamente el 'colapso a repetición a temperatura baja' del modelo; los números de Holtzman dan umbrales de anclaje absolutos y las refs humanas dan el anclaje por-prompt",
+      "implementation_cost": "bajo: medio día",
+      "risk": "necesarias pero no suficientes: texto word-salad de alta entropía pasa; Zipf insensible al significado; usar como ALARMA de degeneración, no como medida de salto cualitativo"
+    },
+    {
+      "technique": "Self-BLEU y distinct-n para colapso de modo y diversidad de batch",
+      "source": "Texygen, Zhu et al., WWW 2018 (doi:10.1145/3209978.3210080, arXiv:1801.07746); distinct-n: Li et al., NAACL 2016, arXiv:1510.03055; crítica: Niu & Carpuat, 'Evaluating the Evaluation of Diversity in NLG', EACL 2021",
+      "date": "2018-01",
+      "evidence": "Texygen define self-BLEU (BLEU de cada muestra vs el resto del batch; menor = más diverso) y reporta mode-collapse: self-BLEU4 0.583 (MLE) → 0.848 (LeakGAN colapsado). Holtzman: humano self-BLEU4 0.31 vs greedy 0.50. Niu & Carpuat: métricas n-gram capturan FORMA no CONTENIDO (fallan el test de diversidad de contenido; sent-BERT mejor, humanos muy por encima)",
+      "fit_3090_183m": "high — CPU, nltk/sacrebleu, minutos",
+      "expected_impact": "Guardrail de diversidad de batch: detecta si el modelo genera 100 variantes del mismo texto; complemento obligatorio de gen-PPL",
+      "implementation_cost": "bajo: medio día",
+      "risk": "se gamea con ruido diverso-incoherente; sensible a longitud y tamaño de batch (fijar N=100 por categoría); solo reportar junto con una métrica de calidad"
+    },
+    {
+      "technique": "GRUEN: evaluación reference-less de gramaticalidad/no-redundancia/foco/coherencia (línea de sintaxis rota sin humanos)",
+      "source": "'GRUEN for Evaluating Linguistic Quality of Generated Text', Zhu & Bhat, Findings EMNLP 2020, arXiv:2010.02498",
+      "date": "2020-10",
+      "evidence": "Reference-less, no supervisada, determinista: gramaticalidad vía likelihood/aceptabilidad con modelo BERT; no-redundancia por componentes repetidos; foco por WMD entre oraciones adyacentes; estructura/coherencia por SOP loss de ALBERT. Spearman 0.87 con juicios humanos (vs 0.76 SUM-QE supervisado) en 7 datasets/4 tareas",
+      "fit_3090_183m": "high — BERT-base/ALBERT en CPU o un porcentaje mínimo de la 3090; el 'foco' (relatedness de oraciones adyacentes) es exactamente un detector de deriva temática barato",
+      "expected_impact": "Cubre el eje sintaxis+coherencia-local sin referencias ni jueces grandes; los 4 sub-scores se mapean 1:1 a los fallos del modelo (sintaxis rota, repetición, drift)",
+      "implementation_cost": "medio: el repo original es 2020 (spaCy viejo); reimplementar lite (CoLA score + WMD/sim entre oraciones + rep) ≈ 1-2 días",
+      "risk": "paper de 2020, inglés-centrado; depende del parser spaCy (texto muy roto puede romper el parse — detectarlo y reportarlo, no ocultarlo); correlación validada en resumen/dialog, no en continuaciones wiki"
+    },
+    {
+      "technique": "Juez LLM abierto pequeño (Prometheus 2, 7B) con rúbrica custom para verificación de salto cualitativo",
+      "source": "'Prometheus 2: An Open Source Language Model Specialized in Evaluating Other Language Models', Kim et al., arXiv:2405.01535; marco G-Eval: Liu et al., EMNLP 2023, arXiv:2303.16634",
+      "date": "2024-05",
+      "evidence": "Prometheus-2-7B: Pearson 0.642 con GPT-4-1106 y 0.544 con humanos (FLASK); acuerdo 72-85% con humanos en pairwise; soporta rúbrica definida por el usuario + direct assessment y pairwise. G-Eval establece el paradigma CoT+form-filling que mejoró correlación con humanos en NLG",
+      "fit_3090_183m": "medium — Prometheus-2-7B bf16 ≈ 14-15GB: cabe en la 3090; 200-400 comparaciones pairwise ≈ 30-60 min; alternativa más liviana: Llama-3.2-3B-Instruct o Gemma-3-4B como juez pairwise con rúbrica (menos validado, declararlo)",
+      "expected_impact": "Es el único eslabón que mide 'mejor texto' percibido de forma relativa (vs run anterior) — el veredicto de salto cualitativo; la rúbrica custom permite apuntar a coherencia global/disco sostenido, que ninguna métrica n-gram cubre",
+      "implementation_cost": "medio: 1 día (prompt rúbrica + parsing + swap de posiciones)",
+      "risk": "solo comparaciones RELATIVAS (A vs B con posiciones intercambiadas): 'Mary, the Cheeseburger-Eating Vegetarian' (arXiv:2512.07777, 2025-12) muestra que LLMs fallan al ratear coherencia absoluta; sesgos conocidos (ver finding sesgos)"
+    },
+    {
+      "technique": "Sesgos de jueces LLM: posición, verbosidad, self-preference (= esencia del problema de gen-PPL)",
+      "source": "Zheng et al., 'Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena', NeurIPS 2023, arXiv:2306.05685; Wataoka et al., 'Self-Preference Bias in LLM-as-a-Judge', ICLR 2025, arXiv:2410.21819; Ye et al., 'Justice or Prejudice?', arXiv:2410.02736 (CALM, 12 sesgos); Shi et al., 'Judging the Judges: A Systematic Study of Position Bias', arXiv:2406.07791",
+      "date": "2025-01",
+      "evidence": "Wataoka: GPT-4 muestra self-preference 0.520 y — clave para nosotros — 'LLMs assign significantly higher evaluations to outputs with lower perplexity than human evaluators, regardless of whether the outputs were self-generated': el sesgo ES familiaridad/PPL. Zheng: sesgos de posición y verbosidad. Ye: taxonomía de 12 sesgos (CALM); el padding inflatescores. Shi: en pares cercanos, el orden puede voltear el ganador en una fracción sustancial de comparaciones",
+      "fit_3090_183m": "high — son reglas de mitigación, costo cero",
+      "expected_impact": "Justifica las reglas del protocolo: swap de posiciones + flip-rate, empates permitidos, longitud igualada, jueces de familia distinta a cualquier modelo del pipeline, nunca usar scores absolutos de juez",
+      "implementation_cost": "cero extra (parte del diseño del juez)",
+      "risk": "sin swap de posiciones el win-rate es no-confiable; un juez Qwen (familia del AR-oracle propio) replicaría el sesgo de familiaridad del oracle"
+    },
+    {
+      "technique": "Drift temático por embeddings: pendiente de similitud coseno(chunk_i, prompt) sobre SBERT + retención de keywords",
+      "source": "Métrica custom; componentes estándar: Sentence-BERT, Reimers & Gurevych, EMNLP 2019, arXiv:1908.10084; validación del principio 'neural > n-gram para contenido': Niu & Carpuat EACL 2021; alarmante para jueces absolutos: arXiv:2512.07777",
+      "date": "2025-10",
+      "evidence": "OPINIÓN/diseño propio (sin paper canónico para 'thematic drift score'): Niu & Carpuat muestran que similitud semántica neural (sent-BERT) detecta diversidad/contenido que n-gram no ve; 2512.07777 muestra que probing token-level de coherencia (PPL) supera a ratings LLM — consistente con medir drift con embeddings + PPL en vez de pedir scores a un chatbot",
+      "fit_3090_183m": "high — MiniLM-L6-v2 corre en CPU; 600 muestras en segundos",
+      "expected_impact": "Cuantifica la deriva temática (el fallo #1 del modelo) con una señal continua y por-ventana: slope de coseno a lo largo de 4 chunks + coseno final + % de retención del topic-entity en prompts adversariales",
+      "implementation_cost": "bajo: medio día con sentence-transformers",
+      "risk": "anisotropía del espacio de embeddings (mitigar: comparar slope vs slope de refs humanas del MISMO prompt, no valores absolutos); MiniLM fue entrenado en otro dominio — validar que refs humanas dan slopes planos antes de confiar"
+    },
+    {
+      "technique": "Rolling-continuation para discurso sostenido >128 tokens (excede el contexto de entrenamiento)",
+      "source": "OPINIÓN/diseño propio; precedentes: evaluación condicional multi-documento de Holtzman (5000 continuaciones con prefijos); infilling/continuation capabilities de SEDD y Dream 7B (arXiv:2508.15487) como marco",
+      "date": "2026-10",
+      "evidence": "sin paper que valide esta métrica específica (declarado gap); el principio (evaluar continuaciones con métricas distribucionales sobre texto cosido) es el de Holtzman/SEDD",
+      "fit_3090_183m": "high — 4 ventanas de generación con overlap 96/128 por prompt; el AR-oracle Qwen3-0.6B ya existente puede servir de contraste (no de juez)",
+      "expected_impact": "Es la ÚNICA forma de medir 'discurso sostenido >128 tokens' con un modelo seq=128: ventana k se genera condicionada en los últimos 96 tokens de la ventana k-1; métricas: rep-3 cross-window, gen-PPL del texto cosido, drift slope sobre ~400 tokens, ruptura de formato en costuras",
+      "implementation_cost": "medio: 1 día (bucle de sampling + stitching + métricas)",
+      "risk": "el modelo nunca vio texto cosido: esperar degradación en costuras y calibrar el umbral con run-0; con guidance de repetición propio activo, reportarlo siempre (CaRE: los hiperparámetros de decodificación dominan las métricas)"
+    },
+    {
+      "technique": "Protocolo de referencia a escala exacta (169M, OpenWebText): gen-PPL + MAUVE + entropía en generación no condicionada",
+      "source": "'Soft-Masked Diffusion Language Models', arXiv:2510.17206 (siguiendo el setup de Wang et al. 2025)",
+      "date": "2025-10",
+      "evidence": "MDLM de 169M (≈ nuestro 183M): 5000 muestras L=1024 nucleus p=0.9; gen-PPL con gpt2-large; MAUVE con features gpt2-large scaling 5; entropía como guardrail de diversidad. Mejoras reportadas del método: hasta +0.568 MAUVE y −26.93 gen-PPL vs su baseline; AR MAUVE 0.760-0.774 en el mismo setup. Ejemplo de firma hack: ReMDM con gen-PPL 11.40 pero entropía y MAUVE degradadas",
+      "fit_3090_183m": "high — es literalmente nuestro setting (single 3090, MDLM, OpenWebText)",
+      "expected_impact": "Define el protocolo base reproducible: mismo juez (gpt2-large), mismo scoring, y da números de referencia para saber qué es un delta grande (0.1-0.5 MAUVE) en esta escala",
+      "implementation_cost": "bajo (reutilizado por r10 con N reducido a lo que el compute permita)",
+      "risk": "5000 muestras ×1024 tokens puede ser caro para nuestro sampler con guidance; r10 lo reduce a ~600×128 + rolling, aceptando CI más anchas compensadas con bootstrap y 3 seeds"
+    }
+  ],
+  "top_recommendations": [
+    {
+      "rank": 1,
+      "technique": "Implementar eval_r10: suite multi-eje (degeneración + gen-PPL dual-juez + MAUVE + drift-embedding + rolling-continuation + sintaxis + juez pairwise) con 100 prompts fijos, 2 configs y 3 seeds",
+      "why": "Ninguna métrica individual sobrevive a sus modos de fallo (gen-PPL hackeable según arXiv:2606.08417; MAUVE dominada por temperatura según CaRE; self-BLEU gameable con ruido; jueces con 12 sesgos). La detección de los 4 modos de fallo del modelo exige ejes separados con contra-métricas emparejadas",
+      "how_concrete": "scripts/eval_r10.py + eval/prompts_r10.jsonl (100 prompts versionados) + eval/thresholds_r10.json + eval/reports/rN/. Especificación completa en protocol_r10_proposal. Integración: una función generate(prompt, config, seed) que envuelva el sampler MDLM existente con su guidance; todo lo demás es post-hoc sobre JSONL de salidas",
+      "effort": "3-4 días de código (sin GPU nueva); cada corrida de evaluación ~1.5-2 h en la 3090 (mayormente sampling del MDLM y el juez pairwise)",
+      "expected_gain": "Convierte 'salto cualitativo' en un GATE binario auditable con CIs bootstrap + tabla comparativa r0→r10; detecta y separa los 4 modos de fallo declarados",
+      "first_experiment": "Run-0 de calibración (<1 día): generar las 600 muestras con el modelo actual, calcular todas las métricas sobre (a) muestras del modelo, (b) refs humanas, (c) muestras gpt2-small en los mismos prompts. Verificar que: refs humanas pasan todos los umbrales, la config de baja temperatura DISPARA la alarma de repetición (control positivo del detector), y gpt2-small cae entre modelo y humano"
+    },
+    {
+      "rank": 2,
+      "technique": "Gen-PPL a ratio contra referencia humana con doble juez de familias distintas + guardrail de entropía",
+      "why": "Es la métrica comparable con la literatura, pero aislada es hackeable (Franca & Tong 2026) y circular si el juez pertenece al pipeline (Qwen3-0.6B es el AR-oracle)",
+      "how_concrete": "Jueces: gpt2-large (primario, familia jamás usada en generación) + opt-1.3b o pythia-1.4b (contra-juez). Reportar ratio = PPL_juez(muestras)/PPL_juez(refs humanas de los mismos prompts) para cancelar artefactos de tokenizer/dominio (decodizar a texto y re-tokenizar SIEMPRE igual para muestras y refs). Flag rojo si |Δratio| entre jueces > 20%. Guardrail: si ratio mejora pero la entropía unigram cae >0.5 nat vs refs, marcar 'ganancia por colapso' (firma ReMDM: PPL 11.40 con MAUVE degradado)",
+      "effort": "medio día de código; <10 min GPU por corrida",
+      "expected_gain": "Señal de fluencia comparable (SEDD/Dream/CaRE) blindada contra los dos fraudes conocidos: imitación del juez y colapso predecible",
+      "first_experiment": "Puntuar 40 continuaciones wiki actuales del modelo + sus refs humanas con ambos jueces: si los dos ratios discrepan >20% ya hay evidencia de sesgo de juez activo en el setup"
+    },
+    {
+      "rank": 3,
+      "technique": "Rolling-continuation test: 4 ventanas × 96 tokens con overlap para medir discurso sostenido >128",
+      "why": "El objetivo declarado (discurso sostenido) es inmedible dentro de seq=128; esta extensión es la prueba mínima de planificación multi-ventana y detecta repetición cross-window que las métricas intra-muestra no ven",
+      "how_concrete": "w1 = generate(prompt); w_{k} = generate(últimos 96 tokens de w_{k-1}); coser con dedup de overlap. Métricas: rep-3 global del cosido, gen-PPL del cosido, drift slope sobre los ~400 tokens, % de costuras con ruptura de formato (detección por regex de listas/capitalización + juez pequeño). Umbral inicial: PASS si rep-3 < 2× rep-3 de refs cosidas artificialmente con el mismo método y drift final ≥ piso de refs",
+      "effort": "1 día; GPU marginal (600 generaciones extra de 96 tokens)",
+      "expected_gain": "Métrica nueva que hoy no existe en el repo y que responde exactamente a '¿hay discurso sostenido?' con número y porcentaje de éxitos por prompt",
+      "first_experiment": "20 prompts de escritura con el modelo actual: medir en cuántos el rep-3 cross-window supera 10× el de refs — cuantifica la severidad del colapso antes de cualquier cambio de entrenamiento"
+    },
+    {
+      "rank": 4,
+      "technique": "MAUVE con protocolo congelado: features gpt2-large, ≥120 pares (wiki × 3 seeds), 5 seed_id promediados, temperatura/NFE/guidance fijados y reportados",
+      "why": "Es la métrica distribucional que CaRE identifica como 'el benchmark actual de MDLM' y la recomendada por el paper anti-genPPL; pero su varianza es dominada por hiperparámetros",
+      "how_concrete": "p_text = refs humanas (pool amplio del held-out propio), q_text = muestras del modelo (40 prompts wiki × 3 seeds = 120); mauve.compute_mauve(p_text, q_text, device_id=0, max_text_length=256), promedio de seed_id 0-4, reportar mean±std y congelar TODO (juez, K, buckets, largo) en eval/thresholds_r10.json. Anclas: AR GPT-2-XL = 0.742, Dream-Base ≈ 0.95, AR 1.5B en setup Soft-Masked 0.760",
+      "effort": "medio día; ~15-30 min GPU por corrida",
+      "expected_gain": "Número comparable con SEDD/Dream/LLaDA y sensible a diversidad+calidad conjuntas (lo que gen-PPL no cubre)",
+      "first_experiment": "MAUVE run-0 del modelo actual vs held-out: establece el piso; si ya es >0.5 el diagnóstico cambia (problema de coherencia condicional, no de distribución marginal)"
+    },
+    {
+      "rank": 5,
+      "technique": "Drift-score por embeddings (SBERT MiniLM): pendiente de coseno a 4 chunks + retención de keyword en 20 prompts adversariales",
+      "why": "La deriva temática es el fallo #1 declarado y ninguna métrica n-gram la captura (Niu & Carpuat: n-gram = forma, no contenido)",
+      "how_concrete": "sentence-transformers all-MiniLM-L6-v2; por muestra: 4 chunks de 32 tokens, cos(chunk_i, prompt), regresión lineal → slope; reportar slope medio por categoría + coseno del chunk final + % de prompts adversariales cuyo topic-entity sigue presente al final (match por lema spaCy). Umbrales RELATIVOS: slope del modelo ≥ slope refs − 0.1; retención ≥ 60% (calibrar con run-0)",
+      "effort": "medio día; CPU",
+      "expected_gain": "Señal continua y barata que debería moverse si el AR-oracle/planeación mejoran la coherencia global — candidata a métrica principal del salto cualitativo",
+      "first_experiment": "Medir slope actual en los 40 wiki (modelo vs refs humanas): si el slope humano es plano y el del modelo cae, la métrica queda validada en <1 h"
+    },
+    {
+      "rank": 6,
+      "technique": "Sintaxis: CoLA-acceptability (roberta-base-CoLA) + parse-fail rate spaCy + POS-3grama KL vs refs",
+      "why": "'Sintaxis rota' necesita su propio eje; GRUEN validó que la aceptabilidad tipo-CoLA correlaciona con juicios (Spearman global 0.87) y es la parte más robusta de ese pipeline",
+      "how_concrete": "score = P(aceptable) media por oración (spaCy sent split); KL entre distribución de trigramas POS del batch y la de refs; % de oraciones que rompen el parser. Alarma: score < refs − 3σ o KL > 2× refs. Peso GPU: cero (modelos <500M, CPU ok)",
+      "effort": "medio día",
+      "expected_gain": "Confirma/cuantifica que la sintaxis local sigue OK mientras se persigue el salto en coherencia (evita regressions silenciosas de fluencia al agregar guidance)",
+      "first_experiment": "Scorear 100 muestras actuales: si el score ya iguala a refs, congelarlo como regression-test (no como meta)"
+    },
+    {
+      "rank": 7,
+      "technique": "Juez pequeño pairwise local (Prometheus-2-7B o Llama-3.2-3B-Instruct) SOLO relativo: r_actual vs r_anterior, posiciones intercambiadas, rúbrica de 4 ítems",
+      "why": "El veredicto final de 'salto' necesita un juez de texto percibido; Prometheus-2-7B es el abierto mejor validado (Pearson 0.544 con humanos, acuerdo pairwise 72-85%) y cabe en la 3090; pero solo es confiable en modo relativo con control de sesgos",
+      "how_concrete": "Rúbrica: (1) ¿todo el texto trata el tema del prompt? (2) ¿hay repetición evidente? (3) ¿las oraciones son gramaticales? (4) ¿el final conecta con el principio? — Likert 1-5 con form-filling estilo G-Eval. Cada par se evalúa 2 veces (A/B y B/A); reportar win-rate + flip-rate (si flip-rate >20%, descartar la comparación o agregar empates); temperatura 0; longitud normalizada al mínimo común. Prohibido: Qwen como juez (familia del oracle) y scores absolutos entre runs",
+      "effort": "1 día; 30-60 min GPU por evaluación de 200 pares",
+      "expected_gain": "La métrica más cercana a 'mejor texto' que corre local y gratis; cubre matices (coherencia percibida) que ninguna métrica automática cubre",
+      "first_experiment": "Validación del juez (medio día): pares sintéticos humano-vs-greedy: el juez debe preferir humano ≥90%; y pares humano-vs-temperatura-baja del modelo propio: debe preferir humano ≥80%. Si falla, el juez no sirve para coherencia (reportado en arXiv:2512.07777)"
+    }
+  ],
+  "sources": [
+    {"title": "SEDD: Discrete Diffusion Modeling by Estimating the Ratios of the Data Distribution (Lou et al., ICML 2024)", "url": "https://arxiv.org/abs/2310.16834", "reliability": "alta", "date": "2024-05"},
+    {"title": "MDLM: Simple and Effective Masked Diffusion Language Models (Sahoo et al., NeurIPS 2024)", "url": "https://arxiv.org/abs/2406.07524", "reliability": "alta", "date": "2024-06"},
+    {"title": "Hacking Generative Perplexity: Why Unconditional Text Evaluation Needs Distributional Metrics (Franca & Tong, SPIGM @ ICML 2026)", "url": "https://arxiv.org/abs/2606.08417", "reliability": "alta", "date": "2026-06"},
+    {"title": "CaRE: Compute-aware Remasking Evaluation Protocol for Masked Diffusion Language Models", "url": "https://arxiv.org/abs/2607.24763", "reliability": "alta", "date": "2026-07"},
+    {"title": "MAUVE: Measuring the Gap Between Neural Text and Human Text (Pillutla et al., NeurIPS 2021)", "url": "https://arxiv.org/abs/2102.01454", "reliability": "alta", "date": "2021-10"},
+    {"title": "MAUVE Scores for Generative Models: Theory and Practice (Pillutla et al., JMLR 2023) + librería oficial", "url": "https://krishnap25.github.io/mauve/", "reliability": "alta", "date": "2023-04"},
+    {"title": "The Curious Case of Neural Text Degeneration (Holtzman et al., ICLR 2020)", "url": "https://arxiv.org/abs/1904.09751", "reliability": "alta", "date": "2020-01"},
+    {"title": "Texygen: A Benchmarking Platform for Text Generation (Zhu et al., WWW 2018) — Self-BLEU", "url": "https://doi.org/10.1145/3209978.3210080", "reliability": "alta", "date": "2018-04"},
+    {"title": "A Diversity-Promoting Objective Function for Neural Conversation Models (Li et al., NAACL 2016) — distinct-n", "url": "https://aclanthology.org/N16-1014.pdf", "reliability": "alta", "date": "2016-05"},
+    {"title": "Evaluating the Evaluation of Diversity in NLG (Niu & Carpuat, EACL 2021)", "url": "https://doi.org/10.18653/v1/2021.eacl-main.25", "reliability": "alta", "date": "2021-04"},
+    {"title": "GRUEN for Evaluating Linguistic Quality of Generated Text (Zhu & Bhat, Findings EMNLP 2020)", "url": "https://arxiv.org/abs/2010.02498", "reliability": "alta", "date": "2020-10"},
+    {"title": "Prometheus 2: An Open Source Language Model Specialized in Evaluating Other Language Models (Kim et al., 2024)", "url": "https://arxiv.org/abs/2405.01535", "reliability": "alta", "date": "2024-05"},
+    {"title": "G-Eval: NLG Evaluation using GPT-4 with Better Human Alignment (Liu et al., EMNLP 2023)", "url": "https://arxiv.org/abs/2303.16634", "reliability": "alta", "date": "2023-05"},
+    {"title": "Self-Preference Bias in LLM-as-a-Judge (Wataoka et al., ICLR 2025)", "url": "https://arxiv.org/abs/2410.21819", "reliability": "alta", "date": "2024-10"},
+    {"title": "Justice or Prejudice? Quantifying Biases in LLM-as-a-Judge (Ye et al., CALM)", "url": "https://arxiv.org/abs/2410.02736", "reliability": "alta", "date": "2024-10"},
+    {"title": "Judging the Judges: A Systematic Study of Position Bias in LLM-as-a-Judge (Shi et al.)", "url": "https://arxiv.org/abs/2406.07791", "reliability": "alta", "date": "2024-06"},
+    {"title": "Mary, the Cheeseburger-Eating Vegetarian: Do LLMs Recognize Incoherence in Narratives?", "url": "https://arxiv.org/abs/2512.07777", "reliability": "media (preprint reciente, n=histórico pequeño)", "date": "2025-12"},
+    {"title": "Soft-Masked Diffusion Language Models (169M, OpenWebText; gen-PPL+MAUVE a nuestra escala)", "url": "https://arxiv.org/abs/2510.17206", "reliability": "media-alta (preprint con experimentos reproducibles)", "date": "2025-10"},
+    {"title": "Dream 7B: Diffusion Large Language Models (Ye et al., 2025)", "url": "https://arxiv.org/abs/2508.15487", "reliability": "alta", "date": "2025-08"},
+    {"title": "Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks (Reimers & Gurevych, EMNLP 2019)", "url": "https://arxiv.org/abs/1908.10084", "reliability": "alta", "date": "2019-08"},
+    {"title": "Language Model Evaluation Beyond Perplexity (Meister & Cotterell, ACL 2021) — Zipf/tendencias estadísticas", "url": "https://aclanthology.org/2021.acl-long.414.pdf", "reliability": "alta", "date": "2021-08"},
+    {"title": "ADJUST: Enabling Approximate Joint Sampling in Diffusion LMs (MAUVE con GPT-2-large como medida de divergencia conjunta)", "url": "https://arxiv.org/abs/2509.22738", "reliability": "media-alta", "date": "2025-09"}
+  ],
+  "gaps": "No verifiqué: (1) el protocolo exacto de jueces de Dream 7B / LLaDA (qué LLM usan como juez instructivo) — solo confirmé vía CaRE su uso de GPT-2-XL/MAUVE; (2) el setup original 'Wang et al. 2025' que Soft-Masked replica (5000 muestras p=0.9) no fue rastreado al paper primario; (3) la sección 'Best Practices' completa de la docs de MAUVE quedó truncada (el promedio sobre seed_id se toma del paper JMLR, no verifiqué el texto exacto de la docs); (4) NO existe paper canónico para 'thematic drift score' por embeddings ni para 'rolling-continuation': ambas métricas son diseño propio marcado como OPINIÓN y requieren la calibración run-0 con refs humanas; (5) los umbrales numéricos concretos del gate r10 son anclas iniciales de Holtzman/CaRE + calibración propia, no estándares validados; (6) el paper CaRE es muy reciente (julio 2026, anónimo con código en anonymous.4open.science) — hallazgos consistentes con la literatura pero replicación aún temprana; (7) GRUEN no fue probado por mí en texto de diffusion LMs (correlación reportada es de 2020, tareas resumen/diálogo); (8) no evalué métricas recientes de coherencia con LLM-judge tipo LUNAR/SCORE porque su validación es débil o GPT-4-dependiente (SCORE: solo GPT-4, scores 3-4/5 auto-reportados).",
+  "protocol_r10_proposal": "PROTOCOLO r10 — 'eval-r10' (MDLM 183M, vocab 10K BPE, seq 128, 1×RTX 3090). PRINCIPIOS: (P1) nunca una métrica sola: cada eje lleva su contra-métrica (gen-PPL↔entropía+MAUVE; MAUVE↔self-BLEU; diversidad↔calidad); (P2) todo umbral es RELATIVO a refs humanas de los mismos prompts y al run-0 del modelo (anclas absolutas de Holtzman solo para alarmas); (P3) hiperparámetros de sampling (steps/NFE, temperatura, unmask-temp, guidance logit) fijos, versionados y reportados en cada tabla — CaRE demostró que la temperatura sola mueve MAUVE 0.66→0.98; (P4) jueces de familias DISTINTAS a cualquier modelo del pipeline de generación (Qwen3-0.6B es el AR-oracle ⇒ prohibido como juez primario); (P5) 3 seeds + bootstrap 95% CI en cada delta reportado.\n\nARCHIVOS: eval/prompts_r10.jsonl (100 prompts, seed fija, git); eval/refs_r10.jsonl (refs humanas); scripts/eval_r10.py (stages 0-8); eval/thresholds_r10.json (todo congelado); eval/reports/r{N}/report.md + metrics.json + samples/. Deps: torch, transformers, mauve-text, sentence-transformers, sacrebleu (o nltk), spacy+en_core_web_sm, numpy/scipy; opcional textattack/roberta-base-CoLA; juez: Prometheus-2-7B (o Llama-3.2-3B-Instruct).\n\nPROMPT SET (100, campos: id, category, prompt, human_ref?): 40 'wiki' = prefijos de 32 tokens del held-out propio + continuación humana como ref (habilita gen-PPL ratio y MAUVE por-prompt); 20 'formato' = tareas que el modelo ya formatea (lista de N ítems, carta formal, receta) — sonda directa de colapso repetitivo; 20 'creativo' = seeds narrativos de 1 línea (estilo WritingPrompts); 20 'adversarial-drift' = prompts con entidad-tema nombrada que debe persistir (p.ej. tema+entregable) + keyword esperada. Reportar SIEMPRE por categoría (que drift en creativo no se esconda en el promedio wiki).\n\nMATRIZ DE SAMPLING (600 generaciones/run): 2 configs × 100 prompts × 3 seeds. Config A 'saludable' = la recomendada del modelo con su guidance actual (documentada). Config B 'estrés' = unmask-temp baja (~0.3) o greedy-equivalente: es el CONTROL POSITIVO — el detector de repetición DEBE dispararse en B (si no, el detector está roto, no el modelo). NFE/steps idénticos entre configs comparadas. Etapa extra 'rolling': subset de 40 prompts (20 creativo + 20 adversarial) × 4 ventanas × 1 seed para el test de discurso largo.\n\nSTAGE 0 — NORMALIZACIÓN: decodizar tokens→texto, re-tokenizar con el tokenizer DEL JUEZ aplicando la MISMA limpieza a muestras y refs (espacios/newlines colapsados); registrar longitud en tokens.\n\nSTAGE 1 — DEGENERACIÓN (CPU): rep-2/3/4 (fracción de tokens dentro de n-gramas ya vistos en la misma muestra), longest-repeat-run (Holtzman: frase ≥2 tokens repetida ≥3 veces al final), distinct-1/2/3 intra-muestra y por batch, self-BLEU-4 del batch de 100 por categoría (método Texygen), Zipf coefficient, entropía unigram H. UMBRALES INICIALES: alarma repetición si rep-3 > 10× rep-3 de refs del mismo prompt-categoría, o longest-run > 3× refs, o Zipf > 0.99 (greedy: 1.00; humano WebText: 0.93), o self-BLEU-4 > refs + 0.15 (anclas: humano 0.31, greedy 0.50). \n\nSTAGE 2 — GEN-PPL DUAL: juez primario gpt2-large fp16; contra-juez opt-1.3b o pythia-1.4b (familia distinta). Reportar ratio_juez = PPL(muestras)/PPL(refs humanas, mismos prompts, mismo juez). REGLAS: (a) flag 'ganancia por colapso' si ratio mejora y H cae >0.5 nat vs refs (firma ReMDM: PPL 11.4 + MAUVE degradado); (b) flag 'sesgo de juez' si |Δratio| entre los dos jueces >20%; (c) NUNCA seleccionar checkpoints o guidance con gen-PPL sola. MITIGACIÓN ANTI-IMITACIÓN-DEL-JUEZ (exigida): juez de familia no usada en generación + ratio contra refs humanas (el juez no escribió las refs) + verificación cruzada con MAUVE/self-BLEU: imitar al juez baja gen-PPL pero no puede falsificar MAUVE a diversidad constante + congelar jueces para TODO el proyecto (cambiar juez = re-benchmark completo) + juez LLM pairwise también de familia distinta. Fundamento: Franca & Tong 2026 (samplers naive SOTA-genPPL incoherentes) y Wataoka 2025 (los jueces prefieren texto de baja PPL-para-ellos: el sesgo es familiaridad).\n\nSTAGE 3 — MAUVE: mauve-text, features gpt2-large (idéntico al juez primario), p_text = 120 refs humanas wiki (pool amplio), q_text = 120 muestras wiki (40 prompts × 3 seeds), max_text_length=256, promedio de seed_id 0..4, reportar mean±std. Congelar K/buckets. Anclas de contexto: AR GPT-2-XL 0.742 (CaRE/OpenWebText), Dream-Base 0.92-0.95, AR en setup Soft-Masked 0.76. Delta mínimo accionable: +0.05 con CI bootstrap que excluya 0.\n\nSTAGE 4 — DRIFT TEMÁTICO: all-MiniLM-L6-v2; por muestra 4 chunks de 32 tokens: cos(chunk_i, prompt) → slope por regresión; + cos(chunk_4, prompt); + retención de keyword en los 20 adversarial (match por lema spaCy, % de muestras con keyword viva al final). Umbrales (calibrar en run-0): slope ≥ slope_refs − 0.1; retención ≥ 60%.\n\nSTAGE 5 — ROLING/DISCURSO >128 (40 prompts): ventana k condicionada en últimos 96 tokens de la k-1; coser dedup de overlap → texto ~380 tokens. Métricas: rep-3 y longest-run del cosido (colapso cross-ventana), gen-PPL del cosido (mismo juez), drift slope sobre el cosido completo, rupturas de costura (regex formato + cambio brusco de cos>0.5→<0.2 entre ventana k-1 y k). PASS-sample si rep-3 ≤ 2× refs cosidas artificialmente por el mismo método. PASS-rate del run = % samples PASS; meta r10 ≥60% (run-0 esperado ~0-10%).\n\nSTAGE 6 — SINTAXIS: (a) aceptabilidad CoLA (roberta-base-CoFA≈textattack/roberta-base-CoLA) media por oración; (b) % oraciones que rompen parse spaCy; (c) KL de trigramas-POS vs refs. Alarma si (a) < refs − 3σ o (c) > 2× refs. Es regression-gate (la sintaxis ya está OK según BRIEF): no debe empeorar al añadir guidance/oracle.\n\nSTAGE 7 — JUEZ PAIRWISE PEQUEÑO (verificación de 'salto'): r_actual vs r_anterior sobre los mismos 100 prompts (200 pares ×2 órdenes). Rúbrica 4 ítems Likert 1-5 (tema / repetición / gramática / cierre-conecta-con-inicio), form-filling G-Eval, temp 0, empates permitidos, longitud recortada al mínimo común. Reportar win-rate y flip-rate; flip-rate >20% ⇒ comparación no confiable (marcar). Validación previa obligatoria del juez con pares sintéticos humano-vs-greedy (≥90% preferencia humana) y humano-vs-temp-baja (≥80%); si falla, descartar juez (evidencia 2512.07777 de que LLMs fallan coherencia absoluta).\n\nSTAGE 8 — GATE 'SALTO CUALITATIVO rN→r10' (todas con bootstrap 95% CI): G1 config A sin alarmas de repetición (stage 1) [control: config B sí dispara]; G2 gen-PPL ratio ≤ 0.9× run anterior CON H estable (±0.5 nat); G3 MAUVE +0.05 absoluto vs run anterior; G4 drift: slope ≥ refs−0.1 y retención ≥60%; G5 rolling PASS-rate ≥60%; G6 sintaxis sin regressión (stage 6 dentro de 3σ de refs); G7 win-rate juez ≥60% con flip-rate <20%. Reporte: metrics.json + tabla r0..r10 por categoría + 10 muestras mejores/peores por gate (inspección humana opcional pero los gates NO dependen de ella). SALTO DECLARADO solo si G1-G7 simultáneos; si solo gen-PPL y MAUVE mejoran pero G4/G5 no, diagnosticar 'mejora marginal de fluencia, no salto'.\n\nCOSTO POR RUN: sampling 600×128 + 160×96 tokens MDLM (~20-40 min según NFE) + jueces PPL (<10 min) + MAUVE (~15 min) + embeddings/spaCy/CoLA (CPU, ~10 min) + juez pairwise (30-60 min) ≈ 1.5-2.5 h totales en la 3090, sin entrenamiento.\n\nCOMANDOS: python scripts/eval_r10.py --model ckpt/mdlm_v4.1.pt --prompts eval/prompts_r10.jsonl --refs eval/refs_r10.jsonl --config-A eval/config_a.yaml --config-B eval/config_b.yaml --seeds 0,1,2 --out eval/reports/r10 [--judge prometheus-2-7b] [--rolling] ; calibración inicial: mismo comando con --calibrate (usa solo refs + gpt2-small como controles y escribe thresholds_r10.json).",
+  "notes_on_gaps_and_honesty": "Ver campo gaps. Métricas drift/rolling son diseño propio (OPINIÓN) con componentes estándar citados; umbrales numéricos requieren calibración run-0 antes de usarse como gate duro."
+}

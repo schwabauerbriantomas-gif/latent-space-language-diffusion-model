@@ -1,0 +1,154 @@
+{
+  "agent": "G",
+  "domain": "Tokenización/vocabulario + datos long-form para LM chico (183M, vocab BPE 10K, 136M tokens)",
+  "findings": [
+    {
+      "technique": "Scaling law de vocabulario: el vocab óptimo depende del budget de compute Y de los datos disponibles",
+      "source": "Tao, Liu, Dou, Muennighoff et al., 'Scaling Laws with Vocabulary: Larger Models Deserve Larger Vocabularies', NeurIPS 2024, arXiv:2407.13623 (Sea AI Lab / HKU / Red Hat)",
+      "date": "2024-07",
+      "evidence": "Entrenan modelos 33M-3B params con vocab 4K-96K en hasta 500B caracteres. (1) Vocab óptimo crece con FLOPs: N_v ∝ C^0.42, más lento que N_nv. (2) Para 3B compute-optimal predicen vocab 37-43K (vs 32K convencional): ARC-C 29.1→32.0 con mismos 2.3e21 FLOPs (avg 7 benchmarks 50.3→51.6). (3) CRÍTICO para nosotros: en régimen data-constrained el vocab óptico DISMINUYE — con datos insuficientes (2.8e20 FLOPs, 'undertraining') vocab 24K le gana a 32K (avg 43.9 vs 43.2); citan que 'when available data is the bottleneck, the optimal vocabulary size decreases empirically... a mechanism to prevent over-fitting'. Fig. 7: al fijar N_nv=335M y variar datos, el V* se desplaza.",
+      "fit_3090_183m": "high — es exactamente el régimen de nuestro modelo; la Tabla 1 del paper no baja de 3B, pero sus experimentos IsoFLOPs cubren 33M-1.13B no-vocab y el hallazgo direccional (menos datos → vocab más chico óptimo) aplica directo.",
+      "expected_impact": "OPINIÓN basada en el paper: con los 136M tokens actuales, saltar de 10K a 32K probablemente NO mejora (o empeora: tokens raros sub-entrenados); con 1-2B tokens, 16K-32K pasa a ser defendible. El vocab es una palanca secundaria: el paper muestra deltas de ~1-3 pts en benchmarks, no saltos cualitativos.",
+      "implementation_cost": "Re-entrenar tokenizer BPE 16-32K sobre 1-2B chars: minutos-horas CPU (HF tokenizers). Re-entrenar modelo: ver finding de costos de compute.",
+      "risk": "Regla general del paper derivada a 3B+; no hay número publicado de V* para ~175M no-vocab (existe calculadora demo en hf.co/spaces/sail/scaling-with-vocab-demo, no la corrí). Riesgo de sobre-interpretar."
+    },
+    {
+      "technique": "Impacto del tamaño de vocab en downstream a escala ~1.5B: ~nulo por sí solo; lo que importa es la compresión (contexto efectivo)",
+      "source": "Dagan, Synnaeve, Rozière (Meta AI / U.Edinburgh), 'Getting the most out of your tokenizer for pre-training and domain adaptation', arXiv:2402.01035",
+      "date": "2024-02",
+      "evidence": "Modelo 1.5B con tokenizers GPT-4 de 32k/64k/128k/256k: HumanEval Pass@1 20.5/20.6/20.8/20.5 — correlación -0.13 con p=0.87 → sin efecto significativo del tamaño de vocab en downstream. PERO la compresión sí importa: tokenizer InCoder usa ~25% menos tokens que Llama en código; GPT-4-100k ≈ 0.75 NSL en English vs Llama-32k. Mayor compresión = más caracteres por ventana = 'effective context size' mayor. Además: se puede CAMBIAR el tokenizer de un modelo pre-entrenado fine-tuneando >50B tokens sin pérdida.",
+      "fit_3090_183m": "high — la conclusión (vocab ≈ neutral, compresión = contexto efectivo) es directamente aplicable y barata de explotar; su escala (1.5B) es cercana a la nuestra.",
+      "expected_impact": "A seq 128, un vocab 32K típico comprime ~15-25% más texto por token que 10K (rango típico NSL 32k→10k en sus curvas): cada ventana de 128 tokens 've' proporcionalmente más palabras. OPINIÓN: para coherencia de discurso a seq 128 esto es más relevante que el efecto paramétrico del vocab.",
+      "implementation_cost": "Bajo: entrenar 2-3 tokenizers candidatos y medir chars/token en held-out (CPU, minutos) antes de decidir.",
+      "risk": "Evidence en dominio código, 1.5B; transferencia a LM de texto natural 183M es inferencia razonable pero no medida."
+    },
+    {
+      "technique": "Costo real de re-entrenar con vocab 32K y 1-2B tokens en la 3090",
+      "source": "Cálculo propio (6ND FLOPs) — OPINIÓN/estimación, no paper",
+      "date": "2026-10",
+      "evidence": "Con d=768 y embeddings atados: vocab 10K→32K suma +16.9M params (+9%); head no atado +33.8M (+18%). FLOPs entrenamiento ≈ 6ND con N≈200M: 136M tokens ≈ 4.5h (consistente con las 3.5h reales del brief → calibración OK a ~10 TFLOps efectivos); 1B tokens ≈ 33h; 2B tokens ≈ 67h (~2.8 días) a seq 128. Bonus: mismo corpus en chars produce ~15% menos tokens con 32K → más texto visto por budget.",
+      "fit_3090_183m": "high — 1-2B tokens cabe en 1.5-3 días de 3090; memoria no es problema (activations dominan, no la capa de vocab).",
+      "expected_impact": "El costo del vocab 32K en sí es marginal (+9-18% params, FLOPs de softmax casi despreciables a d=768); el costo real es el dataset más grande que lo justifica.",
+      "implementation_cost": "Tokenizer: <1h CPU. Re-entrenos: 1.5-3 días GPU por corrida completa; probes de 50-100M tokens: 2-4h cada uno.",
+      "risk": "Estimación con supuestos (d=768, embeddings atados, MFU ~30%); ajustar con el throughput medido del run actual."
+    },
+    {
+      "technique": "Byte-fallback / byte-level BPE: cobertura total sin <UNK>",
+      "source": "Xue et al., 'ByT5: Towards a Token-Free Future with Pre-trained Byte-to-Byte Models', TACL 2022, arXiv:2105.13626; práctica estándar documentada (GPT-2 byte-level BPE; SentencePiece byte_fallback, LLaMA)",
+      "date": "2021-05",
+      "evidence": "ByT5 demuestra que modelar bytes puros es viable: ~1.2x más FLOPs en pre-training pero 6-9x más lento en inferencia con inputs largos (por fertilidad ~4x). De ahí el consenso: byte-level BPE (GPT-2) o byte-fallback (SentencePiece, como LLaMA: 256 pieces <0xXX>) garantizan 0 <UNK> sin pagar la secuencia 4x de bytes puros. Fragmentación de bytes en scripts raros 'explota la ventana de contexto' (análisis OOV moderno: los tokenizers modernos reportan 0% OOV porque degradan a bytes).",
+      "fit_3090_183m": "high — si el BPE 10K actual NO es byte-level y emite <UNK>, arreglarlo es obligatorio y gratis; si ya es byte-level BPE, no hay acción.",
+      "expected_impact": "Elimina una fuente de ruido/colapso en generación (tokens UNK nunca deberían aparecer en un LM moderno). No mejora la coherencia per se.",
+      "implementation_cost": "Trivial: re-entrenar el BPE con byte-level (HF tokenizers ByteLevelBPETokenizer) — minutos CPU + re-tokenizar el corpus (~1h para 1-2B tokens).",
+      "risk": "Desconozco la implementación exacta del BPE 10K actual (byte-level vs char con UNK) — VERIFICAR en el repo antes de actuar."
+    },
+    {
+      "technique": "Subword regularization / BPE-dropout como data augmentation de tokenización",
+      "source": "Kudo, 'Subword Regularization', ACL 2018, arXiv:1804.10959; Provilkov et al., 'BPE-Dropout: Simple and Effective Subword Regularization', ACL 2020, arXiv:1910.13267",
+      "date": "2018-04 / 2020-10",
+      "evidence": "BPE-dropout (dropear merges con prob p durante entrenamiento): hasta +2.3 BLEU vs BPE en MT, +0.9 vs subword regularization de Kudo; también mejora calidad de embeddings y robustez a input ruidoso (Kudo: mejoras consistentes en low-resource y out-of-domain). Para PRE-ENTRENAMIENTO de LMs: sin números verificados — no encontré paper que lo mida en LM pretraining.",
+      "fit_3090_183m": "medium — costo computacional casi nulo (tokenización on-the-fly con dropout p≈0.1), pero requiere re-tokenizar on-the-fly (CPU-bound en el dataloader) y la evidencia es de NMT, no de LM.",
+      "expected_impact": "OPINIÓN: a 136M tokens (régimen data-hungry) puede actuar como regularización útil; con 1-2B tokens el efecto marginal probablemente baja. Prioridad baja-media.",
+      "implementation_cost": "1-2 días de integración (dataloader con tokenización estocástica); runs de control 2-4h.",
+      "risk": "Evidencia indirecta (NMT encoder-decoder); podría no transferir o incluso empeorar un LM diffusion con CE en posiciones enmascaradas."
+    },
+    {
+      "technique": "Corpora long-form open (fuentes concretas, tamaños y licencias) para armar 1-2B tokens",
+      "source": "Cards oficiales de HuggingFace + repos: HuggingFaceFW/fineweb-edu; allenai/dolma; togethercomputer/RedPajama-Data-1T; google-deepmind/pg19; wikimedia/wikipedia; gutenberg.org",
+      "date": "2024-2026",
+      "evidence": "FINEWEB-EDU (ODC-By 1.0): 1.3T tokens (score≥3) y 5.4T (score-2); total 5.84TB parquet; muestras listas: sample-10BT (~10B tokens gpt2, ~27GB) y sample/100BT; docs educativos completos, mediana ~738 tokens/doc, media ~1,100-1,180 (stats de comunidad sobre sample-100BT; subsets filtrados ≥1,000 tokens llegan a ~2,800 tokens/doc). URL: huggingface.co/datasets/HuggingFaceFW/fineweb-edu. DOLMA v1_7 (ODC-BY desde 2024-04-15): ~3T tokens, 4.5TB gzip, json.gz por subset en huggingface.co/datasets/allenai/dolma; incluye Project Gutenberg (55.6GB gzip), peS2o (papers académicos full-text), wiki; sample v1_6 = 16.4GB ≈ 10B tokens. REDPAJAMA-DATA-1T: 1.2T tokens (CC 878B, C4 175B, GitHub 59B, ArXiv 28B, Wikipedia 24B en 20 idiomas, StackExchange 20B); descarga directa con wget desde data.together.xyz/redpajama-data-1T/v1.0.0/urls.txt; OJO: subset 'book' (Gutenberg+Books3) DEFUNCT por copyright. SLIMPAJAMA-627B (Cerebras): 627B tokens, RedPajama limpio y dedupe (usado por Tao et al.): huggingface.co/datasets/cerebras/SlimPajama-627B. PG-19 (DeepMind): 28,602 libros COMPLETOS pre-1919, ~2B palabras (benchmark long-range de Rae et al., arXiv:1911.05507); bucket GCS 'deepmind-gutenberg' (link en github.com/google-deepmind/pg19); dominio público. PROJECT GUTENBERG directo: 79,571 ebooks, mirror rsync rsync://gutenberg.pglaf.org/gutenberg. WIKIPEDIA: wikimedia/wikipedia subset 20231101.en = 6.41M artículos completos (~71.8GB todos los idiomas; en inglés ≈ 11GB parquet), CC BY-SA 3.0/GFDL; dumps crudos en dumps.wikimedia.org. Estimación de tokens en (no verificada por paper): en.wiki ≈ 4-6B tokens, PG-19+Gutenberg ≈ 2-3B tokens, peS2o ≈ 30-40B.",
+      "fit_3090_183m": "high — 1-2B tokens se arma con: FineWeb-Edu sample-100BT filtrado a docs ≥1K tokens (~60-70B tokens disponibles) + PG-19/Gutenberg completo (~2-3B) + wiki en (~4-6B) + peS2o; todo descargable en horas con conexión normal; disco: ~100-200GB.",
+      "expected_impact": "Directo: 136M tokens es ~25x menos que Chinchilla para 183M (~20N tokens ≈ 3.5-4B); escalar a 1-2B con datos de calidad es la palanca #1 disponible (coherente con la conclusión de Xiong et al.: la calidad de los datos domina).",
+      "implementation_cost": "Descarga y prep: 1-2 días (parquet→texto→tokenize→bins). Entrenamiento: 33-67h GPU por 1-2B tokens.",
+      "risk": "Licencias: FineWeb-Edu/Dolma ODC-By (atribución), wiki CC BY-SA (share-alike), Gutenberg dominio público (pre-1929); NO usar Books3/Pile-books3 (retirado). Stats de longitudes de FineWeb-Edu son de terceros, no del card oficial."
+    },
+    {
+      "technique": "Evidencia sobre 'texto largo coherente mejora coherencia generativa' — MIXTA, con contra-evidencia importante",
+      "source": "Xiong et al., 'Effective Long-Context Scaling of Foundation Models', NAACL 2024, arXiv:2309.16039 (Meta/Together); + arXiv:2410.10210 (Salesforce); + Rae et al. arXiv:1911.05507; + Re3 EMNLP 2022 (aclanthology.org/2022.emnlp-main.296)",
+      "date": "2023-09 / 2024-10",
+      "evidence": "CONTRA: Xiong et al. (Llama-2-Long 7B/13B, continual pretraining 80B tokens a seq 32K): 'having abundant long texts in the pretrain dataset is not the key to achieving strong performance... the improvements of our pretrain data over the one used by Llama 2 mostly come from the quality of the data itself, instead of the length distribution difference'. Ablación: quitar casi todos los docs largos apenas cambia; lo que importa es entrenar con SECUENCIAS más largas + calidad. A FAVOR (etapa SFT, no pretrain): arXiv:2410.10210 ('Minimum Tuning to Unlock Long Output'): la falta de datos con SALIDAS largas y coherentes es la causa principal de la incapacidad de generar textos largos; con solo 666 muestras de alta calidad (largo+coherencia alineados a la instrucción) logran mejoras significativas en long-form length-following en varios modelos. INDIRECTO: PG-19 existe porque Rae et al. necesitaban docs largos para evaluar/modelar rango largo; Re3 muestra que +14% coherencia de plot se consigue con planificación en decoding (no data). CONCLUSIÓN HONESTA: NO encontré paper que aislele 'documentos completos vs fragmentos cortos de igual calidad en pretraining → mejor coherencia de discurso generada' a escala small. Sin números verificados para ese claim específico.",
+      "fit_3090_183m": "high — la implicancia práctica para MDLM a seq 128: (a) no hace falta perseguir 'libros completos' per se, sí docs coherentes ≥ seq len; (b) lo análogo al 'entrenar con secuencias más largas' de Xiong sería subir seq 128→256/512 (dominio de otro agente, pero interdependiente); (c) el análogo de 2410.10210 con el AR-oracle ya existente (Qwen teacher) es generador de datos long-form.",
+      "expected_impact": "Reencuadre: la palanca 'long-form' opera más por (i) ventanas de entrenamiento que no crucen fronteras de documentos y (ii) datos con estructura discursiva completa de calidad, que por longitud bruta.",
+      "implementation_cost": "Cero costo extra si se hace al preparar el dataset del finding anterior.",
+      "risk": "Extrapolación desde 7B/seq32K a 183M/seq128 es OPINIÓN; el régimen de un modelo que nunca vio >128 tokens juntos es distinto al de continual pretraining de Llama 2."
+    },
+    {
+      "technique": "Sampling de ventanas dentro del documento (nunca packear a través de bordes de doc) + upsampling selectivo de docs largos",
+      "source": "Práctica estándar del ecosystema (FineWeb blog 2024, Llama 2 data pipeline); Xiong et al. upsampló docs largos en su recipe final",
+      "date": "2023-2024",
+      "evidence": "Sin un paper que lo aisle con números en small scale — práctica estándar: cada ventana de entrenamiento debe venir de UN solo documento; las ventanas que concatenan el final de un doc con el principio de otro enseñan transiciones incoherentes (exactamente el síntoma 'deriva temática' del brief).",
+      "fit_3090_183m": "high — a seq 128, con media de ~1.1K tokens/doc en FineWeb-Edu hay ~8+ ventanas no solapadas por doc; Gutenberg/wiki aportan docs de miles de tokens.",
+      "expected_impact": "OPINIÓN: es el fix de datos más barato con mayor efecto esperado sobre deriva temática; sin números verificados (nadie publica este ablation aislado).",
+      "implementation_cost": "Horas de código en el dataloader/dataset builder; cero costo GPU extra.",
+      "risk": "Bajo; descarta fragmentos <128 tokens (perdida menor de datos)."
+    }
+  ],
+  "top_recommendations": [
+    {
+      "rank": 1,
+      "technique": "Escalar datos de 136M → 1-2B tokens con mix long-form de calidad: FineWeb-Edu (docs ≥1K tokens) + PG-19/Gutenberg + Wikipedia en + peS2o, con sampling de ventanas dentro de documento",
+      "why": "136M tokens es ~25x menos que el óptimo Chinchilla para 183M; Tao et al. muestran que el vocab/data deben co-escalarse; Xiong et al. muestran que CALIDAD de datos > distribución de longitud; 2410.10210 muestra que textos largos coherentes en entrenamiento desbloquean generación larga. Es la única palanca de este dominio con magnitud de 'salto cualitativo'.",
+      "how_concrete": "1) Descargar FineWeb-Edu sample/100BT (HF parquet) + PG-19 (GCS deepmind-gutenberg) + wikimedia/wikipedia 20231101.en + Dolma/peS2o subset. 2) Filtrar FineWeb-Edu a docs ≥1,000 tokens. 3) Tokenizar (tokenizer actual) a bins densos; samplear SOLO ventanas de 128 dentro de un mismo doc (descartar colas <128). 4) Mix sugerido OPINIÓN: 70% FineWeb-Edu-filtrado / 15% libros / 10% wiki / 5% papers. 5) Entrenar mismo MDLM v4.1, mismo schedule relativo.",
+      "effort": "Prep de datos: 1-2 días CPU/disco (~150GB). Entrenamiento: ~33h (1B tokens) a ~67h (2B) en la 3090 — 1.5-3 días por corrida.",
+      "expected_gain": "PPL held-out debería caer fuerte por 10x+ datos (la ppl 62.4 actual está limitada por datos); el efecto buscado en generación: menos deriva temática y más variedad (más docs distintos vistos). Ganancia exacta no predecible sin correrlo.",
+      "first_experiment": "Run de control de 4-6h: re-entrenar con 300-500M tokens del mix nuevo (mismo tokenizer, mismas épocas relativas 1 paso de datos) y comparar ppl held-out + 20 samples ciegos vs modelo actual. Si ppl no baja ≥15%, el pipeline de datos tiene un problema — falsa la hipótesis baratamente."
+    },
+    {
+      "rank": 2,
+      "technique": "Re-entrenar BPE a 16K-32K + byte-level, PERO condicionado al salto de datos (no antes)",
+      "why": "Tao et al.: en data-constrained el vocab óptimo baja (24K>32K en undertraining) — con 136M tokens el 10K actual no es el problema; con 1-2B tokens un 16K-32K se justifica y compra ~15-25% más texto por ventana de 128 (Dagan: compresión = contexto efectivo, el tamaño per se es neutral en downstream). Byte-level elimina <UNK> para siempre.",
+      "how_concrete": "Entrenar BPE byte-level 16K, 24K y 32K sobre el mix del rank 1 (1-2B chars, HF tokenizers, <1h). Medir chars/token vs 10K actual en held-out. Elegir por curva de compresión (ganancias marginales decaen exponencialmente con V — Fig.4 Dagan). Integrar: solo cambia el tokenizer + tamaño de embedding/head en el config del MDLM.",
+      "effort": "Tokenizer: <1 día. Re-entrenos A/B: 2 runs de 33h (1B tokens) con 10K vs 24K → 2-3 días GPU total.",
+      "expected_gain": "Modesto en calidad intrínseca (Dagan: Δdownstream ≈ 0 por vocab solo); real pero acotado: +15-25% de contexto efectivo por ventana a seq 128, y base más limpia para future scaling. NO esperar el salto cualitativo de esto.",
+      "first_experiment": "Antes de cualquier GPU: medir fertilidad (chars/token) del BPE 10K actual vs candidatos 16K/24K/32K sobre 100MB del nuevo corpus (CPU, minutos). Si el 10K ya está a <10% de la compresión del 32K, descartar el cambio; si está 20%+ atrás, el A/B de 1 día vale la pena."
+    },
+    {
+      "rank": 3,
+      "technique": "Ventanas de entrenamiento intra-documento estrictas (anti-deriva) — incluido en rank 1 pero listado como check independiente",
+      "why": "El síntoma #1 del brief (deriva temática, transiciones sin hilo) es consistente con ventanas que cruzan bordes de documento: el modelo aprende que CUALQUIER salto temático es probable en el próximo token. Fix de costo cero.",
+      "how_concrete": "En el builder del dataset: agrupar por doc_id, emitir ventanas [i:i+128] dentro del doc, descartar colas <128; opcional: BOS al inicio de cada ventana que empieza un doc nuevo para marcar frontera (MDLM: token especial enmascarable).",
+      "effort": "2-4h de código; cero GPU extra.",
+      "expected_gain": "OPINIÓN: efecto directo sobre coherencia local→global de samples; sin números verificados en literature para small scale.",
+      "first_experiment": "Inspección: contar qué fracción de las 1.06M seqs actuales cruza un borde de doc (script de 10 min sobre los bins + offsets). Si >5% cruza, el fix es prioritario sobre cualquier otra cosa de este dominio."
+    },
+    {
+      "rank": 4,
+      "technique": "Generar datos long-form sintéticos con el AR-oracle ya implementado (Qwen teacher) estilo 2410.10210, y mezclarlos en el re-entrenamiento",
+      "why": "2410.10210 (Salesforce): la variable causal para generación larga es tener ejemplos largos y coherentes ALINEADOS A UN OBJETIVO (666 muestras bastaron en SFT). El setup del usuario ya tiene el pipeline teacher-forcing; aplicarlo a PRE-entrenamiento como data augmentation long-form es la adaptación natural.",
+      "how_concrete": "Tomar docs largos del mix (rank 1); para cada uno, generar 'continuaciones' largas coherentes con Qwen3-0.6B desde prefixes de 64 tokens a temperatura baja; filtrar por coherencia (el AR-oracle ya regenera segmentos malos); mezclar ~5-10% de estos ejemplos como datos extra.",
+      "effort": "Generación: ~1 día de compute (Qwen 0.6B es barato en 3090); integración al mix: horas.",
+      "expected_gain": "Sin números verificados para pretraining (el paper es SFT); mecanismo plausible para 'discurso sostenido'. Riesgo de sesgo del teacher en la distribución.",
+      "first_experiment": "Generar 50M tokens oraculares, fine-tune ligero (2-4h) del MDLM actual solo con eso + replay, y evaluar samples largos a ciegas. Si no hay diferencia visible, descartar."
+    },
+    {
+      "rank": 5,
+      "technique": "BPE-dropout (p=0.1) en el re-entrenamiento grande",
+      "why": "Evidencia NMT sólida (+2.3 BLEU máx, mejor embeddings y robustez, Kudo 2018 / Provilkov 2020); en régimen 1-2B tokens actúa como regularización de segmentación; costo marginal.",
+      "how_concrete": "Tokenización on-the-fly en el dataloader con dropout de merges p=0.1 (tokenizers.BPE(dropout=0.1)); inferencia con BPE determinístico estándar.",
+      "effort": "1-2 días de integración (dataloader CPU-bound — verificar que no cuelgue el throughput GPU); puede requerir pre-tokenizar K variantes por epoch como atajo.",
+      "expected_gain": "Desconocido para LM pretraining — sin números verificados; esperar efecto pequeño vs palancas 1-3.",
+      "first_experiment": "Run corto 136M tokens con y sin dropout (2x4h); comparar ppl y robustez de samples a prompts con typos/ruido. Si ppl empeora >2%, descartar."
+    }
+  ],
+  "sources": [
+    {"title": "Tao et al., Scaling Laws with Vocabulary: Larger Models Deserve Larger Vocabularies (NeurIPS 2024)", "url": "https://arxiv.org/abs/2407.13623", "reliability": "alta", "date": "2024-07 (v3 2024-11)"},
+    {"title": "Dagan, Synnaeve, Rozière, Getting the most out of your tokenizer for pre-training and domain adaptation", "url": "https://arxiv.org/abs/2402.01035", "reliability": "alta", "date": "2024-02"},
+    {"title": "HuggingFaceFW/fineweb-edu (card oficial: 1.3T/5.4T tokens, ODC-By, samples 10BT/100BT)", "url": "https://huggingface.co/datasets/HuggingFaceFW/fineweb-edu", "reliability": "alta", "date": "2024-05"},
+    {"title": "Penedo et al., The FineWeb Datasets (arXiv:2406.17557)", "url": "https://arxiv.org/abs/2406.17557", "reliability": "alta", "date": "2024-06"},
+    {"title": "allenai/dolma (card: v1_7 4.5TB ~3T tokens, ODC-BY, subsets Gutenberg/peS2o/wiki, sample 10B)", "url": "https://huggingface.co/datasets/allenai/dolma", "reliability": "alta", "date": "2024-04"},
+    {"title": "togethercomputer/RedPajama-Data-1T (1.2T tokens por subset, urls.txt directo, book subset defunct)", "url": "https://huggingface.co/datasets/togethercomputer/RedPajama-Data-1T", "reliability": "alta", "date": "2023-05"},
+    {"title": "google-deepmind/pg19 (28,602 libros completos pre-1919, link a bucket GCS)", "url": "https://github.com/google-deepmind/pg19", "reliability": "alta", "date": "2020"},
+    {"title": "Rae et al., Compressive Transformers for Long-Range Sequence Modelling (origen de PG-19)", "url": "https://arxiv.org/abs/1911.05507", "reliability": "alta", "date": "2019-11"},
+    {"title": "wikimedia/wikipedia (20231101.en: 6.41M artículos, CC BY-SA/GFDL)", "url": "https://huggingface.co/datasets/wikimedia/wikipedia", "reliability": "alta", "date": "2023-11"},
+    {"title": "Project Gutenberg mirrors (rsync gutenberg.pglaf.org, 79,571 ebooks)", "url": "https://www.gutenberg.org/MIRRORS.ALL", "reliability": "alta", "date": "2026-10"},
+    {"title": "Xiong et al., Effective Long-Context Scaling of Foundation Models (NAACL 2024) — ablation: long texts abundantes no son la clave", "url": "https://arxiv.org/abs/2309.16039", "reliability": "alta", "date": "2023-09"},
+    {"title": "Xue et al., ByT5: Towards a Token-Free Future (TACL 2022)", "url": "https://arxiv.org/abs/2105.13626", "reliability": "alta", "date": "2021-05"},
+    {"title": "Kudo, Subword Regularization (ACL 2018)", "url": "https://arxiv.org/abs/1804.10959", "reliability": "alta", "date": "2018-04"},
+    {"title": "Provilkov et al., BPE-Dropout (ACL 2020)", "url": "https://arxiv.org/abs/1910.13267", "reliability": "alta", "date": "2019-10"},
+    {"title": "Minimum Tuning to Unlock Long Output from LLMs with High Quality Data as the Key (Salesforce)", "url": "https://arxiv.org/abs/2410.10210", "reliability": "media-alta", "date": "2024-10"},
+    {"title": "cerebras/SlimPajama-627B (627B tokens dedup; citado como dataset de Tao et al.)", "url": "https://huggingface.co/datasets/cerebras/SlimPajama-627B", "reliability": "media", "date": "2023-11"},
+    {"title": "mdonigian/fineweb-edu-curated (stats de longitud: mediana 738, media 1,180 tokens/doc)", "url": "https://huggingface.co/datasets/mdonigian/fineweb-edu-curated", "reliability": "media (dataset de comunidad, stats no oficiales)", "date": "2024"},
+    {"title": "Yang et al., Re3: Generating Longer Stories With Recursive Reprompting and Revision (EMNLP 2022)", "url": "https://aclanthology.org/2022.emnlp-main.296/", "reliability": "alta", "date": "2022-10"}
+  ],
+  "gaps": "NO pude verificar: (1) el número exacto de vocab óptimo para ~175M no-vocab params — la Tabla 1 de Tao et al. empieza en 3B; existe la calculadora hf.co/spaces/sail/scaling-with-vocab-demo pero no la ejecuté (mi estimación 16-32K para 1-2B tokens es OPINIÓN calibrada con sus curvas). (2) Si el BPE 10K actual del repo es byte-level o emite <UNK> — no leí el código (regla read-only del brief, y no inspeccioné el repo). (3) No existe (o no encontré) paper que aislele causalmente 'docs completos vs fragmentos cortos de igual calidad en PRE-entrenamiento → mejor coherencia de discurso generada' a escala small; la evidencia más cercana es de SFT (2410.10210) y es CONTRA para el caso de abundancia de docs largos en continual pretraining (Xiong et al.). (4) Stats de longitud de docs de FineWeb-Edu vienen de datasets de comunidad (mdonigian, Yxanul), no del card oficial. (5) No medí fertilidad real del tokenizer actual (requiere acceso al modelo del tokenizer del repo). (6) Estimaciones de tokens de wiki-en/PG-19/peS2o son órdenes de magnitud derivados de cards, no conteos propios."
+}

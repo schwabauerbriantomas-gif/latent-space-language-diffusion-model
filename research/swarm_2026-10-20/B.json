@@ -1,0 +1,239 @@
+{
+  "agent": "B",
+  "domain": "decoding/inferencia para calidad en masked diffusion LMs",
+  "findings": [
+    {
+      "technique": "Semi-autoregressive block decoding (semi-AR remasking): generar en bloques de 16-32 tokens, condicionando cada bloque en los ya cometidos, con difusión dentro del bloque",
+      "source": "LLaDA (Nie et al., arXiv:2502.09992, ap. B.4 'Block Diffusion sampling' / semi-autoregressive remasking) + MDLM SAR (Sahoo et al., arXiv:2406.07524, sec. 4.2)",
+      "date": "2025-02",
+      "evidence": "LLaDA-8B-Instruct: GSM8K 69.4 (pure diffusion) vs 77.5 (block L'=32) y 78.6 (L'=8); HumanEval 49.4 vs 46.3, MBPP 41.0 vs 34.2 (Tabla 8). MDLM (nuestro mismo family, contexto 128): decodificación SAR de 2048 tokens logró GenPPL 27.18 vs SSD-LM 35.43, ~25-30x más rápido, EN una RTX 3090 (Tabla 5). Bloques pequeños (8-32) rinden mejor que bloques grandes en tasks con instruct-style data.",
+      "fit_3090_183m": "high — SOLO inferencia: el modelo ya es bidireccional y con carry-over unmasking los tokens del prefijo se copian; el contexto 128 nativo se respeta (prefijo + bloque <= 128); coste marginal ~0.",
+      "expected_impact": "Es LA palanca más directa para 'discurso sostenido': cap la propagación de errores a un bloque, da anclaje causal izquierdo (ataque directo a la deriva temática), y extiende generación efectiva más allá de 128 tokens (concatenando bloques). OPINIÓN: mayor salto cualitativo esperado de toda la lista para texto abierto.",
+      "implementation_cost": "bajo: 1-2 días. Envolver el loop actual: fijar prefijo (últimos 96 tokens generados), inicializar la ventana de 32 tokens en [MASK], correr el sampler actual (cosine, 16-32 steps) dentro de la ventana, repetir. Vocab/EOS: descartar tras EOS.",
+      "risk": "Calidad depende del overlap del prefijo; si el modelo nunca vio prefijos 'generados por sí mismo' puede haber mismatch de estilo (mitigable con temperatura baja y AR-oracle sobre el borde del bloque). LLaDA advierte que sampling puramente AR (bloque=1) colapsa en modelos SFT (GSM8K 0.0) — usar bloques >= 8."
+    },
+    {
+      "technique": "Low-confidence remasking (Dream/LLaDA-style) dentro del bloque: en cada step re-enmascarar los tokens de menor confianza y re-predict",
+      "source": "LLaDA ap. remasking ablation (arXiv:2502.09992) + Dream 7B (Ye et al., arXiv:2508.15487; GitHub DreamLM/Dream: alg='maskgit_plus'/'entropy') + linaje MaskGIT (2202.04200)",
+      "date": "2025-08",
+      "evidence": "LLaDA 8B: random remasking 52.3 (Base) / 72.0 (Instruct) vs lowest-confidence 64.7 / 12.9 — ¡el remasking de baja confianza SOLO destruye al modelo instruct! — vs lowest-confidence + semi-AR 64.4 / 73.8 (mejor combo). Dream usa por defecto orden por confianza/entropía con steps=max_new_tokens y temperature 0.2, top_p 0.95 en su ejemplo oficial.",
+      "fit_3090_183m": "high — SOLO inferencia; reemplaza el commit paralelo por score-and-remask. Ya tenés los logits por posición.",
+      "expected_impact": "Permite que tokens 'maldecidos' temprano se revisen en steps posteriores en vez de fosilizarse: corrección del error local que hoy deriva en colapso repetitivo. CRÍTICO: combinarlo con semi-AR (hallazgo LLaDA), nunca solo en canvas global.",
+      "implementation_cost": "bajo: ~1 día. En cada step: samplear candidatos en todas las posiciones mask, computar score (top1 prob, margen top1-top2 tipo 'topk_margin' de 2502.06768, o entropía), commitear solo el cuantil que toca por el schedule, re-enmascarar el resto.",
+      "risk": "Paper 2610.24795 (oct 2026) muestra que el orden por confianza reduce diversidad y colapsa forks de alta entropía (sesgo de muestreador); en texto creativo, alternar orden por confianza con algo de aleatoriedad (alg_temp de Dream) o usar remasking aleatorio dentro del bloque."
+    },
+    {
+      "technique": "ReMDM: sampler con remasking principiado (proceso backward custom que re-enmascara tokens YA cometidos) = iterative refinement + inference-time scaling",
+      "source": "ReMDM (Wang, Schiff, Sahoo, Kuleshov — arXiv:2503.00307, NeurIPS 2025)",
+      "date": "2025-03",
+      "evidence": "Sobre OWT con MDLM-like models: MAUVE 2.23x vs MDLM con samplers correctores (FB/DFM) y 15.62x vs masked diffusion base; al reducir steps la degradación es mucho menor; 'increasing sampling steps approaches AR quality'. Detalle implementable: muestrear en float64 — el sampling en fp32 'curb diversity' significativamente (nota citando 2409.02908).",
+      "fit_3090_183m": "high — SOLO inferencia, diseñado EXACTAMENTE para modelos masked diffusion preentrenados (la familia de nuestro MDLM); código público (remdm.github.io).",
+      "expected_impact": "Convierte el presupuesto de steps en un knob de calidad monótono (más steps => mejor texto, no solo más lento). Es la versión 'principiada' del remasking ad-hoc: probabilidad de remask como hiperparámetro del backward process.",
+      "implementation_cost": "medio-bajo: 2-3 días para portar el sampler a nuestro loop (es un cambio al proceso de transición, no al modelo).",
+      "risk": "Ganancias medidas en MAUVE/OWT con modelos 110M entrenados a 33B+ tokens; nuestro modelo vio 136M tokens — el margen de mejora del sampler debería mantenerse (es sampler puro) pero la magnitud no está garantizada."
+    },
+    {
+      "technique": "Confidence-threshold commit + parallel decoding revokable (WINO 'Wide-In, Narrow-Out'): des-enmascarar agresivo y luego RE-ENMASCAR lo poco confiable bajo contexto enriquecido",
+      "source": "WINO / 'Roll Out and Roll Back' (arXiv:2605.16941) + Fast-dLLM confidence-aware parallel decoding (arXiv:2505.22618, ICLR 2026)",
+      "date": "2026-05",
+      "evidence": "LLaDA GSM8K: 73.24% @256 steps (1 tok/step) vs 71.11% @128 (2 tok) vs 64.67% @64 (4 tok) — parallel naive degrada. WINO training-free @128 steps: 75.82% (+2.58 SOBRE el baseline lento) con 5.66-6.10x speedup; @512: 79.91 (+5.31) 6.98x. Fast-dLLM: commitear solo tokens con confianza > umbral (en vez de top-K) mantiene calidad con hasta 13.3x aceleración; LLaDA2.0 corrobora: umbral 0.95 => calidad 70.15 vs 0.85 => 67.90.",
+      "fit_3090_183m": "high — SOLO inferencia. Reemplaza el cosine schedule fijo por threshold dinámico + re-masking posterior.",
+      "expected_impact": "Calidad >= decodificación token-a-token con ~4-6x menos steps. Para nosotros el beneficio doble: mismo presupuesto => más steps efectivos => mejor coherencia; o mismo wallclock y steps para experimentar más rápido.",
+      "implementation_cost": "medio: 2-4 días. Cada step: forward, commitear todo lo que supera umbral (empezar 0.9), en el siguiente step re-evaluar tokens commiteados y re-enmascarar los que cayeron bajo umbral bajo el nuevo contexto.",
+      "risk": "Evidencia en modelos 7-8B en tareas con respuesta verificable (GSM8K/MMaDA); transferencia a 183M texto abierto no verificada. El re-masking infinito puede oscilar: cap de re-masks por posición (WINO lo hace)."
+    },
+    {
+      "technique": "Pasos vs calidad: steps = longitud (calidad tope), Prophet early-commit para recortar sin perder",
+      "source": "LLaDA (arXiv:2502.09992: steps seteados IGUAL a la longitud de respuesta para máx calidad) + Prophet (arXiv:2508.19982) + Dream quality-speed (arXiv:2508.15487 sec. 5.5.2)",
+      "date": "2025-08",
+      "evidence": "LLaDA usa 256-512 steps (1 token/step) para benchmarks de generación. Prophet: 97-99% de instancias GSM8K/MMLU ya decodifican bien a la MITAD de los steps (early answer convergence); monitor del gap de confianza top1-top2 decide cuándo hacer 'all-in': -3.4x steps sin pérdida. Dream: entre 5-20 steps supera a Qwen2.5-7B en speed Y quality en Countdown (planning), pero la calidad sigue subiendo con más steps.",
+      "fit_3090_183m": "high — SOLO inferencia; con 183M y seq 128, un forward es barato (decenas de ms), 128 steps es totalmente viable en 3090.",
+      "expected_impact": "Nuestros 32-64 steps sobre seq 128 son 2-4 tokens/step — zona de degradación paralela según LLaDA/Fast-dLLM. Subir a 96-128 steps (1-1.3 tok/step) con threshold-commit debería subir coherencia medible. Prophet-gap como stop-temprano devuelve el wallclock.",
+      "implementation_cost": "bajo: 0.5-1 día (subir steps + implementar gap top1-top2 como criterio de early-stop).",
+      "risk": "Marginal: solo coste de tiempo; sin riesgo de calidad (más steps nunca empeoró en la literatura citada)."
+    },
+    {
+      "technique": "Temperature: bajar de 0.7 a ~0.0-0.2 para coherencia; temperatura dinámica por entropía (EDT) donde se necesita diversidad",
+      "source": "Dream 7B README/defaults (temperature 0.0 por defecto; 'smaller = more accurate, larger = more diverse; if repeated results, increase') + LLaDA2.0 (arXiv:2512.15745: temperature 0.0 en todas las evals) + EDT (arXiv:2403.14541)",
+      "date": "2025-12",
+      "evidence": "Todos los dLLM de producción usan T=0.0 para calidad máxima (LLaDA2.0, Dream default). Pero nuestro síntoma 'colapso a repetición a temperatura baja' es real y documentado: Dream recomienda SUBIR temperatura si hay repetición. EDT (AR LLMs): T dinámico por token T = T0 * N^(theta/Entropia) domina a T fijo y a KLD en quality-diversity trade-off (p.ej. ROUGE XLSum 23->29 con la T correcta; EDT ~coste cero); TAPS (2601.22629) usa EDT como baseline dinámico dentro de dLLMs.",
+      "fit_3090_183m": "high — SOLO inferencia, trivial.",
+      "expected_impact": "Con guidance anti-repetición propio ya instalado, T baja (0.0-0.3) + top-p debería dar sintaxis/coherencia máxima SIN el colapso repetitivo clásico (que el guidance amortigua). EDT como upgrade: tokens confiables casi-greedy, tokens inciertos más diversos — ataca deriva temática y repetición a la vez.",
+      "implementation_cost": "trivial: horas (T fija); EDT 0.5 día (una línea de entropy del post-softmax + reshape).",
+      "risk": "Bajo. En texto creativo T=0 puro puede ser soso; EDT o T 0.3-0.5 como punto medio. OJO: la evidencia EDT es de AR LLMs; adaptación a per-position distributions de MDLM es razonable pero sin paper directo que lo valide (ver gaps)."
+    },
+    {
+      "technique": "Anti-EOS / control de terminación: annealing de la prioridad del EOS y confidence-zero",
+      "source": "LLaDA ap. B.4 (setear confidence del EOS a 0 durante sampling para evitar cortes prematuros en HumanEval/GSM8K/etc.) + 'Early Decisions Matter / proximity bias' (arXiv:2604.10567: EOS temperature annealing)",
+      "date": "2026-04",
+      "evidence": "LLaDA-8B-Instruct: sin el fix, la proporción de EOS se dispara y las generaciones quedan cortísimas. 2604.10567: escalar el logit del EOS con temperatura que anneala de fuerte supresión a 1 extiende tokens efectivos GSM8K de 157.2 a 188.6; con init-position planner, Prob-Margin 40.9 -> 54.7 GSM8K. Además: el primer token des-enmascarado condiciona desproporadamente la trayectoria (proximity bias) — evitar commits de EOS/inicio en steps tempranos.",
+      "fit_3090_183m": "high — SOLO inferencia, compatible con cualquier remasking.",
+      "expected_impact": "Si el MDLM corta o rellena con padding, esto es ganancia inmediata de 'discurso sostenido' (texto más largo y completo). También se aplica al revés: si nunca termina, boostear EOS al final del schedule.",
+      "implementation_cost": "trivial: horas. Módulo en el guidance-logit stack que ya tenés.",
+      "risk": "Mínimo; tunear el schedule de annealing (lineal de supresión fuerte a 1)."
+    },
+    {
+      "technique": "Fast-dLLM: KV-cache aproximado por bloques (DualCache) para atención bidireccional — velocidad que financia más steps",
+      "source": "Fast-dLLM (Wu, Zhang, Xue, Liu, Diao, Zhu, Luo, Han, Xie — HKU/NVIDIA/MIT, arXiv:2505.22618, ICLR 2026; código NVIDIA Github)",
+      "date": "2025-05",
+      "evidence": "Cache solo: 2-3.6x throughput; +confidence-parallel: hasta 27.6x (LLaDA GSM8K len 512: 11x; Dream MBPP 7.8x) con pérdida de accuracy mínima. Clave teórica: la degradación paralela viene de romper dependencias bajo independencia condicional — el threshold-commit lo mitiga. MDLM (2406.07524 Supl. E.2): si el modelo NO condiciona en t, se cachea x_theta y se saltan steps (2x).",
+      "fit_3090_183m": "high — SOLO inferencia; nuestro 183M con seq 128 ya es rápido, el cache libera presupuesto para 128+ steps o best-of-N barato. Implementación PyTorch directa (cachear K/V de posiciones no cambiadas entre steps adyacentes).",
+      "expected_impact": "Indirecto en calidad (permite steps↑ y N↑ al mismo wallclock). Directo en throughput de experimentación: 3-10x más muestras/hora para evaluar técnicas cualitativas.",
+      "implementation_cost": "medio: 3-5 días de ingeniería PyTorch attention (manual KV cache fuera de SDPA, o recompute parcial).",
+      "risk": "Cache aproximado: verificar con GenPPL/MAUVE que no degrada; con seq 128 el win absoluto es menor que a 512."
+    },
+    {
+      "technique": "Self-speculative decoding para dLLMs (SSD / Spiffy / SimSD): el propio modelo draftea y verifica en un forward con árboles; LOSSLESS (salida idéntica al decoding lento)",
+      "source": "SSD (Gao et al., arXiv:2510.04147), Spiffy (arXiv:2509.18085), SimSD (Cui et al., arXiv:2606.02544)",
+      "date": "2025-10",
+      "evidence": "SSD: hasta 3.46x speedup con salida IDÉNTICA al stepwise decoding en LLaDA y Dream (sin módulo auxiliar). Spiffy: 2.8-3.1x provably distribution-preserving, 7.9x combinado con KV-cache/multi-token. SimSD: training-free 7.46x throughput 'maintaining and even improving average generation quality' (SDAR-family).",
+      "fit_3090_183m": "high — SOLO inferencia; el modelo chico hace verificación barata.",
+      "expected_impact": "Calidad: NULA por sí mismo (es lossless-speed), pero habilita el regimen de máxima calidad (1 token/step o muchos steps) a coste práctico, y best-of-N con el mismo modelo.",
+      "implementation_cost": "medio: 3-5 días (árbol de verificación jerárquico sobre nuestras posiciones enmascaradas).",
+      "risk": "Complejidad de implementación; el acceptance-rate en un modelo 183M (logits más planos) puede ser menor que en 7-8B."
+    },
+    {
+      "technique": "CFG (classifier-free guidance) discreto en inferencia: p̃ ∝ p(r0|prompt,rt)^(1+w) / p(r0|mask,rt)^w",
+      "source": "LLaDA 'unsupervised CFG' (arXiv:2502.09992 ap. B.3, Eq. 16) + Simple Guidance Mechanisms for Discrete Diffusion (Schiff et al., ICLR 2025, arXiv:2412.10193)",
+      "date": "2025-02",
+      "evidence": "LLaDA 8B Base con CFG (escala en {0.5,1,1.5,2}): ARC-C 45.9->47.9, HellaSwag 70.5->72.5, GPQA 25.2->26.1, PIQA 73.6->74.4 — mejora consistente. Schiff: D-CFG/D-CBG funcionan en discrete diffusion y son MÁS útiles que en AR.",
+      "fit_3090_183m": "low-medium COMO ESTÁ — NO es solo-inferencia para nosotros: requiere que el modelo haya sido entrenado a veces sin prompt (cond/uncond). Nuestro MDLM es incondicional puro: no existe la rama condicional. Requiere fine-tune mínimo: re-entrenar 1-3h con 10-20% de batches 'prompt fully-masked' o condicionar a prompt real.",
+      "expected_impact": "Mediano (+1-3 pts benchmark en modelos 8B); menos relevante para nuestro objetivo actual de texto incondicional coherente. Prioridad baja vs semi-AR/remasking.",
+      "implementation_cost": "alto relativo: fine-tune corto (horas en 3090) + doble forward por step en inferencia.",
+      "risk": "Cambiar el objetivo de entrenamiento puede mover la ppl; hay que re-validar held-out."
+    },
+    {
+      "technique": "Entropy / diversity guidance en logits (SAKE): señal de guía computada del propio output y sumada a los logits por step, maximizando Rényi-2 entropía en espacio semántico",
+      "source": "SAKE 'Exploring More to Solve More: Boosting Diversity in Text Diffusion Models via Entropy-Based Guidance' (arXiv:2608.00024) + espectro D-CFG de Schiff (2412.10193)",
+      "date": "2026-08",
+      "evidence": "Training-free, inference-time: agrega al logit una señal de diversidad (kernel semántico sobre embeddings) con teoría de dinámica de entropía (Prop. 4.1: cambio de Shannon entropy ~ -covarianza entre log-probs y señal). Muestra que temperatura estática sacrifica fidelity por coverage mientras el guidance entra solo donde hay redundancia. Cuantitativa en diversidad semántica/lexica; 'sin números verificados' para coherencia global.",
+      "fit_3090_183m": "high — SOLO inferencia; es conceptualmente el mismo patrón que nuestro guidance-logit stack (repetición/n-gram/top-p bias): suma otra señal que penaliza tokens que NO aportan información nueva vs lo ya generado.",
+      "expected_impact": "Ataca directamente repetición/deriva temática (diversidad semántica SIN subir temperatura). Complementario al guidance actual: el nuestro es léxico (n-gramas), SAKE es semántico (embeddings).",
+      "implementation_cost": "medio: 2-3 días (requiere embeddings por token — el propio modelo o el encoder de SplatsDB sirve).",
+      "risk": "Paper muy reciente (ago 2026), evaluación principalmente en diversidad; ganancia en coherencia global no cuantificada. Ajuste de peso de guía sensible."
+    },
+    {
+      "technique": "Sesgo del muestreador: orden por confianza colapsa forks de alta entropía; Fork-First Sampling (decidir primero las decisiones globales)",
+      "source": "'Who Gets Unmasked? Sampler-Induced Bias in Diffusion Language Models' (arXiv:2610.24795)",
+      "date": "2026-10",
+      "evidence": "En LLaDA y Dream: los samplers 'peeking' (commitear lo más probable) amplifican estereotipos y colapsan distribuciones de opinión; el orden por confianza pospone forks de alta entropía y los colapsa (más aún con parallel decoding rápido). La 'belief' del modelo en un forward correlaciona 0.95-0.97 con el sampling fiel; Fork-First (resolver el fork ANTES de escribir el resto, +1 forward pass) mejora fluidez y fidelidad distribucional.",
+      "fit_3090_183m": "high — SOLO inferencia; conceptualmente simple.",
+      "expected_impact": "Para texto abierto (cartas, listas, discurso): comprometer PRIMERO los tokens estructurales de alta entropía (tópico/entidad principal) y rellenar después reduce deriva temática. Es una justificación teórica del patrón 'plan-then-fill' aplicable a nuestro sampler con una pasada extra.",
+      "implementation_cost": "medio: 1-2 días (identificar posiciones de mayor entropía marginal en el primer forward, commitearlas primero con muestreo fiel, luego el schedule normal).",
+      "risk": "Paper oct-2026 sin código público verificado por mí; efecto principal demostrado en fairness/diversidad, la extensión a coherencia de discurso es OPINIÓN informada."
+    },
+    {
+      "technique": "Self-corrección tipo AR-oracle + speculative híbrido: AR chico draftea bloques, MDLM verifica/refina (o inverso)",
+      "source": "SpecDiff (arXiv:2408.05636: difusión draftea para AR target, 7.2x) + DEER (arXiv:2512.15176: dLLM draftera bloques de hasta 32 tokens aceptados vs 10 de EAGLE-3, 5.54x HumanEval) — ambos con training de alineación; nuestro AR-oracle ya existe",
+      "date": "2025-12",
+      "evidence": "DEER: acceptance length hasta 32 tokens vs 10 de EAGLE-3; SpecDiff hasta 7.2x vs generación estándar. Ambos requieren distilar/entrenar el drafter (2-stage en DEER). Nuestro pipeline ya tiene Qwen3-0.6B teacher-forcing (AR-oracle) para regenerar segmentos.",
+      "fit_3090_183m": "medium — la combinación exacta 'AR 0.6B draftea segmento, MDLM con remasking refina/acepta' NO tiene paper directo (OPINIÓN nuestra, análoga a DEER invertido); sin training no es lossless, es heurística de refinamiento.",
+      "expected_impact": "Potencial alto en coherencia global: el AR aporta plan causal de bajo costo, el MDLM aporta refinamiento bidireccional e infilling. Es la formalización de lo que el AR-oracle ya hace ad-hoc.",
+      "implementation_cost": "medio: 3-5 días de orchestration sobre el pipeline actual (drafter->mask del segmento peor puntuado->re-denoise local).",
+      "risk": "Sin garantía distribucional; riesgo de que el texto final 'huela' a Qwen (fuga de estilo). Mantener el MDLM como último paso de refinamiento global."
+    },
+    {
+      "technique": "Calidad seq 128 vs 512 + model scheduling: la degradación paralela crece con la longitud; los pasos medios del trayecto son los más sensibles",
+      "source": "Fast-dLLM (2505.22618: peor degradación a len 512) + LLaDA (256-512 steps para tasks largas) + 'Not All Denoising Steps Are Equal' (arXiv:2604.02340: pasos del MEDIO del trayecto son los críticos; early/late toleran modelo chico, 17% FLOPs-off con degradación mínima)",
+      "date": "2026-04",
+      "evidence": "Fast-dLLM: la ganancia de cache y la pérdida paralela son mayores a seq 512 que a 256. 2604.02340: reemplazar steps intermedios por un modelo pequeño degrada más que reemplazar extremos (sandwich schedule); steps centrales concentran la información semántica. TAPS (2601.22629): los steps TEMPRANOS fijan la trayectoria semántica, los tardíos refinan léxico.",
+      "fit_3090_183m": "high — para nosotros: (a) NO intentar canvas 512 full-parallel (seq de entrenamiento es 128, y la literatura dice que paralelo largo degrada); (b) 512 tokens = 4 ventanas de 128 o 16 bloques de 32 semi-AR; (c) si algún día entrenamos un modelo chico hermano, el sandwich scheduling da 17% FLOPs-off.",
+      "expected_impact": "Define la arquitectura de generación larga correcta (semi-AR por bloques) y dónde concentrar steps si hay presupuesto asimétrico: más resolución en el primer tercio del schedule (fija semántica, per TAPS/proximity-bias) y en el último (léxico limpio).",
+      "implementation_cost": "bajo (es diseño del schedule): 0.5 día redistribuyendo el cosine actual a un schedule power-law/sandwich.",
+      "risk": "Los hallazgos de step-importance son de OWT/LM1B con modelos MDLM 100-400M — transferencia razonable a nuestro setup."
+    },
+    {
+      "technique": "Fine-tune mínimo con retorno en calidad: (a) SFT con prompt-drop para habilitar CFG; (b) BD3-LM block fine-tune; (c) VRPO/dParallel si se va a RL",
+      "source": "BD3-LM (arXiv:2503.09573 ICLR 2025 oral: L'=1 con schedule tunneado alcanza ppl 22.88 = AR en LM1B) + LLaDA-1.5 VRPO (2505.19223: GSM8K +4.7, IFEval +4.0, Arena-Hard +4.3 vs SFT) + dParallel (2509.26488: 256->30 steps sin degradación, requiere destilación de teacher)",
+      "date": "2025-09",
+      "evidence": "BD3-LM: block diffusion SOTA en ppl y generación de longitud arbitraria, pero requiere entrenar (850K steps pretrain + 150K finetune en sus experimentos). LLaDA-1.5: preference optimization con estimadores ELBO de varianza reducida — ganancias claras pero sobre 8B con 350k pares. dParallel: distilación de trayectorias teacher->student para parallel decoding confiable.",
+      "fit_3090_183m": "medium — BD3-LM-style fine-tune de NUESTRO checkpoint en 3090: horas-días factibles (183M), dataset propio; VRPO: demasiado por ahora (data de preferencias + variance engineering).",
+      "expected_impact": "BD3-LM es el camino 'con training' más alineado con discurso sostenido (bloques AR + difusión interior + KV cache nativo). Pero TODA la lista inference-only de arriba debería agotarse primero.",
+      "implementation_cost": "alto: 1-2 semanas (implementar objetivo BD + entrenar en 3090 con seq 128 por bloques de 32).",
+      "risk": "Cambiar el objetivo puede requerir re-tunear lr/schedule; riesgo de sobre-ajuste con 136M tokens de corpus."
+    }
+  ],
+  "top_recommendations": [
+    {
+      "rank": 1,
+      "technique": "Semi-AR blockwise decoding (bloques 16-32) + low-confidence remasking DENTRO del bloque + threshold-commit",
+      "why": "Única técnica con evidencia de salto grande en la métrica que importa al usuario (coherencia global/discurso sostenido): LLaDA instruct GSM8K 69.4->77.5-78.6 y MDLM SAR GenPPL 27.18 en una 3090. Ataca deriva temática (anclaje causal por bloques), repetición (re-visión local) y longitud >128 (encadenado). 100% inference-only.",
+      "how_concrete": "Modo 'block' en el sampler: (1) prompt/prefijo = últimos 96 tokens (padding si <96); (2) ventana de 32 [MASK]; (3) dentro de la ventana correr el loop actual con steps=24-32 pero commitear por score (margen top1-top2) en lugar de cosine fijo, re-enmascarando el cuantil bajo; (4) al cerrar la ventana, append y shift; (5) guidance-logit y AR-oracle siguen operando igual. Hiperparámetros iniciales: bloque 32, steps 32, threshold 0.9, T 0.2, top-p 0.95 (defaults Dream).",
+      "effort": "2-4 días de código; 0 GPU-horas de entrenamiento.",
+      "expected_gain": "OPINIÓN basada en transferencia LLaDA/MDLM: el mayor salto cualitativo disponible sin re-entrenar; en benchmarks análogos el delta fue +8-12 pts absolutos (8B). Para 183M esperamos mejora visible en coherencia entre oraciones y extensión sostenida, no garantizada en magnitud.",
+      "first_experiment": "<1 día: generar 50 muestras de 256 tokens (2 encadenados de 128) con (a) pipeline actual y (b) bloque-32 semi-AR + remasking, misprefijo/mismo seed; evaluar blind con el AR-oracle como juez (score por segmento) + GenPPL bajo Qwen3-0.6B + conteo de n-gramas repetidos. Falsifica si (b) no reduce repeticiones ni mejora GenPPL."
+    },
+    {
+      "rank": 2,
+      "technique": "Steps 96-128 (≈1 token/step) con early-stop Prophet (gap top1-top2) y schedule no-uniforme (más resolución temprana)",
+      "why": "La literatura es unánime: calidad tope está en 1 token/step (LLaDA usa steps=longitud); nuestro 32-64 steps sobre 128 tokens está en zona paralela degradada. Prophet muestra que la mitad final de los steps suele ser redundante (97-99% early convergence) — recuperamos el wallclock.",
+      "how_concrete": "Cambiar steps default 64->128; en cada step computar g_t = mean(top1-top2 logit) sobre posiciones aún mask; si g_t > umbral y pasos_restantes < mitad, commitear todo (all-in). Distribución no-lineal de unmasking: power-law con más tokens en el primer tercio (fija semántica) — evidencia TAPS/proximity-bias/entropic-schedulers.",
+      "effort": "0.5-1 día; 0 GPU-h entrenamiento.",
+      "expected_gain": "Mejora de coherencia local baja-media pero segura; coste: ~2x wallclock mitigado por early-stop (~1.5-3x menos steps efectivos, Prophet 3.4x).",
+      "first_experiment": "Mismas 50 seeds, steps in {32, 64, 128, 128+early-stop}: curva GenPPL/oracle-score vs steps; verificar dónde satura nuestro modelo (si satura a 64, ahorrar compute; si no, sumar)."
+    },
+    {
+      "rank": 3,
+      "technique": "Temperatura 0.0-0.2 + EDT dinámico + anti-EOS annealing dentro del guidance-logit stack",
+      "why": "T=0.7 con vocab 10K probablemente añade ruido a un modelo ya débil: todos los dLLM serios evalúan a T=0. Nuestro colapso repetitivo a T baja lo amortigua el guidance anti-repetición existente; EDT da el término medio principiado (confiable->greedy, incierto->diverso); el fix anti-EOS de LLaDA es gratis.",
+      "how_concrete": "(1) T=0.1 default para tasks estructuradas; (2) EDT: T_i,t = T0 * N^(theta/H_i,t) con H = entropía del post-softmax por posición (theta=20, N=0.5 como en TAPS-baseline); (3) logit-EOS escalado por factor lineal 0.1->1.0 a lo largo de los steps; (4) todo como módulos del hook de logits que ya existe (patrón generation_logits_hook_func de Dream).",
+      "effort": "0.5-1 día total.",
+      "expected_gain": "Menos errores léxicos, menos cortes prematuros, menos repetición que T fija (evidencia EDT ROUGE 23->29 en el régimen correcto de T).",
+      "first_experiment": "Grid T in {0.0, 0.1, 0.3, 0.7} x {EDT on/off} sobre 50 muestras: GenPPL + distinct-n + longitud media. Falsifica si EDT no bate a la mejor T fija en al menos una métrica sin perder la otra."
+    },
+    {
+      "rank": 4,
+      "technique": "WINO-style revokable decoding (parallel agresivo + re-mask de lo que baja de confianza)",
+      "why": "Es el upgrade del threshold-commit (rank 1) que en LLaDA dio calidad POR ENCIMA del decoding lento (+2.58 GSM8K a 128 steps) — no solo speed. Encaja natural sobre el semi-AR por bloques.",
+      "how_concrete": "Dentro del bloque: cada step commitea TODO lo que supera 0.9; el siguiente step re-evalúa los commiteados del paso anterior y re-enmascara los que caen bajo 0.5 (cap 2 re-masks/posición). Requiere guardar los scores por token (barato).",
+      "effort": "1-2 días sobre lo del rank 1.",
+      "expected_gain": "Calidad >= 1-token/step con 4-6x menos forwards dentro del bloque; ventana para subir a bloques de 64.",
+      "first_experiment": "A/B sobre los mismos 50 seeds: threshold-commit solo vs +revokable; medir GenPPL, oracle-score y wallclock."
+    },
+    {
+      "rank": 5,
+      "technique": "Fast-dLLM KV-cache aproximado + (opcional) SSD self-speculative — throughput para best-of-N",
+      "why": "El salto cualitativo con modelos chicos muchas veces viene de selección: generar N=8-16 candidatos con el sampler mejorado (ranks 1-4) y rankearlos con el AR-oracle + GenPPL. Eso exige throughput 3-10x.",
+      "how_concrete": "Portar el blockwise KV-cache (cachear K/V de posiciones fuera del bloque activo; recomputar al cerrar bloque) — se integra de lleno con el modo bloque del rank 1. Después, opcionalmente, árboles de verificación SSD.",
+      "effort": "3-5 días ingeniería.",
+      "expected_gain": "3-10x muestras/hora; habilita best-of-N con reranking (técnica estándar, sin paper específico MDLM verificado aquí — OPINIÓN).",
+      "first_experiment": "Verificar no-degradación: 50 muestras con y sin cache, delta GenPPL < 2% antes de adoptar."
+    },
+    {
+      "rank": 6,
+      "technique": "(Si se permite fine-tune mínimo) SFT corto con prompt-conditioning + prompt-drop 15% para habilitar CFG; o fine-tune BD3-LM por bloques",
+      "why": "CFG suma +1-3 pts consistentes (LLaDA) y el condicionamiento abre control temático (anti-deriva dirigida); BD3-LM es el único camino verificado a ppl-paridad con AR y longitud arbitraria.",
+      "how_concrete": "Fase 1 (horas): continuar entrenamiento 1-2h con 15% de ejemplos 'prompt enmascarado' para crear la rama uncond; en inferencia p̃ ∝ p_cond^(1+w)/p_uncond^w, w en {0.5,1,1.5,2}. Fase 2 (días): objetivo block-diffusion con bloques 32 sobre el corpus actual.",
+      "effort": "Fase 1: 1-2 GPU-horas 3090 + 1 día código; Fase 2: 1-2 semanas.",
+      "expected_gain": "Fase 1: +1-3 pts análogos + controlabilidad; Fase 2: ppl cercana a AR y discurso sostenido estructural (evidencia BD3-LM ppl 22.88=AR con schedule tunneado).",
+      "first_experiment": "Fase 1: re-entrenar 30 min con prompt-drop, medir ppl held-out antes/después (no debe moverse >2%) y teste CFG w=1 en 20 prompts."
+    }
+  ],
+  "sources": [
+    {"title": "Dream 7B: Diffusion Large Language Models (Ye, Xie, Zheng et al., HKU + Huawei Noah's Ark)", "url": "https://arxiv.org/abs/2508.15487", "reliability": "alta", "date": "2025-08 (modelo abr-2025)"},
+    {"title": "DreamLM/Dream — repo oficial (estrategias remasking: origin/maskgit_plus/topk_margin/entropy, defaults temperature 0.0, hook de logits)", "url": "https://github.com/DreamLM/Dream", "reliability": "alta", "date": "2025-09"},
+    {"title": "Fast-dLLM: Training-free Acceleration of Diffusion LLM by Enabling KV Cache and Parallel Decoding (Wu et al., HKU/NVIDIA/MIT, ICLR 2026)", "url": "https://arxiv.org/abs/2505.22618", "reliability": "alta", "date": "2025-05"},
+    {"title": "ReMDM: Remasking Discrete Diffusion Models with Inference-Time Scaling (Wang, Schiff, Sahoo, Kuleshov, NeurIPS 2025)", "url": "https://arxiv.org/abs/2503.00307", "reliability": "alta", "date": "2025-03"},
+    {"title": "Large Language Diffusion Models — LLaDA (Nie et al., Ant/RLDD; apéndices B.3-B.4: CFG, remasking, sampling strategies)", "url": "https://arxiv.org/abs/2502.09992", "reliability": "alta", "date": "2025-02"},
+    {"title": "Roll Out and Roll Back: WINO revokable parallel decoding (arXiv:2605.16941)", "url": "https://arxiv.org/abs/2605.16941", "reliability": "media-alta", "date": "2026-05"},
+    {"title": "Prophet: Diffusion Language Models Know the Answer Before Decoding (arXiv:2508.19982)", "url": "https://arxiv.org/abs/2508.19982", "reliability": "media-alta", "date": "2025-08"},
+    {"title": "Simple and Effective Masked Diffusion Language Models — MDLM (Sahoo et al., NeurIPS 2024; SAR en 3090)", "url": "https://arxiv.org/abs/2406.07524", "reliability": "alta", "date": "2024-06"},
+    {"title": "Block Diffusion: Interpolating Between Autoregressive and Diffusion Language Models (Arriola et al., ICLR 2025 oral)", "url": "https://arxiv.org/abs/2503.09573", "reliability": "alta", "date": "2025-03"},
+    {"title": "LLaDA 2.0: Scaling Up Diffusion Language Models (threshold 0.95 vs 0.85, temp 0.0, bloques 32, CAP loss)", "url": "https://arxiv.org/abs/2512.15745", "reliability": "alta", "date": "2025-12"},
+    {"title": "Self Speculative Decoding for Diffusion Large Language Models (Gao et al., arXiv:2510.04147)", "url": "https://arxiv.org/abs/2510.04147", "reliability": "media-alta", "date": "2025-10"},
+    {"title": "Spiffy: Multiplying Diffusion LLM Acceleration via Lossless Speculative Decoding (arXiv:2509.18085)", "url": "https://arxiv.org/abs/2509.18085", "reliability": "media-alta", "date": "2025-09"},
+    {"title": "SimSD: Simple Speculative Decoding in Diffusion Language Models (arXiv:2606.02544)", "url": "https://arxiv.org/abs/2606.02544", "reliability": "media", "date": "2026-06"},
+    {"title": "Simple Guidance Mechanisms for Discrete Diffusion Models (Schiff et al., ICLR 2025 — D-CFG/D-CBG)", "url": "https://arxiv.org/abs/2412.10193", "reliability": "alta", "date": "2024-12"},
+    {"title": "SAKE: Boosting Diversity in Text Diffusion Models via Entropy-Based Guidance (arXiv:2608.00024)", "url": "https://arxiv.org/abs/2608.00024", "reliability": "media (muy reciente)", "date": "2026-08"},
+    {"title": "Who Gets Unmasked? Sampler-Induced Bias in Diffusion Language Models / Fork-First Sampling (arXiv:2610.24795)", "url": "https://arxiv.org/abs/2610.24795", "reliability": "media (preprint muy reciente)", "date": "2026-10"},
+    {"title": "EDT: Entropy-based Dynamic Temperature Sampling (arXiv:2403.14541, AR LLMs)", "url": "https://arxiv.org/abs/2403.14541", "reliability": "media-alta", "date": "2024-03"},
+    {"title": "Early Decisions Matter: Proximity Bias and EOS Temperature Annealing (arXiv:2604.10567)", "url": "https://arxiv.org/abs/2604.10567", "reliability": "media", "date": "2026-04"},
+    {"title": "Not All Denoising Steps Are Equal: Model Scheduling for Faster MDLMs (arXiv:2604.02340)", "url": "https://arxiv.org/abs/2604.02340", "reliability": "media", "date": "2026-04"},
+    {"title": "dParallel: Learnable Parallel Decoding for dLLMs (arXiv:2509.26488)", "url": "https://arxiv.org/abs/2509.26488", "reliability": "media-alta", "date": "2025-09"},
+    {"title": "LLaDA 1.5: Variance-Reduced Preference Optimization (VRPO, arXiv:2505.19223)", "url": "https://arxiv.org/abs/2505.19223", "reliability": "alta", "date": "2025-05"},
+    {"title": "Speculative Diffusion Decoding — SpecDiff (Christopher et al., arXiv:2408.05636) y DEER (arXiv:2512.15176)", "url": "https://arxiv.org/abs/2408.05636", "reliability": "media-alta", "date": "2024-08 / 2025-12"},
+    {"title": "TAPS: Time-Annealed Perturbation Sampling / estructura temporal de Diffusion-LMs (arXiv:2601.22629)", "url": "https://arxiv.org/abs/2601.22629", "reliability": "media", "date": "2026-01"},
+    {"title": "Entropic Time Schedulers for Generative Diffusion Models (arXiv:2504.13612)", "url": "https://arxiv.org/abs/2504.13612", "reliability": "media", "date": "2025-04"}
+  ],
+  "gaps": "No pude verificar: (1) 'TorchDiffDiff' — no existe con ese nombre; los resultados son TorchDiff (librería de difusión para imágenes, LoqmanSamani) y DiffDiff (forecasting time-series, synlp) — ninguno es un sampler de MDLM de texto; lo traté como fuente inexistente. (2) Números exactos del benchmark de la tabla de remasking de LLaDA (v2 ap. B.3: 52.3/64.7/12.9/73.8) — el snippet no nombra el benchmark, asumí que es generación condicional (probablemente GSM8K) pero no lo confirmé leyendo la tabla completa. (3) Evidencia cuantitativa de EDT aplicado DENTRO de un MDLM (solo existe como baseline citado por TAPS); la transferencia es hipótesis razonada. (4) Papers 2605/2606/2608/2610 (2026) leídos solo por abstract/search-snippets, no full-text — números citados textualmente de los snippets pero sin lectura completa de apéndices. (5) Ninguna evidencia directa de 'temperature schedule por step' (T variable a lo largo de la trayectoria) en MDLMs: lo más cercano es PRR (2603.04514, controlador ENTRENADO de temperatura por token) y el EOS-annealing de 2604.10567; una T(t) manual simple queda como heurística sin paper. (6) Toda la transferencia 7-8B -> 183M está sin validar empíricamente (nadie publica ablations de samplers en modelos de 183M con 136M tokens). (7) No medí nada en GPU propio (regla read-only)."
+}
