@@ -15,3 +15,14 @@
 2. Vocab 10K→32K NO ayuda ahora: en undertraining el vocab óptimo BAJA (Tao et al. NeurIPS 2024); re-evaluar 16-24K solo tras escalar datos.
 3. Fix anti-deriva más barato: ventanas de entrenamiento que no crucen bordes de documento (check de 10 min).
 4. CaRE: la temperatura domina MAUVE → comparar configs siempre a NFE/T igualados.
+
+## Ejecución FASE 0-1 (20-oct): falsificadores con receipts
+- eval/prompts_r10.jsonl (100 prompts, 4 cats) + refs_r10.jsonl (120 refs humanas reales del corpus)
+- scripts/eval_r10.py: S1 degeneración + S2 gen-PPL dual-juez + S4 drift + S6 CoLA
+- BASELINE v1 (T0.7,64s): gen-PPL ratio 3.70x (gpt2-large) / 4.17x (pythia, jueces de acuerdo);
+  drift slope -0.108; CoLA 0.433 vs refs 0.753; rep3 = refs (sin colapso a T0.7)
+- FASE 1 semi-AR FALSIFICADA (negativo): v2 T0.2 → 43x; v2b T0.7 → 50x. Causa estructural:
+  el checkpoint se entrenó con máscaras dispersas; el patrón prefijo-limpio+bloque-masked
+  es lo que entrena BD3-LM (conversión FASE 4 necesaria, no solo sampler). Bug adicional
+  corregido: RCR re-masked posiciones relativas corruptas del contexto.
+- Lección: semi-AR solo-inferencia NO transferible a MDLM estándar undertrained.

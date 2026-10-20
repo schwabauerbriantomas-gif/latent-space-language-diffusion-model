@@ -1,0 +1,50 @@
+{
+ "tag": "run_v2b_t07",
+ "sampler": "v2",
+ "temp": 0.7,
+ "steps": 32,
+ "block": 16,
+ "seed": 42,
+ "gen_seconds": 261.6,
+ "S1_degeneration": {
+  "rep2": 0.00841935116224709,
+  "rep3": 0.004370121112649453,
+  "rep4": 0.0025613275613275612,
+  "longest_run": 1.02020202020202,
+  "distinct2": 0.991580648837753,
+  "distinct3": 0.9956298788873506,
+  "entropy": 4.990495378517035,
+  "zipf": 0.18110487614140536,
+  "self_bleu4": 0.001540740740740741
+ },
+ "S1_refs_baseline": {
+  "rep2": 0.06337957872995119,
+  "rep3": 0.023276363401705594,
+  "rep4": 0.0108218963532423,
+  "longest_run": 1.05,
+  "distinct2": 0.9366204212700487,
+  "distinct3": 0.9767236365982944,
+  "entropy": 6.37906548454364,
+  "zipf": 0.4715748552894568,
+  "self_bleu4": 0.0018632563085885017
+ },
+ "S2_genppl": {
+  "gpt2-large": {
+   "samples_ppl": 1373.0,
+   "refs_ppl": 27.16,
+   "ratio_samples_over_refs": 50.558
+  },
+  "EleutherAI/pythia-1.4b": {
+   "samples_ppl": 1198.61,
+   "refs_ppl": 21.03,
+   "ratio_samples_over_refs": 56.994
+  }
+ },
+ "S4_drift": {
+  "drift_slope_mean": null,
+  "final_sim_mean": null,
+  "n": 0
+ },
+ "S6_cola": 0.4139,
+ "S6_cola_refs": 0.753
+}
