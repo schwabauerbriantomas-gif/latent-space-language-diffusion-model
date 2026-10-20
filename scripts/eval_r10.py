@@ -294,6 +294,7 @@ def main():
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--ckpt", default="checkpoints/mdlm_v4_best.pt")
     ap.add_argument("--tag", required=True)
+    ap.add_argument("--samples-from", default=None, help="path to samples.json: skip generation")
     ap.add_argument("--skip-judges", action="store_true", help="S1 only (fast)")
     args = ap.parse_args()
 
@@ -312,14 +313,18 @@ def main():
     gen_fn = build_sampler(args.sampler, args.block, args.steps, args.temp, args.anti_eos)
 
     t0 = time.time()
-    texts = []
-    for i, p in enumerate(prompts):
-        ids = tok.encode(p["prompt"], add_special=True)
-        text, _ = gen_fn(model, tok, ids, n_new=128, eos_id=tok.eos_id)
-        text = " ".join(text.split())
-        texts.append(text)
-        if (i+1) % 20 == 0:
-            print(f"  gen {i+1}/100 ({time.time()-t0:.0f}s)", flush=True)
+    if args.samples_from:
+        texts = json.load(open(args.samples_from, encoding="utf-8"))
+        print(f"loaded {len(texts)} samples from {args.samples_from}")
+    else:
+        texts = []
+        for i, p in enumerate(prompts):
+            ids = tok.encode(p["prompt"], add_special=True)
+            text, _ = gen_fn(model, tok, ids, n_new=128, eos_id=tok.eos_id)
+            text = " ".join(text.split())
+            texts.append(text)
+            if (i+1) % 20 == 0:
+                print(f"  gen {i+1}/100 ({time.time()-t0:.0f}s)", flush=True)
     json.dump(texts, open(f"{outdir}/samples.json", "w", encoding="utf-8"), ensure_ascii=False)
 
     report = {"tag": args.tag, "sampler": args.sampler, "temp": args.temp,

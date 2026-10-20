@@ -31,8 +31,10 @@ def rm_scores(rm_tok, rm, texts):
     for t in texts:
         conv = [{"role": "user", "content": "Write a coherent text continuation."},
                 {"role": "assistant", "content": t[:1200]}]
-        ids = rm_tok.apply_chat_template(conv, tokenize=True, return_tensors="pt").to(rm.device)
-        logit = rm(ids).logits[0][0].item()
+        enc = rm_tok.apply_chat_template(conv, tokenize=True, return_tensors="pt")
+        ids = enc.input_ids if hasattr(enc, "input_ids") else enc
+        ids = ids.to(rm.device)
+        logit = rm(input_ids=ids).logits[0][0].item()
         out.append(logit)
     return out
 

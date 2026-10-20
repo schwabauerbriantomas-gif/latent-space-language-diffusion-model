@@ -17,6 +17,7 @@ import sys
 import time
 import math
 import argparse
+import os
 import random
 import numpy as np
 from pathlib import Path
@@ -41,6 +42,12 @@ def prepare_data(seq_len=128):
     """Tokenize Ultra-FineWeb and pack into seq_len sequences.
     Disk-streaming via memmap — peak RAM = chunk_size only.
     """
+    override = os.environ.get("MDLM_DATA_FILE")
+    if override:
+        arr = np.load(override, mmap_mode='r')
+        print(f"  Data override: {override} ({len(arr):,} seqs, mmap)")
+        return np.array(arr), len(arr)
+
     input_file = DATA_DIR / "ultra_fineweb_en_1m.jsonl"
     if not input_file.exists():
         input_file = DATA_DIR / "ultra_fineweb_en.jsonl"

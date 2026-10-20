@@ -26,3 +26,11 @@
   es lo que entrena BD3-LM (conversión FASE 4 necesaria, no solo sampler). Bug adicional
   corregido: RCR re-masked posiciones relativas corruptas del contexto.
 - Lección: semi-AR solo-inferencia NO transferible a MDLM estándar undertrained.
+- FASE 2 best-of-N FALSIFICADA (T0.7 limpio): BoN-4 con Skywork-RM ratio 3.96x/4.49x
+  vs baseline 3.70x/4.17x — neutro-peor. El RM (preferencia chat) no correlaciona con
+  fluidez wiki en texto degradado; su margen +1.1 logits no se traduce en calidad objetiva.
+  (BoN a T0.9 con N=8 fue 16.2x: candidatos ruidosos, comparación inválida, descartada.)
+  Re-testear cuando el base llegue a ratio <2x. Verifier queda para post-KD.
+- CONTROL INTRA-DOC en curso (proc_9dd1c51a7b3d): v5 (1.64M ventanas estrictamente
+  intra-doc) x 2 epocas = 25,668 steps ~= budget v4.1. Checkpoint publicado respaldado
+  en checkpoints/mdlm_v4.1_published.pt.
