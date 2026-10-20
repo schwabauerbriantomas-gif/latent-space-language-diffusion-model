@@ -24,8 +24,9 @@
   ],
   "training": {
     "params": 182795264,
-    "ppl": 62.405095410681284,
+    "ppl": 54.13,
     "step": 20000,
-    "loss": 4.133646929264069
+    "loss": 4.133646929264069,
+    "ppl_protocol": "deterministic quick_eval t=0.5 (audited r9)"
   }
 }

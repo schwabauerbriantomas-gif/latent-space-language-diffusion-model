@@ -43,7 +43,7 @@ The training code that produced the diverged runs weighted the loss by `1/(1-t)`
 | Architecture | d_model=1024, 10 layers, 16 heads, d_ff=2816 | RMSNorm + SwiGLU + RoPE + weight tying |
 | Vocab | 10,000 BPE | tokenizer included |
 | Training data | 27.2M tokens (100K docs, Ultra-FineWeb) | deliberately small; single-GPU budget |
-| Perplexity (plain CE, masked positions) | **62.4** | measured on held-out data at release time |
+| Perplexity (plain CE, masked positions) | **54.1** | deterministic held-out eval (t=0.5, audited protocol, receipt in results/val_ppl_v41_audited.json) |
 | Forward throughput, batch 1 / 8 / 32 | 6,024 / 56,225 / 130,782 TPS | RTX 3090, seq=128 |
 | Full-parallel generation | ~58–113 tok/s (12 samples, no guidance) | 32 diffusion steps, seq=128 |
 | Training time | ~50 min | single RTX 3090 |
@@ -60,7 +60,7 @@ We cite the AR-control number because it is the comparison a reviewer actually c
 
 ## 🚧 Known limitations (measured, not vibes)
 
-- **Quality**: an equal-size AR control trained with 30× more tokens reaches perplexity ~18 vs our ~62.4. This model demonstrates an architecture, not a product.
+- **Quality**: an equal-size AR control trained with 30× more tokens reaches perplexity ~18 vs our ~54.1. This model demonstrates an architecture, not a product.
 - **Data**: 27.2M training tokens (vs trillions for production models).
 - **Prompt adherence**: unconditional-style generation; there is no instruction tuning.
 - Known failed experiments (kept for transparency): embedding-based drift detection, token-level oracle replacement, guided-MDLM regeneration — see GitHub repo docs.

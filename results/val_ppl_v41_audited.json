@@ -1,0 +1,6 @@
+{
+ "protocol": "deterministic quick_eval, t=0.5, seed 1234, 20 batches of 32, held-out first 5%",
+ "ce": 3.991344654560089,
+ "ppl": 54.12762340692662,
+ "step": 20000
+}

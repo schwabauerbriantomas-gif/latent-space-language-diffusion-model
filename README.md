@@ -56,7 +56,7 @@ All v4 code is `torch.compile` compatible and uses Flash Attention throughout.
 |--------|----|----|-------|
 | Model parameters | 201M | **183M** | d_model=1024, 10 layers, 16 heads |
 | Training data | 272M tokens | 27.2M tokens | 100K docs from Ultra-FineWeb |
-| Perplexity (plain CE, comparable) | 102.6 | **62.4** | v4.1 uses 10× less data; loss = plain CE on masked positions (see Release v4.1 below) |
+| Perplexity (plain CE, comparable) | 102.6 | **54.1** | v4.1 uses 10× less data; loss = plain CE on masked positions (see Release v4.1 below) |
 | Forward throughput (batch=1) | 5,595 TPS | **5,952 TPS** | **+6.4% faster** |
 | Forward throughput (batch=8) | 40,000 TPS | **53,783 TPS** | **+34.5% faster** |
 | Forward throughput (batch=32) | 127,187 TPS | 123,341 TPS | Comparable |
